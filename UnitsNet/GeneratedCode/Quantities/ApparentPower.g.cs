@@ -8,326 +8,195 @@
 //
 //     See https://github.com/angularsen/UnitsNet/wiki/Adding-a-New-Unit for how to add or edit units.
 //
-//     Add CustomCode\Quantities\MyUnit.extra.cs files to add code to generated quantities.
-//     Add Extensions\MyUnitExtensions.cs to decorate quantities with new behavior.
-//     Add UnitDefinitions\MyUnit.json and run GeneratUnits.bat to generate new units or quantities.
+//     Add CustomCode\Quantities\MyQuantity.extra.cs files to add code to generated quantities.
+//     Add UnitDefinitions\MyQuantity.json and run generate-code.bat to generate new units or quantities.
 //
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-// Copyright (c) 2013 Andreas Gullberg Larsen (andreas.larsen84@gmail.com).
-// https://github.com/angularsen/UnitsNet
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
+// Licensed under MIT No Attribution, see LICENSE file at the root.
+// Copyright 2013 Andreas Gullberg Larsen (andreas.larsen84@gmail.com). Maintained at https://github.com/angularsen/UnitsNet.
 
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Text.RegularExpressions;
 using System.Linq;
 using JetBrains.Annotations;
+using UnitsNet.InternalHelpers;
 using UnitsNet.Units;
 
-// Windows Runtime Component does not support CultureInfo type, so use culture name string instead for public methods: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if WINDOWS_UWP
-using Culture = System.String;
-#else
-using Culture = System.IFormatProvider;
-#endif
+#nullable enable
 
 // ReSharper disable once CheckNamespace
 
 namespace UnitsNet
 {
+    /// <inheritdoc />
     /// <summary>
     ///     Power engineers measure apparent power as the magnitude of the vector sum of active and reactive power. Apparent power is the product of the root-mean-square of voltage and current.
     /// </summary>
-    // ReSharper disable once PartialTypeWithSinglePart
-
-    // Windows Runtime Component has constraints on public types: https://msdn.microsoft.com/en-us/library/br230301.aspx#Declaring types in Windows Runtime Components
-    // Public structures can't have any members other than public fields, and those fields must be value types or strings.
-    // Public classes must be sealed (NotInheritable in Visual Basic). If your programming model requires polymorphism, you can create a public interface and implement that interface on the classes that must be polymorphic.
-#if WINDOWS_UWP
-    public sealed partial class ApparentPower
-#else
-    public partial struct ApparentPower : IComparable, IComparable<ApparentPower>
-#endif
+    public partial struct ApparentPower : IQuantity<ApparentPowerUnit>, IEquatable<ApparentPower>, IComparable, IComparable<ApparentPower>, IConvertible, IFormattable
     {
         /// <summary>
-        ///     Base unit of ApparentPower.
+        ///     The numeric value this quantity was constructed with.
         /// </summary>
-        private readonly double _voltamperes;
+        private readonly double _value;
 
-        // Windows Runtime Component requires a default constructor
-#if WINDOWS_UWP
-        public ApparentPower() : this(0)
-        {
-        }
-#endif
+        /// <summary>
+        ///     The unit this quantity was constructed with.
+        /// </summary>
+        private readonly ApparentPowerUnit? _unit;
 
-        public ApparentPower(double voltamperes)
+        static ApparentPower()
         {
-            _voltamperes = Convert.ToDouble(voltamperes);
-        }
+            BaseDimensions = new BaseDimensions(2, 1, -3, 0, 0, 0, 0);
 
-        // Windows Runtime Component does not allow public methods/ctors with same number of parameters: https://msdn.microsoft.com/en-us/library/br230301.aspx#Overloaded methods
-#if WINDOWS_UWP
-        private
-#else
-        public
-#endif
-        ApparentPower(long voltamperes)
-        {
-            _voltamperes = Convert.ToDouble(voltamperes);
+            Info = new QuantityInfo<ApparentPowerUnit>(QuantityType.ApparentPower,
+                new UnitInfo<ApparentPowerUnit>[] {
+                    new UnitInfo<ApparentPowerUnit>(ApparentPowerUnit.Gigavoltampere, BaseUnits.Undefined),
+                    new UnitInfo<ApparentPowerUnit>(ApparentPowerUnit.Kilovoltampere, BaseUnits.Undefined),
+                    new UnitInfo<ApparentPowerUnit>(ApparentPowerUnit.Megavoltampere, BaseUnits.Undefined),
+                    new UnitInfo<ApparentPowerUnit>(ApparentPowerUnit.Voltampere, BaseUnits.Undefined),
+                },
+                BaseUnit, Zero, BaseDimensions);
         }
 
-        // Windows Runtime Component does not allow public methods/ctors with same number of parameters: https://msdn.microsoft.com/en-us/library/br230301.aspx#Overloaded methods
-        // Windows Runtime Component does not support decimal type
-#if WINDOWS_UWP
-        private
-#else
-        public
-#endif
-        ApparentPower(decimal voltamperes)
+        /// <summary>
+        ///     Creates the quantity with the given numeric value and unit.
+        /// </summary>
+        /// <param name="value">The numeric value to construct this quantity with.</param>
+        /// <param name="unit">The unit representation to construct this quantity with.</param>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public ApparentPower(double value, ApparentPowerUnit unit)
         {
-            _voltamperes = Convert.ToDouble(voltamperes);
+            if(unit == ApparentPowerUnit.Undefined)
+              throw new ArgumentException("The quantity can not be created with an undefined unit.", nameof(unit));
+
+            _value = Guard.EnsureValidNumber(value, nameof(value));
+            _unit = unit;
         }
 
-        #region Properties
+        /// <summary>
+        /// Creates an instance of the quantity with the given numeric value in units compatible with the given <see cref="UnitSystem"/>.
+        /// If multiple compatible units were found, the first match is used.
+        /// </summary>
+        /// <param name="value">The numeric value to construct this quantity with.</param>
+        /// <param name="unitSystem">The unit system to create the quantity with.</param>
+        /// <exception cref="ArgumentNullException">The given <see cref="UnitSystem"/> is null.</exception>
+        /// <exception cref="ArgumentException">No unit was found for the given <see cref="UnitSystem"/>.</exception>
+        public ApparentPower(double value, UnitSystem unitSystem)
+        {
+            if(unitSystem is null) throw new ArgumentNullException(nameof(unitSystem));
+
+            var unitInfos = Info.GetUnitInfosFor(unitSystem.BaseUnits);
+            var firstUnitInfo = unitInfos.FirstOrDefault();
+
+            _value = Guard.EnsureValidNumber(value, nameof(value));
+            _unit = firstUnitInfo?.Value ?? throw new ArgumentException("No units were found for the given UnitSystem.", nameof(unitSystem));
+        }
+
+        #region Static Properties
+
+        /// <inheritdoc cref="IQuantity.QuantityInfo"/>
+        public static QuantityInfo<ApparentPowerUnit> Info { get; }
+
+        /// <summary>
+        ///     The <see cref="BaseDimensions" /> of this quantity.
+        /// </summary>
+        public static BaseDimensions BaseDimensions { get; }
+
+        /// <summary>
+        ///     The base unit of ApparentPower, which is Voltampere. All conversions go via this value.
+        /// </summary>
+        public static ApparentPowerUnit BaseUnit { get; } = ApparentPowerUnit.Voltampere;
+
+        /// <summary>
+        /// Represents the largest possible value of ApparentPower
+        /// </summary>
+        public static ApparentPower MaxValue { get; } = new ApparentPower(double.MaxValue, BaseUnit);
+
+        /// <summary>
+        /// Represents the smallest possible value of ApparentPower
+        /// </summary>
+        public static ApparentPower MinValue { get; } = new ApparentPower(double.MinValue, BaseUnit);
 
         /// <summary>
         ///     The <see cref="QuantityType" /> of this quantity.
         /// </summary>
-        public static QuantityType QuantityType => QuantityType.ApparentPower;
-
-        /// <summary>
-        ///     The base unit representation of this quantity for the numeric value stored internally. All conversions go via this value.
-        /// </summary>
-        public static ApparentPowerUnit BaseUnit
-        {
-            get { return ApparentPowerUnit.Voltampere; }
-        }
+        public static QuantityType QuantityType { get; } = QuantityType.ApparentPower;
 
         /// <summary>
         ///     All units of measurement for the ApparentPower quantity.
         /// </summary>
-        public static ApparentPowerUnit[] Units { get; } = Enum.GetValues(typeof(ApparentPowerUnit)).Cast<ApparentPowerUnit>().ToArray();
+        public static ApparentPowerUnit[] Units { get; } = Enum.GetValues(typeof(ApparentPowerUnit)).Cast<ApparentPowerUnit>().Except(new ApparentPowerUnit[]{ ApparentPowerUnit.Undefined }).ToArray();
+
+        /// <summary>
+        ///     Gets an instance of this quantity with a value of 0 in the base unit Voltampere.
+        /// </summary>
+        public static ApparentPower Zero { get; } = new ApparentPower(0, BaseUnit);
+
+        #endregion
+
+        #region Properties
+
+        /// <summary>
+        ///     The numeric value this quantity was constructed with.
+        /// </summary>
+        public double Value => _value;
+
+        Enum IQuantity.Unit => Unit;
+
+        /// <inheritdoc />
+        public ApparentPowerUnit Unit => _unit.GetValueOrDefault(BaseUnit);
+
+        /// <inheritdoc />
+        public QuantityInfo<ApparentPowerUnit> QuantityInfo => Info;
+
+        /// <inheritdoc cref="IQuantity.QuantityInfo"/>
+        QuantityInfo IQuantity.QuantityInfo => Info;
+
+        /// <summary>
+        ///     The <see cref="QuantityType" /> of this quantity.
+        /// </summary>
+        public QuantityType Type => ApparentPower.QuantityType;
+
+        /// <summary>
+        ///     The <see cref="BaseDimensions" /> of this quantity.
+        /// </summary>
+        public BaseDimensions Dimensions => ApparentPower.BaseDimensions;
+
+        #endregion
+
+        #region Conversion Properties
+
+        /// <summary>
+        ///     Get ApparentPower in Gigavoltamperes.
+        /// </summary>
+        public double Gigavoltamperes => As(ApparentPowerUnit.Gigavoltampere);
 
         /// <summary>
         ///     Get ApparentPower in Kilovoltamperes.
         /// </summary>
-        public double Kilovoltamperes
-        {
-            get { return (_voltamperes) / 1e3d; }
-        }
+        public double Kilovoltamperes => As(ApparentPowerUnit.Kilovoltampere);
 
         /// <summary>
         ///     Get ApparentPower in Megavoltamperes.
         /// </summary>
-        public double Megavoltamperes
-        {
-            get { return (_voltamperes) / 1e6d; }
-        }
+        public double Megavoltamperes => As(ApparentPowerUnit.Megavoltampere);
 
         /// <summary>
         ///     Get ApparentPower in Voltamperes.
         /// </summary>
-        public double Voltamperes
-        {
-            get { return _voltamperes; }
-        }
+        public double Voltamperes => As(ApparentPowerUnit.Voltampere);
 
         #endregion
 
-        #region Static
-
-        public static ApparentPower Zero
-        {
-            get { return new ApparentPower(); }
-        }
-
-        /// <summary>
-        ///     Get ApparentPower from Kilovoltamperes.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static ApparentPower FromKilovoltamperes(double kilovoltamperes)
-        {
-            double value = (double) kilovoltamperes;
-            return new ApparentPower((value) * 1e3d);
-        }
-#else
-        public static ApparentPower FromKilovoltamperes(QuantityValue kilovoltamperes)
-        {
-            double value = (double) kilovoltamperes;
-            return new ApparentPower(((value) * 1e3d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get ApparentPower from Megavoltamperes.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static ApparentPower FromMegavoltamperes(double megavoltamperes)
-        {
-            double value = (double) megavoltamperes;
-            return new ApparentPower((value) * 1e6d);
-        }
-#else
-        public static ApparentPower FromMegavoltamperes(QuantityValue megavoltamperes)
-        {
-            double value = (double) megavoltamperes;
-            return new ApparentPower(((value) * 1e6d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get ApparentPower from Voltamperes.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static ApparentPower FromVoltamperes(double voltamperes)
-        {
-            double value = (double) voltamperes;
-            return new ApparentPower(value);
-        }
-#else
-        public static ApparentPower FromVoltamperes(QuantityValue voltamperes)
-        {
-            double value = (double) voltamperes;
-            return new ApparentPower((value));
-        }
-#endif
-
-        // Windows Runtime Component does not support nullable types (double?): https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if !WINDOWS_UWP
-        /// <summary>
-        ///     Get nullable ApparentPower from nullable Kilovoltamperes.
-        /// </summary>
-        public static ApparentPower? FromKilovoltamperes(QuantityValue? kilovoltamperes)
-        {
-            if (kilovoltamperes.HasValue)
-            {
-                return FromKilovoltamperes(kilovoltamperes.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable ApparentPower from nullable Megavoltamperes.
-        /// </summary>
-        public static ApparentPower? FromMegavoltamperes(QuantityValue? megavoltamperes)
-        {
-            if (megavoltamperes.HasValue)
-            {
-                return FromMegavoltamperes(megavoltamperes.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable ApparentPower from nullable Voltamperes.
-        /// </summary>
-        public static ApparentPower? FromVoltamperes(QuantityValue? voltamperes)
-        {
-            if (voltamperes.HasValue)
-            {
-                return FromVoltamperes(voltamperes.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-#endif
-
-        /// <summary>
-        ///     Dynamically convert from value and unit enum <see cref="ApparentPowerUnit" /> to <see cref="ApparentPower" />.
-        /// </summary>
-        /// <param name="value">Value to convert from.</param>
-        /// <param name="fromUnit">Unit to convert from.</param>
-        /// <returns>ApparentPower unit value.</returns>
-#if WINDOWS_UWP
-        // Fix name conflict with parameter "value"
-        [return: System.Runtime.InteropServices.WindowsRuntime.ReturnValueName("returnValue")]
-        public static ApparentPower From(double value, ApparentPowerUnit fromUnit)
-#else
-        public static ApparentPower From(QuantityValue value, ApparentPowerUnit fromUnit)
-#endif
-        {
-            switch (fromUnit)
-            {
-                case ApparentPowerUnit.Kilovoltampere:
-                    return FromKilovoltamperes(value);
-                case ApparentPowerUnit.Megavoltampere:
-                    return FromMegavoltamperes(value);
-                case ApparentPowerUnit.Voltampere:
-                    return FromVoltamperes(value);
-
-                default:
-                    throw new NotImplementedException("fromUnit: " + fromUnit);
-            }
-        }
-
-        // Windows Runtime Component does not support nullable types (double?): https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if !WINDOWS_UWP
-        /// <summary>
-        ///     Dynamically convert from value and unit enum <see cref="ApparentPowerUnit" /> to <see cref="ApparentPower" />.
-        /// </summary>
-        /// <param name="value">Value to convert from.</param>
-        /// <param name="fromUnit">Unit to convert from.</param>
-        /// <returns>ApparentPower unit value.</returns>
-        public static ApparentPower? From(QuantityValue? value, ApparentPowerUnit fromUnit)
-        {
-            if (!value.HasValue)
-            {
-                return null;
-            }
-            switch (fromUnit)
-            {
-                case ApparentPowerUnit.Kilovoltampere:
-                    return FromKilovoltamperes(value.Value);
-                case ApparentPowerUnit.Megavoltampere:
-                    return FromMegavoltamperes(value.Value);
-                case ApparentPowerUnit.Voltampere:
-                    return FromVoltamperes(value.Value);
-
-                default:
-                    throw new NotImplementedException("fromUnit: " + fromUnit);
-            }
-        }
-#endif
+        #region Static Methods
 
         /// <summary>
         ///     Get unit abbreviation string.
         /// </summary>
         /// <param name="unit">Unit to get abbreviation for.</param>
         /// <returns>Unit abbreviation string.</returns>
-        [UsedImplicitly]
         public static string GetAbbreviation(ApparentPowerUnit unit)
         {
             return GetAbbreviation(unit, null);
@@ -337,172 +206,68 @@ namespace UnitsNet
         ///     Get unit abbreviation string.
         /// </summary>
         /// <param name="unit">Unit to get abbreviation for.</param>
-        /// <param name="culture">Culture to use for localization. Defaults to Thread.CurrentUICulture.</param>
         /// <returns>Unit abbreviation string.</returns>
-        [UsedImplicitly]
-        public static string GetAbbreviation(ApparentPowerUnit unit, [CanBeNull] Culture culture)
+        /// <param name="provider">Format to use for localization. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public static string GetAbbreviation(ApparentPowerUnit unit, IFormatProvider? provider)
         {
-            return UnitSystem.GetCached(culture).GetDefaultAbbreviation(unit);
+            return UnitAbbreviationsCache.Default.GetDefaultAbbreviation(unit, provider);
         }
 
         #endregion
 
-        #region Arithmetic Operators
+        #region Static Factory Methods
 
-        // Windows Runtime Component does not allow operator overloads: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if !WINDOWS_UWP
-        public static ApparentPower operator -(ApparentPower right)
+        /// <summary>
+        ///     Get ApparentPower from Gigavoltamperes.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static ApparentPower FromGigavoltamperes(QuantityValue gigavoltamperes)
         {
-            return new ApparentPower(-right._voltamperes);
+            double value = (double) gigavoltamperes;
+            return new ApparentPower(value, ApparentPowerUnit.Gigavoltampere);
         }
-
-        public static ApparentPower operator +(ApparentPower left, ApparentPower right)
+        /// <summary>
+        ///     Get ApparentPower from Kilovoltamperes.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static ApparentPower FromKilovoltamperes(QuantityValue kilovoltamperes)
         {
-            return new ApparentPower(left._voltamperes + right._voltamperes);
+            double value = (double) kilovoltamperes;
+            return new ApparentPower(value, ApparentPowerUnit.Kilovoltampere);
         }
-
-        public static ApparentPower operator -(ApparentPower left, ApparentPower right)
+        /// <summary>
+        ///     Get ApparentPower from Megavoltamperes.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static ApparentPower FromMegavoltamperes(QuantityValue megavoltamperes)
         {
-            return new ApparentPower(left._voltamperes - right._voltamperes);
+            double value = (double) megavoltamperes;
+            return new ApparentPower(value, ApparentPowerUnit.Megavoltampere);
         }
-
-        public static ApparentPower operator *(double left, ApparentPower right)
+        /// <summary>
+        ///     Get ApparentPower from Voltamperes.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static ApparentPower FromVoltamperes(QuantityValue voltamperes)
         {
-            return new ApparentPower(left*right._voltamperes);
-        }
-
-        public static ApparentPower operator *(ApparentPower left, double right)
-        {
-            return new ApparentPower(left._voltamperes*(double)right);
-        }
-
-        public static ApparentPower operator /(ApparentPower left, double right)
-        {
-            return new ApparentPower(left._voltamperes/(double)right);
-        }
-
-        public static double operator /(ApparentPower left, ApparentPower right)
-        {
-            return Convert.ToDouble(left._voltamperes/right._voltamperes);
-        }
-#endif
-
-        #endregion
-
-        #region Equality / IComparable
-
-        public int CompareTo(object obj)
-        {
-            if (obj == null) throw new ArgumentNullException("obj");
-            if (!(obj is ApparentPower)) throw new ArgumentException("Expected type ApparentPower.", "obj");
-            return CompareTo((ApparentPower) obj);
-        }
-
-        // Windows Runtime Component does not allow public methods/ctors with same number of parameters: https://msdn.microsoft.com/en-us/library/br230301.aspx#Overloaded methods
-#if WINDOWS_UWP
-        internal
-#else
-        public
-#endif
-        int CompareTo(ApparentPower other)
-        {
-            return _voltamperes.CompareTo(other._voltamperes);
-        }
-
-        // Windows Runtime Component does not allow operator overloads: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if !WINDOWS_UWP
-        public static bool operator <=(ApparentPower left, ApparentPower right)
-        {
-            return left._voltamperes <= right._voltamperes;
-        }
-
-        public static bool operator >=(ApparentPower left, ApparentPower right)
-        {
-            return left._voltamperes >= right._voltamperes;
-        }
-
-        public static bool operator <(ApparentPower left, ApparentPower right)
-        {
-            return left._voltamperes < right._voltamperes;
-        }
-
-        public static bool operator >(ApparentPower left, ApparentPower right)
-        {
-            return left._voltamperes > right._voltamperes;
-        }
-
-        [Obsolete("It is not safe to compare equality due to using System.Double as the internal representation. It is very easy to get slightly different values due to floating point operations. Instead use Equals(other, maxError) to provide the max allowed error.")]
-        public static bool operator ==(ApparentPower left, ApparentPower right)
-        {
-            // ReSharper disable once CompareOfFloatsByEqualityOperator
-            return left._voltamperes == right._voltamperes;
-        }
-
-        [Obsolete("It is not safe to compare equality due to using System.Double as the internal representation. It is very easy to get slightly different values due to floating point operations. Instead use Equals(other, maxError) to provide the max allowed error.")]
-        public static bool operator !=(ApparentPower left, ApparentPower right)
-        {
-            // ReSharper disable once CompareOfFloatsByEqualityOperator
-            return left._voltamperes != right._voltamperes;
-        }
-#endif
-
-        [Obsolete("It is not safe to compare equality due to using System.Double as the internal representation. It is very easy to get slightly different values due to floating point operations. Instead use Equals(other, maxError) to provide the max allowed error.")]
-        public override bool Equals(object obj)
-        {
-            if (obj == null || GetType() != obj.GetType())
-            {
-                return false;
-            }
-
-            return _voltamperes.Equals(((ApparentPower) obj)._voltamperes);
+            double value = (double) voltamperes;
+            return new ApparentPower(value, ApparentPowerUnit.Voltampere);
         }
 
         /// <summary>
-        ///     Compare equality to another ApparentPower by specifying a max allowed difference.
-        ///     Note that it is advised against specifying zero difference, due to the nature
-        ///     of floating point operations and using System.Double internally.
+        ///     Dynamically convert from value and unit enum <see cref="ApparentPowerUnit" /> to <see cref="ApparentPower" />.
         /// </summary>
-        /// <param name="other">Other quantity to compare to.</param>
-        /// <param name="maxError">Max error allowed.</param>
-        /// <returns>True if the difference between the two values is not greater than the specified max.</returns>
-        public bool Equals(ApparentPower other, ApparentPower maxError)
+        /// <param name="value">Value to convert from.</param>
+        /// <param name="fromUnit">Unit to convert from.</param>
+        /// <returns>ApparentPower unit value.</returns>
+        public static ApparentPower From(QuantityValue value, ApparentPowerUnit fromUnit)
         {
-            return Math.Abs(_voltamperes - other._voltamperes) <= maxError._voltamperes;
-        }
-
-        public override int GetHashCode()
-        {
-            return _voltamperes.GetHashCode();
+            return new ApparentPower((double)value, fromUnit);
         }
 
         #endregion
 
-        #region Conversion
-
-        /// <summary>
-        ///     Convert to the unit representation <paramref name="unit" />.
-        /// </summary>
-        /// <returns>Value in new unit if successful, exception otherwise.</returns>
-        /// <exception cref="NotImplementedException">If conversion was not successful.</exception>
-        public double As(ApparentPowerUnit unit)
-        {
-            switch (unit)
-            {
-                case ApparentPowerUnit.Kilovoltampere:
-                    return Kilovoltamperes;
-                case ApparentPowerUnit.Megavoltampere:
-                    return Megavoltamperes;
-                case ApparentPowerUnit.Voltampere:
-                    return Voltamperes;
-
-                default:
-                    throw new NotImplementedException("unit: " + unit);
-            }
-        }
-
-        #endregion
-
-        #region Parsing
+        #region Static Parse Methods
 
         /// <summary>
         ///     Parse a string with one or two quantities of the format "&lt;quantity&gt; &lt;unit&gt;".
@@ -535,7 +300,6 @@ namespace UnitsNet
         ///     Parse a string with one or two quantities of the format "&lt;quantity&gt; &lt;unit&gt;".
         /// </summary>
         /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
-        /// <param name="culture">Format to use when parsing number and unit. If it is null, it defaults to <see cref="NumberFormatInfo.CurrentInfo"/> for parsing the number and <see cref="CultureInfo.CurrentUICulture"/> for parsing the unit abbreviation by culture/language.</param>
         /// <example>
         ///     Length.Parse("5.5 m", new CultureInfo("en-US"));
         /// </example>
@@ -554,23 +318,13 @@ namespace UnitsNet
         ///     We wrap exceptions in <see cref="UnitsNetException" /> to allow you to distinguish
         ///     Units.NET exceptions from other exceptions.
         /// </exception>
-        public static ApparentPower Parse(string str, [CanBeNull] Culture culture)
+        /// <param name="provider">Format to use when parsing number and unit. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public static ApparentPower Parse(string str, IFormatProvider? provider)
         {
-            if (str == null) throw new ArgumentNullException("str");
-
-        // Windows Runtime Component does not support CultureInfo type, so use culture name string for public methods instead: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if WINDOWS_UWP
-            IFormatProvider formatProvider = culture == null ? null : new CultureInfo(culture);
-#else
-            IFormatProvider formatProvider = culture;
-#endif
-            return QuantityParser.Parse<ApparentPower, ApparentPowerUnit>(str, formatProvider,
-                delegate(string value, string unit, IFormatProvider formatProvider2)
-                {
-                    double parsedValue = double.Parse(value, formatProvider2);
-                    ApparentPowerUnit parsedUnit = ParseUnit(unit, formatProvider2);
-                    return From(parsedValue, parsedUnit);
-                }, (x, y) => FromVoltamperes(x.Voltamperes + y.Voltamperes));
+            return QuantityParser.Default.Parse<ApparentPower, ApparentPowerUnit>(
+                str,
+                provider,
+                From);
         }
 
         /// <summary>
@@ -581,7 +335,7 @@ namespace UnitsNet
         /// <example>
         ///     Length.Parse("5.5 m", new CultureInfo("en-US"));
         /// </example>
-        public static bool TryParse([CanBeNull] string str, out ApparentPower result)
+        public static bool TryParse(string? str, out ApparentPower result)
         {
             return TryParse(str, null, out result);
         }
@@ -590,28 +344,25 @@ namespace UnitsNet
         ///     Try to parse a string with one or two quantities of the format "&lt;quantity&gt; &lt;unit&gt;".
         /// </summary>
         /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
-        /// <param name="culture">Format to use when parsing number and unit. If it is null, it defaults to <see cref="NumberFormatInfo.CurrentInfo"/> for parsing the number and <see cref="CultureInfo.CurrentUICulture"/> for parsing the unit abbreviation by culture/language.</param>
         /// <param name="result">Resulting unit quantity if successful.</param>
+        /// <returns>True if successful, otherwise false.</returns>
         /// <example>
         ///     Length.Parse("5.5 m", new CultureInfo("en-US"));
         /// </example>
-        public static bool TryParse([CanBeNull] string str, [CanBeNull] Culture culture, out ApparentPower result)
+        /// <param name="provider">Format to use when parsing number and unit. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public static bool TryParse(string? str, IFormatProvider? provider, out ApparentPower result)
         {
-            try
-            {
-                result = Parse(str, culture);
-                return true;
-            }
-            catch
-            {
-                result = default(ApparentPower);
-                return false;
-            }
+            return QuantityParser.Default.TryParse<ApparentPower, ApparentPowerUnit>(
+                str,
+                provider,
+                From,
+                out result);
         }
 
         /// <summary>
         ///     Parse a unit string.
         /// </summary>
+        /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
         /// <example>
         ///     Length.ParseUnit("m", new CultureInfo("en-US"));
         /// </example>
@@ -619,153 +370,534 @@ namespace UnitsNet
         /// <exception cref="UnitsNetException">Error parsing string.</exception>
         public static ApparentPowerUnit ParseUnit(string str)
         {
-            return ParseUnit(str, (IFormatProvider)null);
+            return ParseUnit(str, null);
         }
 
         /// <summary>
         ///     Parse a unit string.
         /// </summary>
+        /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
+        /// <param name="provider">Format to use when parsing number and unit. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
         /// <example>
         ///     Length.ParseUnit("m", new CultureInfo("en-US"));
         /// </example>
         /// <exception cref="ArgumentNullException">The value of 'str' cannot be null. </exception>
         /// <exception cref="UnitsNetException">Error parsing string.</exception>
-        public static ApparentPowerUnit ParseUnit(string str, [CanBeNull] string cultureName)
+        public static ApparentPowerUnit ParseUnit(string str, IFormatProvider? provider)
         {
-            return ParseUnit(str, cultureName == null ? null : new CultureInfo(cultureName));
+            return UnitParser.Default.Parse<ApparentPowerUnit>(str, provider);
+        }
+
+        /// <inheritdoc cref="TryParseUnit(string,IFormatProvider,out UnitsNet.Units.ApparentPowerUnit)"/>
+        public static bool TryParseUnit(string str, out ApparentPowerUnit unit)
+        {
+            return TryParseUnit(str, null, out unit);
         }
 
         /// <summary>
         ///     Parse a unit string.
         /// </summary>
+        /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
+        /// <param name="unit">The parsed unit if successful.</param>
+        /// <returns>True if successful, otherwise false.</returns>
         /// <example>
-        ///     Length.ParseUnit("m", new CultureInfo("en-US"));
+        ///     Length.TryParseUnit("m", new CultureInfo("en-US"));
         /// </example>
-        /// <exception cref="ArgumentNullException">The value of 'str' cannot be null. </exception>
-        /// <exception cref="UnitsNetException">Error parsing string.</exception>
-
-        // Windows Runtime Component does not allow public methods/ctors with same number of parameters: https://msdn.microsoft.com/en-us/library/br230301.aspx#Overloaded methods
-#if WINDOWS_UWP
-        internal
-#else
-        public
-#endif
-        static ApparentPowerUnit ParseUnit(string str, IFormatProvider formatProvider = null)
+        /// <param name="provider">Format to use when parsing number and unit. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public static bool TryParseUnit(string str, IFormatProvider? provider, out ApparentPowerUnit unit)
         {
-            if (str == null) throw new ArgumentNullException("str");
-
-            var unitSystem = UnitSystem.GetCached(formatProvider);
-            var unit = unitSystem.Parse<ApparentPowerUnit>(str.Trim());
-
-            if (unit == ApparentPowerUnit.Undefined)
-            {
-                var newEx = new UnitsNetException("Error parsing string. The unit is not a recognized ApparentPowerUnit.");
-                newEx.Data["input"] = str;
-                newEx.Data["formatprovider"] = formatProvider?.ToString() ?? "(null)";
-                throw newEx;
-            }
-
-            return unit;
+            return UnitParser.Default.TryParse<ApparentPowerUnit>(str, provider, out unit);
         }
 
         #endregion
 
-        /// <summary>
-        ///     Set the default unit used by ToString(). Default is Voltampere
-        /// </summary>
-        public static ApparentPowerUnit ToStringDefaultUnit { get; set; } = ApparentPowerUnit.Voltampere;
+        #region Arithmetic Operators
+
+        /// <summary>Negate the value.</summary>
+        public static ApparentPower operator -(ApparentPower right)
+        {
+            return new ApparentPower(-right.Value, right.Unit);
+        }
+
+        /// <summary>Get <see cref="ApparentPower"/> from adding two <see cref="ApparentPower"/>.</summary>
+        public static ApparentPower operator +(ApparentPower left, ApparentPower right)
+        {
+            return new ApparentPower(left.Value + right.GetValueAs(left.Unit), left.Unit);
+        }
+
+        /// <summary>Get <see cref="ApparentPower"/> from subtracting two <see cref="ApparentPower"/>.</summary>
+        public static ApparentPower operator -(ApparentPower left, ApparentPower right)
+        {
+            return new ApparentPower(left.Value - right.GetValueAs(left.Unit), left.Unit);
+        }
+
+        /// <summary>Get <see cref="ApparentPower"/> from multiplying value and <see cref="ApparentPower"/>.</summary>
+        public static ApparentPower operator *(double left, ApparentPower right)
+        {
+            return new ApparentPower(left * right.Value, right.Unit);
+        }
+
+        /// <summary>Get <see cref="ApparentPower"/> from multiplying value and <see cref="ApparentPower"/>.</summary>
+        public static ApparentPower operator *(ApparentPower left, double right)
+        {
+            return new ApparentPower(left.Value * right, left.Unit);
+        }
+
+        /// <summary>Get <see cref="ApparentPower"/> from dividing <see cref="ApparentPower"/> by value.</summary>
+        public static ApparentPower operator /(ApparentPower left, double right)
+        {
+            return new ApparentPower(left.Value / right, left.Unit);
+        }
+
+        /// <summary>Get ratio value from dividing <see cref="ApparentPower"/> by <see cref="ApparentPower"/>.</summary>
+        public static double operator /(ApparentPower left, ApparentPower right)
+        {
+            return left.Voltamperes / right.Voltamperes;
+        }
+
+        #endregion
+
+        #region Equality / IComparable
+
+        /// <summary>Returns true if less or equal to.</summary>
+        public static bool operator <=(ApparentPower left, ApparentPower right)
+        {
+            return left.Value <= right.GetValueAs(left.Unit);
+        }
+
+        /// <summary>Returns true if greater than or equal to.</summary>
+        public static bool operator >=(ApparentPower left, ApparentPower right)
+        {
+            return left.Value >= right.GetValueAs(left.Unit);
+        }
+
+        /// <summary>Returns true if less than.</summary>
+        public static bool operator <(ApparentPower left, ApparentPower right)
+        {
+            return left.Value < right.GetValueAs(left.Unit);
+        }
+
+        /// <summary>Returns true if greater than.</summary>
+        public static bool operator >(ApparentPower left, ApparentPower right)
+        {
+            return left.Value > right.GetValueAs(left.Unit);
+        }
+
+        /// <summary>Returns true if exactly equal.</summary>
+        /// <remarks>Consider using <see cref="Equals(ApparentPower, double, ComparisonType)"/> for safely comparing floating point values.</remarks>
+        public static bool operator ==(ApparentPower left, ApparentPower right)
+        {
+            return left.Equals(right);
+        }
+
+        /// <summary>Returns true if not exactly equal.</summary>
+        /// <remarks>Consider using <see cref="Equals(ApparentPower, double, ComparisonType)"/> for safely comparing floating point values.</remarks>
+        public static bool operator !=(ApparentPower left, ApparentPower right)
+        {
+            return !(left == right);
+        }
+
+        /// <inheritdoc />
+        public int CompareTo(object obj)
+        {
+            if(obj is null) throw new ArgumentNullException(nameof(obj));
+            if(!(obj is ApparentPower objApparentPower)) throw new ArgumentException("Expected type ApparentPower.", nameof(obj));
+
+            return CompareTo(objApparentPower);
+        }
+
+        /// <inheritdoc />
+        public int CompareTo(ApparentPower other)
+        {
+            return _value.CompareTo(other.GetValueAs(this.Unit));
+        }
+
+        /// <inheritdoc />
+        /// <remarks>Consider using <see cref="Equals(ApparentPower, double, ComparisonType)"/> for safely comparing floating point values.</remarks>
+        public override bool Equals(object obj)
+        {
+            if(obj is null || !(obj is ApparentPower objApparentPower))
+                return false;
+
+            return Equals(objApparentPower);
+        }
+
+        /// <inheritdoc />
+        /// <remarks>Consider using <see cref="Equals(ApparentPower, double, ComparisonType)"/> for safely comparing floating point values.</remarks>
+        public bool Equals(ApparentPower other)
+        {
+            return _value.Equals(other.GetValueAs(this.Unit));
+        }
 
         /// <summary>
-        ///     Get default string representation of value and unit.
+        ///     <para>
+        ///     Compare equality to another ApparentPower within the given absolute or relative tolerance.
+        ///     </para>
+        ///     <para>
+        ///     Relative tolerance is defined as the maximum allowable absolute difference between this quantity's value and
+        ///     <paramref name="other"/> as a percentage of this quantity's value. <paramref name="other"/> will be converted into
+        ///     this quantity's unit for comparison. A relative tolerance of 0.01 means the absolute difference must be within +/- 1% of
+        ///     this quantity's value to be considered equal.
+        ///     <example>
+        ///     In this example, the two quantities will be equal if the value of b is within +/- 1% of a (0.02m or 2cm).
+        ///     <code>
+        ///     var a = Length.FromMeters(2.0);
+        ///     var b = Length.FromInches(50.0);
+        ///     a.Equals(b, 0.01, ComparisonType.Relative);
+        ///     </code>
+        ///     </example>
+        ///     </para>
+        ///     <para>
+        ///     Absolute tolerance is defined as the maximum allowable absolute difference between this quantity's value and
+        ///     <paramref name="other"/> as a fixed number in this quantity's unit. <paramref name="other"/> will be converted into
+        ///     this quantity's unit for comparison.
+        ///     <example>
+        ///     In this example, the two quantities will be equal if the value of b is within 0.01 of a (0.01m or 1cm).
+        ///     <code>
+        ///     var a = Length.FromMeters(2.0);
+        ///     var b = Length.FromInches(50.0);
+        ///     a.Equals(b, 0.01, ComparisonType.Absolute);
+        ///     </code>
+        ///     </example>
+        ///     </para>
+        ///     <para>
+        ///     Note that it is advised against specifying zero difference, due to the nature
+        ///     of floating point operations and using System.Double internally.
+        ///     </para>
+        /// </summary>
+        /// <param name="other">The other quantity to compare to.</param>
+        /// <param name="tolerance">The absolute or relative tolerance value. Must be greater than or equal to 0.</param>
+        /// <param name="comparisonType">The comparison type: either relative or absolute.</param>
+        /// <returns>True if the absolute difference between the two values is not greater than the specified relative or absolute tolerance.</returns>
+        public bool Equals(ApparentPower other, double tolerance, ComparisonType comparisonType)
+        {
+            if(tolerance < 0)
+                throw new ArgumentOutOfRangeException("tolerance", "Tolerance must be greater than or equal to 0.");
+
+            double thisValue = (double)this.Value;
+            double otherValueInThisUnits = other.As(this.Unit);
+
+            return UnitsNet.Comparison.Equals(thisValue, otherValueInThisUnits, tolerance, comparisonType);
+        }
+
+        /// <summary>
+        ///     Returns the hash code for this instance.
+        /// </summary>
+        /// <returns>A hash code for the current ApparentPower.</returns>
+        public override int GetHashCode()
+        {
+            return new { QuantityType, Value, Unit }.GetHashCode();
+        }
+
+        #endregion
+
+        #region Conversion Methods
+
+        /// <summary>
+        ///     Convert to the unit representation <paramref name="unit" />.
+        /// </summary>
+        /// <returns>Value converted to the specified unit.</returns>
+        public double As(ApparentPowerUnit unit)
+        {
+            if(Unit == unit)
+                return Convert.ToDouble(Value);
+
+            var converted = GetValueAs(unit);
+            return Convert.ToDouble(converted);
+        }
+
+        /// <inheritdoc cref="IQuantity.As(UnitSystem)"/>
+        public double As(UnitSystem unitSystem)
+        {
+            if(unitSystem is null)
+                throw new ArgumentNullException(nameof(unitSystem));
+
+            var unitInfos = Info.GetUnitInfosFor(unitSystem.BaseUnits);
+
+            var firstUnitInfo = unitInfos.FirstOrDefault();
+            if(firstUnitInfo == null)
+                throw new ArgumentException("No units were found for the given UnitSystem.", nameof(unitSystem));
+
+            return As(firstUnitInfo.Value);
+        }
+
+        /// <inheritdoc />
+        double IQuantity.As(Enum unit)
+        {
+            if(!(unit is ApparentPowerUnit unitAsApparentPowerUnit))
+                throw new ArgumentException($"The given unit is of type {unit.GetType()}. Only {typeof(ApparentPowerUnit)} is supported.", nameof(unit));
+
+            return As(unitAsApparentPowerUnit);
+        }
+
+        /// <summary>
+        ///     Converts this ApparentPower to another ApparentPower with the unit representation <paramref name="unit" />.
+        /// </summary>
+        /// <returns>A ApparentPower with the specified unit.</returns>
+        public ApparentPower ToUnit(ApparentPowerUnit unit)
+        {
+            var convertedValue = GetValueAs(unit);
+            return new ApparentPower(convertedValue, unit);
+        }
+
+        /// <inheritdoc />
+        IQuantity IQuantity.ToUnit(Enum unit)
+        {
+            if(!(unit is ApparentPowerUnit unitAsApparentPowerUnit))
+                throw new ArgumentException($"The given unit is of type {unit.GetType()}. Only {typeof(ApparentPowerUnit)} is supported.", nameof(unit));
+
+            return ToUnit(unitAsApparentPowerUnit);
+        }
+
+        /// <inheritdoc cref="IQuantity.ToUnit(UnitSystem)"/>
+        public ApparentPower ToUnit(UnitSystem unitSystem)
+        {
+            if(unitSystem is null)
+                throw new ArgumentNullException(nameof(unitSystem));
+
+            var unitInfos = Info.GetUnitInfosFor(unitSystem.BaseUnits);
+
+            var firstUnitInfo = unitInfos.FirstOrDefault();
+            if(firstUnitInfo == null)
+                throw new ArgumentException("No units were found for the given UnitSystem.", nameof(unitSystem));
+
+            return ToUnit(firstUnitInfo.Value);
+        }
+
+        /// <inheritdoc />
+        IQuantity IQuantity.ToUnit(UnitSystem unitSystem) => ToUnit(unitSystem);
+
+        /// <inheritdoc />
+        IQuantity<ApparentPowerUnit> IQuantity<ApparentPowerUnit>.ToUnit(ApparentPowerUnit unit) => ToUnit(unit);
+
+        /// <inheritdoc />
+        IQuantity<ApparentPowerUnit> IQuantity<ApparentPowerUnit>.ToUnit(UnitSystem unitSystem) => ToUnit(unitSystem);
+
+        /// <summary>
+        ///     Converts the current value + unit to the base unit.
+        ///     This is typically the first step in converting from one unit to another.
+        /// </summary>
+        /// <returns>The value in the base unit representation.</returns>
+        private double GetValueInBaseUnit()
+        {
+            switch(Unit)
+            {
+                case ApparentPowerUnit.Gigavoltampere: return (_value) * 1e9d;
+                case ApparentPowerUnit.Kilovoltampere: return (_value) * 1e3d;
+                case ApparentPowerUnit.Megavoltampere: return (_value) * 1e6d;
+                case ApparentPowerUnit.Voltampere: return _value;
+                default:
+                    throw new NotImplementedException($"Can not convert {Unit} to base units.");
+            }
+        }
+
+        /// <summary>
+        ///     Converts the current value + unit to the base unit.
+        ///     This is typically the first step in converting from one unit to another.
+        /// </summary>
+        /// <returns>The value in the base unit representation.</returns>
+        internal ApparentPower ToBaseUnit()
+        {
+            var baseUnitValue = GetValueInBaseUnit();
+            return new ApparentPower(baseUnitValue, BaseUnit);
+        }
+
+        private double GetValueAs(ApparentPowerUnit unit)
+        {
+            if(Unit == unit)
+                return _value;
+
+            var baseUnitValue = GetValueInBaseUnit();
+
+            switch(unit)
+            {
+                case ApparentPowerUnit.Gigavoltampere: return (baseUnitValue) / 1e9d;
+                case ApparentPowerUnit.Kilovoltampere: return (baseUnitValue) / 1e3d;
+                case ApparentPowerUnit.Megavoltampere: return (baseUnitValue) / 1e6d;
+                case ApparentPowerUnit.Voltampere: return baseUnitValue;
+                default:
+                    throw new NotImplementedException($"Can not convert {Unit} to {unit}.");
+            }
+        }
+
+        #endregion
+
+        #region ToString Methods
+
+        /// <summary>
+        ///     Gets the default string representation of value and unit.
         /// </summary>
         /// <returns>String representation.</returns>
         public override string ToString()
         {
-            return ToString(ToStringDefaultUnit);
+            return ToString("g");
         }
 
         /// <summary>
-        ///     Get string representation of value and unit. Using current UI culture and two significant digits after radix.
+        ///     Gets the default string representation of value and unit using the given format provider.
         /// </summary>
-        /// <param name="unit">Unit representation to use.</param>
         /// <returns>String representation.</returns>
-        public string ToString(ApparentPowerUnit unit)
+        /// <param name="provider">Format to use for localization and number formatting. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public string ToString(IFormatProvider? provider)
         {
-            return ToString(unit, null, 2);
-        }
-
-        /// <summary>
-        ///     Get string representation of value and unit. Using two significant digits after radix.
-        /// </summary>
-        /// <param name="unit">Unit representation to use.</param>
-        /// <param name="culture">Culture to use for localization and number formatting.</param>
-        /// <returns>String representation.</returns>
-        public string ToString(ApparentPowerUnit unit, [CanBeNull] Culture culture)
-        {
-            return ToString(unit, culture, 2);
+            return ToString("g", provider);
         }
 
         /// <summary>
         ///     Get string representation of value and unit.
         /// </summary>
-        /// <param name="unit">Unit representation to use.</param>
-        /// <param name="culture">Culture to use for localization and number formatting.</param>
         /// <param name="significantDigitsAfterRadix">The number of significant digits after the radix point.</param>
         /// <returns>String representation.</returns>
-        [UsedImplicitly]
-        public string ToString(ApparentPowerUnit unit, [CanBeNull] Culture culture, int significantDigitsAfterRadix)
+        /// <param name="provider">Format to use for localization and number formatting. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        [Obsolete(@"This method is deprecated and will be removed at a future release. Please use ToString(""s2"") or ToString(""s2"", provider) where 2 is an example of the number passed to significantDigitsAfterRadix.")]
+        public string ToString(IFormatProvider? provider, int significantDigitsAfterRadix)
         {
-            double value = As(unit);
-            string format = UnitFormatter.GetFormat(value, significantDigitsAfterRadix);
-            return ToString(unit, culture, format);
+            var value = Convert.ToDouble(Value);
+            var format = UnitFormatter.GetFormat(value, significantDigitsAfterRadix);
+            return ToString(provider, format);
         }
 
         /// <summary>
         ///     Get string representation of value and unit.
         /// </summary>
-        /// <param name="culture">Culture to use for localization and number formatting.</param>
-        /// <param name="unit">Unit representation to use.</param>
         /// <param name="format">String format to use. Default:  "{0:0.##} {1} for value and unit abbreviation respectively."</param>
-        /// <param name="args">Arguments for string format. Value and unit are implictly included as arguments 0 and 1.</param>
+        /// <param name="args">Arguments for string format. Value and unit are implicitly included as arguments 0 and 1.</param>
         /// <returns>String representation.</returns>
-        [UsedImplicitly]
-        public string ToString(ApparentPowerUnit unit, [CanBeNull] Culture culture, [NotNull] string format,
-            [NotNull] params object[] args)
+        /// <param name="provider">Format to use for localization and number formatting. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        [Obsolete("This method is deprecated and will be removed at a future release. Please use string.Format().")]
+        public string ToString(IFormatProvider? provider, [NotNull] string format, [NotNull] params object[] args)
         {
             if (format == null) throw new ArgumentNullException(nameof(format));
             if (args == null) throw new ArgumentNullException(nameof(args));
 
-        // Windows Runtime Component does not support CultureInfo type, so use culture name string for public methods instead: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if WINDOWS_UWP
-            IFormatProvider formatProvider = culture == null ? null : new CultureInfo(culture);
-#else
-            IFormatProvider formatProvider = culture;
-#endif
-            double value = As(unit);
-            object[] formatArgs = UnitFormatter.GetFormatArgs(unit, value, formatProvider, args);
-            return string.Format(formatProvider, format, formatArgs);
+            provider = provider ?? CultureInfo.CurrentUICulture;
+
+            var value = Convert.ToDouble(Value);
+            var formatArgs = UnitFormatter.GetFormatArgs(Unit, value, provider, args);
+            return string.Format(provider, format, formatArgs);
         }
 
+        /// <inheritdoc cref="QuantityFormatter.Format{TUnitType}(IQuantity{TUnitType}, string, IFormatProvider)"/>
         /// <summary>
-        /// Represents the largest possible value of ApparentPower
+        /// Gets the string representation of this instance in the specified format string using <see cref="CultureInfo.CurrentUICulture" />.
         /// </summary>
-        public static ApparentPower MaxValue
+        /// <param name="format">The format string.</param>
+        /// <returns>The string representation.</returns>
+        public string ToString(string format)
         {
-            get
-            {
-                return new ApparentPower(double.MaxValue);
-            }
+            return ToString(format, CultureInfo.CurrentUICulture);
         }
 
+        /// <inheritdoc cref="QuantityFormatter.Format{TUnitType}(IQuantity{TUnitType}, string, IFormatProvider)"/>
         /// <summary>
-        /// Represents the smallest possible value of ApparentPower
+        /// Gets the string representation of this instance in the specified format string using the specified format provider, or <see cref="CultureInfo.CurrentUICulture" /> if null.
         /// </summary>
-        public static ApparentPower MinValue
+        /// <param name="format">The format string.</param>
+        /// <param name="provider">Format to use for localization and number formatting. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        /// <returns>The string representation.</returns>
+        public string ToString(string format, IFormatProvider? provider)
         {
-            get
-            {
-                return new ApparentPower(double.MinValue);
-            }
+            return QuantityFormatter.Format<ApparentPowerUnit>(this, format, provider);
         }
+
+        #endregion
+
+        #region IConvertible Methods
+
+        TypeCode IConvertible.GetTypeCode()
+        {
+            return TypeCode.Object;
+        }
+
+        bool IConvertible.ToBoolean(IFormatProvider provider)
+        {
+            throw new InvalidCastException($"Converting {typeof(ApparentPower)} to bool is not supported.");
+        }
+
+        byte IConvertible.ToByte(IFormatProvider provider)
+        {
+            return Convert.ToByte(_value);
+        }
+
+        char IConvertible.ToChar(IFormatProvider provider)
+        {
+            throw new InvalidCastException($"Converting {typeof(ApparentPower)} to char is not supported.");
+        }
+
+        DateTime IConvertible.ToDateTime(IFormatProvider provider)
+        {
+            throw new InvalidCastException($"Converting {typeof(ApparentPower)} to DateTime is not supported.");
+        }
+
+        decimal IConvertible.ToDecimal(IFormatProvider provider)
+        {
+            return Convert.ToDecimal(_value);
+        }
+
+        double IConvertible.ToDouble(IFormatProvider provider)
+        {
+            return Convert.ToDouble(_value);
+        }
+
+        short IConvertible.ToInt16(IFormatProvider provider)
+        {
+            return Convert.ToInt16(_value);
+        }
+
+        int IConvertible.ToInt32(IFormatProvider provider)
+        {
+            return Convert.ToInt32(_value);
+        }
+
+        long IConvertible.ToInt64(IFormatProvider provider)
+        {
+            return Convert.ToInt64(_value);
+        }
+
+        sbyte IConvertible.ToSByte(IFormatProvider provider)
+        {
+            return Convert.ToSByte(_value);
+        }
+
+        float IConvertible.ToSingle(IFormatProvider provider)
+        {
+            return Convert.ToSingle(_value);
+        }
+
+        string IConvertible.ToString(IFormatProvider provider)
+        {
+            return ToString("g", provider);
+        }
+
+        object IConvertible.ToType(Type conversionType, IFormatProvider provider)
+        {
+            if(conversionType == typeof(ApparentPower))
+                return this;
+            else if(conversionType == typeof(ApparentPowerUnit))
+                return Unit;
+            else if(conversionType == typeof(QuantityType))
+                return ApparentPower.QuantityType;
+            else if(conversionType == typeof(BaseDimensions))
+                return ApparentPower.BaseDimensions;
+            else
+                throw new InvalidCastException($"Converting {typeof(ApparentPower)} to {conversionType} is not supported.");
+        }
+
+        ushort IConvertible.ToUInt16(IFormatProvider provider)
+        {
+            return Convert.ToUInt16(_value);
+        }
+
+        uint IConvertible.ToUInt32(IFormatProvider provider)
+        {
+            return Convert.ToUInt32(_value);
+        }
+
+        ulong IConvertible.ToUInt64(IFormatProvider provider)
+        {
+            return Convert.ToUInt64(_value);
+        }
+
+        #endregion
     }
 }

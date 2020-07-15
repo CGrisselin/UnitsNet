@@ -8,326 +8,195 @@
 //
 //     See https://github.com/angularsen/UnitsNet/wiki/Adding-a-New-Unit for how to add or edit units.
 //
-//     Add CustomCode\Quantities\MyUnit.extra.cs files to add code to generated quantities.
-//     Add Extensions\MyUnitExtensions.cs to decorate quantities with new behavior.
-//     Add UnitDefinitions\MyUnit.json and run GeneratUnits.bat to generate new units or quantities.
+//     Add CustomCode\Quantities\MyQuantity.extra.cs files to add code to generated quantities.
+//     Add UnitDefinitions\MyQuantity.json and run generate-code.bat to generate new units or quantities.
 //
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-// Copyright (c) 2013 Andreas Gullberg Larsen (andreas.larsen84@gmail.com).
-// https://github.com/angularsen/UnitsNet
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
+// Licensed under MIT No Attribution, see LICENSE file at the root.
+// Copyright 2013 Andreas Gullberg Larsen (andreas.larsen84@gmail.com). Maintained at https://github.com/angularsen/UnitsNet.
 
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Text.RegularExpressions;
 using System.Linq;
 using JetBrains.Annotations;
+using UnitsNet.InternalHelpers;
 using UnitsNet.Units;
 
-// Windows Runtime Component does not support CultureInfo type, so use culture name string instead for public methods: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if WINDOWS_UWP
-using Culture = System.String;
-#else
-using Culture = System.IFormatProvider;
-#endif
+#nullable enable
 
 // ReSharper disable once CheckNamespace
 
 namespace UnitsNet
 {
+    /// <inheritdoc />
     /// <summary>
     ///     Volt-ampere reactive (var) is a unit by which reactive power is expressed in an AC electric power system. Reactive power exists in an AC circuit when the current and voltage are not in phase.
     /// </summary>
-    // ReSharper disable once PartialTypeWithSinglePart
-
-    // Windows Runtime Component has constraints on public types: https://msdn.microsoft.com/en-us/library/br230301.aspx#Declaring types in Windows Runtime Components
-    // Public structures can't have any members other than public fields, and those fields must be value types or strings.
-    // Public classes must be sealed (NotInheritable in Visual Basic). If your programming model requires polymorphism, you can create a public interface and implement that interface on the classes that must be polymorphic.
-#if WINDOWS_UWP
-    public sealed partial class ReactivePower
-#else
-    public partial struct ReactivePower : IComparable, IComparable<ReactivePower>
-#endif
+    public partial struct ReactivePower : IQuantity<ReactivePowerUnit>, IEquatable<ReactivePower>, IComparable, IComparable<ReactivePower>, IConvertible, IFormattable
     {
         /// <summary>
-        ///     Base unit of ReactivePower.
+        ///     The numeric value this quantity was constructed with.
         /// </summary>
-        private readonly double _voltamperesReactive;
+        private readonly double _value;
 
-        // Windows Runtime Component requires a default constructor
-#if WINDOWS_UWP
-        public ReactivePower() : this(0)
-        {
-        }
-#endif
+        /// <summary>
+        ///     The unit this quantity was constructed with.
+        /// </summary>
+        private readonly ReactivePowerUnit? _unit;
 
-        public ReactivePower(double voltamperesreactive)
+        static ReactivePower()
         {
-            _voltamperesReactive = Convert.ToDouble(voltamperesreactive);
-        }
+            BaseDimensions = new BaseDimensions(2, 1, -3, 0, 0, 0, 0);
 
-        // Windows Runtime Component does not allow public methods/ctors with same number of parameters: https://msdn.microsoft.com/en-us/library/br230301.aspx#Overloaded methods
-#if WINDOWS_UWP
-        private
-#else
-        public
-#endif
-        ReactivePower(long voltamperesreactive)
-        {
-            _voltamperesReactive = Convert.ToDouble(voltamperesreactive);
+            Info = new QuantityInfo<ReactivePowerUnit>(QuantityType.ReactivePower,
+                new UnitInfo<ReactivePowerUnit>[] {
+                    new UnitInfo<ReactivePowerUnit>(ReactivePowerUnit.GigavoltampereReactive, BaseUnits.Undefined),
+                    new UnitInfo<ReactivePowerUnit>(ReactivePowerUnit.KilovoltampereReactive, BaseUnits.Undefined),
+                    new UnitInfo<ReactivePowerUnit>(ReactivePowerUnit.MegavoltampereReactive, BaseUnits.Undefined),
+                    new UnitInfo<ReactivePowerUnit>(ReactivePowerUnit.VoltampereReactive, BaseUnits.Undefined),
+                },
+                BaseUnit, Zero, BaseDimensions);
         }
 
-        // Windows Runtime Component does not allow public methods/ctors with same number of parameters: https://msdn.microsoft.com/en-us/library/br230301.aspx#Overloaded methods
-        // Windows Runtime Component does not support decimal type
-#if WINDOWS_UWP
-        private
-#else
-        public
-#endif
-        ReactivePower(decimal voltamperesreactive)
+        /// <summary>
+        ///     Creates the quantity with the given numeric value and unit.
+        /// </summary>
+        /// <param name="value">The numeric value to construct this quantity with.</param>
+        /// <param name="unit">The unit representation to construct this quantity with.</param>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public ReactivePower(double value, ReactivePowerUnit unit)
         {
-            _voltamperesReactive = Convert.ToDouble(voltamperesreactive);
+            if(unit == ReactivePowerUnit.Undefined)
+              throw new ArgumentException("The quantity can not be created with an undefined unit.", nameof(unit));
+
+            _value = Guard.EnsureValidNumber(value, nameof(value));
+            _unit = unit;
         }
 
-        #region Properties
+        /// <summary>
+        /// Creates an instance of the quantity with the given numeric value in units compatible with the given <see cref="UnitSystem"/>.
+        /// If multiple compatible units were found, the first match is used.
+        /// </summary>
+        /// <param name="value">The numeric value to construct this quantity with.</param>
+        /// <param name="unitSystem">The unit system to create the quantity with.</param>
+        /// <exception cref="ArgumentNullException">The given <see cref="UnitSystem"/> is null.</exception>
+        /// <exception cref="ArgumentException">No unit was found for the given <see cref="UnitSystem"/>.</exception>
+        public ReactivePower(double value, UnitSystem unitSystem)
+        {
+            if(unitSystem is null) throw new ArgumentNullException(nameof(unitSystem));
+
+            var unitInfos = Info.GetUnitInfosFor(unitSystem.BaseUnits);
+            var firstUnitInfo = unitInfos.FirstOrDefault();
+
+            _value = Guard.EnsureValidNumber(value, nameof(value));
+            _unit = firstUnitInfo?.Value ?? throw new ArgumentException("No units were found for the given UnitSystem.", nameof(unitSystem));
+        }
+
+        #region Static Properties
+
+        /// <inheritdoc cref="IQuantity.QuantityInfo"/>
+        public static QuantityInfo<ReactivePowerUnit> Info { get; }
+
+        /// <summary>
+        ///     The <see cref="BaseDimensions" /> of this quantity.
+        /// </summary>
+        public static BaseDimensions BaseDimensions { get; }
+
+        /// <summary>
+        ///     The base unit of ReactivePower, which is VoltampereReactive. All conversions go via this value.
+        /// </summary>
+        public static ReactivePowerUnit BaseUnit { get; } = ReactivePowerUnit.VoltampereReactive;
+
+        /// <summary>
+        /// Represents the largest possible value of ReactivePower
+        /// </summary>
+        public static ReactivePower MaxValue { get; } = new ReactivePower(double.MaxValue, BaseUnit);
+
+        /// <summary>
+        /// Represents the smallest possible value of ReactivePower
+        /// </summary>
+        public static ReactivePower MinValue { get; } = new ReactivePower(double.MinValue, BaseUnit);
 
         /// <summary>
         ///     The <see cref="QuantityType" /> of this quantity.
         /// </summary>
-        public static QuantityType QuantityType => QuantityType.ReactivePower;
-
-        /// <summary>
-        ///     The base unit representation of this quantity for the numeric value stored internally. All conversions go via this value.
-        /// </summary>
-        public static ReactivePowerUnit BaseUnit
-        {
-            get { return ReactivePowerUnit.VoltampereReactive; }
-        }
+        public static QuantityType QuantityType { get; } = QuantityType.ReactivePower;
 
         /// <summary>
         ///     All units of measurement for the ReactivePower quantity.
         /// </summary>
-        public static ReactivePowerUnit[] Units { get; } = Enum.GetValues(typeof(ReactivePowerUnit)).Cast<ReactivePowerUnit>().ToArray();
+        public static ReactivePowerUnit[] Units { get; } = Enum.GetValues(typeof(ReactivePowerUnit)).Cast<ReactivePowerUnit>().Except(new ReactivePowerUnit[]{ ReactivePowerUnit.Undefined }).ToArray();
+
+        /// <summary>
+        ///     Gets an instance of this quantity with a value of 0 in the base unit VoltampereReactive.
+        /// </summary>
+        public static ReactivePower Zero { get; } = new ReactivePower(0, BaseUnit);
+
+        #endregion
+
+        #region Properties
+
+        /// <summary>
+        ///     The numeric value this quantity was constructed with.
+        /// </summary>
+        public double Value => _value;
+
+        Enum IQuantity.Unit => Unit;
+
+        /// <inheritdoc />
+        public ReactivePowerUnit Unit => _unit.GetValueOrDefault(BaseUnit);
+
+        /// <inheritdoc />
+        public QuantityInfo<ReactivePowerUnit> QuantityInfo => Info;
+
+        /// <inheritdoc cref="IQuantity.QuantityInfo"/>
+        QuantityInfo IQuantity.QuantityInfo => Info;
+
+        /// <summary>
+        ///     The <see cref="QuantityType" /> of this quantity.
+        /// </summary>
+        public QuantityType Type => ReactivePower.QuantityType;
+
+        /// <summary>
+        ///     The <see cref="BaseDimensions" /> of this quantity.
+        /// </summary>
+        public BaseDimensions Dimensions => ReactivePower.BaseDimensions;
+
+        #endregion
+
+        #region Conversion Properties
+
+        /// <summary>
+        ///     Get ReactivePower in GigavoltamperesReactive.
+        /// </summary>
+        public double GigavoltamperesReactive => As(ReactivePowerUnit.GigavoltampereReactive);
 
         /// <summary>
         ///     Get ReactivePower in KilovoltamperesReactive.
         /// </summary>
-        public double KilovoltamperesReactive
-        {
-            get { return (_voltamperesReactive) / 1e3d; }
-        }
+        public double KilovoltamperesReactive => As(ReactivePowerUnit.KilovoltampereReactive);
 
         /// <summary>
         ///     Get ReactivePower in MegavoltamperesReactive.
         /// </summary>
-        public double MegavoltamperesReactive
-        {
-            get { return (_voltamperesReactive) / 1e6d; }
-        }
+        public double MegavoltamperesReactive => As(ReactivePowerUnit.MegavoltampereReactive);
 
         /// <summary>
         ///     Get ReactivePower in VoltamperesReactive.
         /// </summary>
-        public double VoltamperesReactive
-        {
-            get { return _voltamperesReactive; }
-        }
+        public double VoltamperesReactive => As(ReactivePowerUnit.VoltampereReactive);
 
         #endregion
 
-        #region Static
-
-        public static ReactivePower Zero
-        {
-            get { return new ReactivePower(); }
-        }
-
-        /// <summary>
-        ///     Get ReactivePower from KilovoltamperesReactive.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static ReactivePower FromKilovoltamperesReactive(double kilovoltamperesreactive)
-        {
-            double value = (double) kilovoltamperesreactive;
-            return new ReactivePower((value) * 1e3d);
-        }
-#else
-        public static ReactivePower FromKilovoltamperesReactive(QuantityValue kilovoltamperesreactive)
-        {
-            double value = (double) kilovoltamperesreactive;
-            return new ReactivePower(((value) * 1e3d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get ReactivePower from MegavoltamperesReactive.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static ReactivePower FromMegavoltamperesReactive(double megavoltamperesreactive)
-        {
-            double value = (double) megavoltamperesreactive;
-            return new ReactivePower((value) * 1e6d);
-        }
-#else
-        public static ReactivePower FromMegavoltamperesReactive(QuantityValue megavoltamperesreactive)
-        {
-            double value = (double) megavoltamperesreactive;
-            return new ReactivePower(((value) * 1e6d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get ReactivePower from VoltamperesReactive.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static ReactivePower FromVoltamperesReactive(double voltamperesreactive)
-        {
-            double value = (double) voltamperesreactive;
-            return new ReactivePower(value);
-        }
-#else
-        public static ReactivePower FromVoltamperesReactive(QuantityValue voltamperesreactive)
-        {
-            double value = (double) voltamperesreactive;
-            return new ReactivePower((value));
-        }
-#endif
-
-        // Windows Runtime Component does not support nullable types (double?): https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if !WINDOWS_UWP
-        /// <summary>
-        ///     Get nullable ReactivePower from nullable KilovoltamperesReactive.
-        /// </summary>
-        public static ReactivePower? FromKilovoltamperesReactive(QuantityValue? kilovoltamperesreactive)
-        {
-            if (kilovoltamperesreactive.HasValue)
-            {
-                return FromKilovoltamperesReactive(kilovoltamperesreactive.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable ReactivePower from nullable MegavoltamperesReactive.
-        /// </summary>
-        public static ReactivePower? FromMegavoltamperesReactive(QuantityValue? megavoltamperesreactive)
-        {
-            if (megavoltamperesreactive.HasValue)
-            {
-                return FromMegavoltamperesReactive(megavoltamperesreactive.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable ReactivePower from nullable VoltamperesReactive.
-        /// </summary>
-        public static ReactivePower? FromVoltamperesReactive(QuantityValue? voltamperesreactive)
-        {
-            if (voltamperesreactive.HasValue)
-            {
-                return FromVoltamperesReactive(voltamperesreactive.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-#endif
-
-        /// <summary>
-        ///     Dynamically convert from value and unit enum <see cref="ReactivePowerUnit" /> to <see cref="ReactivePower" />.
-        /// </summary>
-        /// <param name="value">Value to convert from.</param>
-        /// <param name="fromUnit">Unit to convert from.</param>
-        /// <returns>ReactivePower unit value.</returns>
-#if WINDOWS_UWP
-        // Fix name conflict with parameter "value"
-        [return: System.Runtime.InteropServices.WindowsRuntime.ReturnValueName("returnValue")]
-        public static ReactivePower From(double value, ReactivePowerUnit fromUnit)
-#else
-        public static ReactivePower From(QuantityValue value, ReactivePowerUnit fromUnit)
-#endif
-        {
-            switch (fromUnit)
-            {
-                case ReactivePowerUnit.KilovoltampereReactive:
-                    return FromKilovoltamperesReactive(value);
-                case ReactivePowerUnit.MegavoltampereReactive:
-                    return FromMegavoltamperesReactive(value);
-                case ReactivePowerUnit.VoltampereReactive:
-                    return FromVoltamperesReactive(value);
-
-                default:
-                    throw new NotImplementedException("fromUnit: " + fromUnit);
-            }
-        }
-
-        // Windows Runtime Component does not support nullable types (double?): https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if !WINDOWS_UWP
-        /// <summary>
-        ///     Dynamically convert from value and unit enum <see cref="ReactivePowerUnit" /> to <see cref="ReactivePower" />.
-        /// </summary>
-        /// <param name="value">Value to convert from.</param>
-        /// <param name="fromUnit">Unit to convert from.</param>
-        /// <returns>ReactivePower unit value.</returns>
-        public static ReactivePower? From(QuantityValue? value, ReactivePowerUnit fromUnit)
-        {
-            if (!value.HasValue)
-            {
-                return null;
-            }
-            switch (fromUnit)
-            {
-                case ReactivePowerUnit.KilovoltampereReactive:
-                    return FromKilovoltamperesReactive(value.Value);
-                case ReactivePowerUnit.MegavoltampereReactive:
-                    return FromMegavoltamperesReactive(value.Value);
-                case ReactivePowerUnit.VoltampereReactive:
-                    return FromVoltamperesReactive(value.Value);
-
-                default:
-                    throw new NotImplementedException("fromUnit: " + fromUnit);
-            }
-        }
-#endif
+        #region Static Methods
 
         /// <summary>
         ///     Get unit abbreviation string.
         /// </summary>
         /// <param name="unit">Unit to get abbreviation for.</param>
         /// <returns>Unit abbreviation string.</returns>
-        [UsedImplicitly]
         public static string GetAbbreviation(ReactivePowerUnit unit)
         {
             return GetAbbreviation(unit, null);
@@ -337,172 +206,68 @@ namespace UnitsNet
         ///     Get unit abbreviation string.
         /// </summary>
         /// <param name="unit">Unit to get abbreviation for.</param>
-        /// <param name="culture">Culture to use for localization. Defaults to Thread.CurrentUICulture.</param>
         /// <returns>Unit abbreviation string.</returns>
-        [UsedImplicitly]
-        public static string GetAbbreviation(ReactivePowerUnit unit, [CanBeNull] Culture culture)
+        /// <param name="provider">Format to use for localization. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public static string GetAbbreviation(ReactivePowerUnit unit, IFormatProvider? provider)
         {
-            return UnitSystem.GetCached(culture).GetDefaultAbbreviation(unit);
+            return UnitAbbreviationsCache.Default.GetDefaultAbbreviation(unit, provider);
         }
 
         #endregion
 
-        #region Arithmetic Operators
+        #region Static Factory Methods
 
-        // Windows Runtime Component does not allow operator overloads: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if !WINDOWS_UWP
-        public static ReactivePower operator -(ReactivePower right)
+        /// <summary>
+        ///     Get ReactivePower from GigavoltamperesReactive.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static ReactivePower FromGigavoltamperesReactive(QuantityValue gigavoltamperesreactive)
         {
-            return new ReactivePower(-right._voltamperesReactive);
+            double value = (double) gigavoltamperesreactive;
+            return new ReactivePower(value, ReactivePowerUnit.GigavoltampereReactive);
         }
-
-        public static ReactivePower operator +(ReactivePower left, ReactivePower right)
+        /// <summary>
+        ///     Get ReactivePower from KilovoltamperesReactive.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static ReactivePower FromKilovoltamperesReactive(QuantityValue kilovoltamperesreactive)
         {
-            return new ReactivePower(left._voltamperesReactive + right._voltamperesReactive);
+            double value = (double) kilovoltamperesreactive;
+            return new ReactivePower(value, ReactivePowerUnit.KilovoltampereReactive);
         }
-
-        public static ReactivePower operator -(ReactivePower left, ReactivePower right)
+        /// <summary>
+        ///     Get ReactivePower from MegavoltamperesReactive.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static ReactivePower FromMegavoltamperesReactive(QuantityValue megavoltamperesreactive)
         {
-            return new ReactivePower(left._voltamperesReactive - right._voltamperesReactive);
+            double value = (double) megavoltamperesreactive;
+            return new ReactivePower(value, ReactivePowerUnit.MegavoltampereReactive);
         }
-
-        public static ReactivePower operator *(double left, ReactivePower right)
+        /// <summary>
+        ///     Get ReactivePower from VoltamperesReactive.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static ReactivePower FromVoltamperesReactive(QuantityValue voltamperesreactive)
         {
-            return new ReactivePower(left*right._voltamperesReactive);
-        }
-
-        public static ReactivePower operator *(ReactivePower left, double right)
-        {
-            return new ReactivePower(left._voltamperesReactive*(double)right);
-        }
-
-        public static ReactivePower operator /(ReactivePower left, double right)
-        {
-            return new ReactivePower(left._voltamperesReactive/(double)right);
-        }
-
-        public static double operator /(ReactivePower left, ReactivePower right)
-        {
-            return Convert.ToDouble(left._voltamperesReactive/right._voltamperesReactive);
-        }
-#endif
-
-        #endregion
-
-        #region Equality / IComparable
-
-        public int CompareTo(object obj)
-        {
-            if (obj == null) throw new ArgumentNullException("obj");
-            if (!(obj is ReactivePower)) throw new ArgumentException("Expected type ReactivePower.", "obj");
-            return CompareTo((ReactivePower) obj);
-        }
-
-        // Windows Runtime Component does not allow public methods/ctors with same number of parameters: https://msdn.microsoft.com/en-us/library/br230301.aspx#Overloaded methods
-#if WINDOWS_UWP
-        internal
-#else
-        public
-#endif
-        int CompareTo(ReactivePower other)
-        {
-            return _voltamperesReactive.CompareTo(other._voltamperesReactive);
-        }
-
-        // Windows Runtime Component does not allow operator overloads: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if !WINDOWS_UWP
-        public static bool operator <=(ReactivePower left, ReactivePower right)
-        {
-            return left._voltamperesReactive <= right._voltamperesReactive;
-        }
-
-        public static bool operator >=(ReactivePower left, ReactivePower right)
-        {
-            return left._voltamperesReactive >= right._voltamperesReactive;
-        }
-
-        public static bool operator <(ReactivePower left, ReactivePower right)
-        {
-            return left._voltamperesReactive < right._voltamperesReactive;
-        }
-
-        public static bool operator >(ReactivePower left, ReactivePower right)
-        {
-            return left._voltamperesReactive > right._voltamperesReactive;
-        }
-
-        [Obsolete("It is not safe to compare equality due to using System.Double as the internal representation. It is very easy to get slightly different values due to floating point operations. Instead use Equals(other, maxError) to provide the max allowed error.")]
-        public static bool operator ==(ReactivePower left, ReactivePower right)
-        {
-            // ReSharper disable once CompareOfFloatsByEqualityOperator
-            return left._voltamperesReactive == right._voltamperesReactive;
-        }
-
-        [Obsolete("It is not safe to compare equality due to using System.Double as the internal representation. It is very easy to get slightly different values due to floating point operations. Instead use Equals(other, maxError) to provide the max allowed error.")]
-        public static bool operator !=(ReactivePower left, ReactivePower right)
-        {
-            // ReSharper disable once CompareOfFloatsByEqualityOperator
-            return left._voltamperesReactive != right._voltamperesReactive;
-        }
-#endif
-
-        [Obsolete("It is not safe to compare equality due to using System.Double as the internal representation. It is very easy to get slightly different values due to floating point operations. Instead use Equals(other, maxError) to provide the max allowed error.")]
-        public override bool Equals(object obj)
-        {
-            if (obj == null || GetType() != obj.GetType())
-            {
-                return false;
-            }
-
-            return _voltamperesReactive.Equals(((ReactivePower) obj)._voltamperesReactive);
+            double value = (double) voltamperesreactive;
+            return new ReactivePower(value, ReactivePowerUnit.VoltampereReactive);
         }
 
         /// <summary>
-        ///     Compare equality to another ReactivePower by specifying a max allowed difference.
-        ///     Note that it is advised against specifying zero difference, due to the nature
-        ///     of floating point operations and using System.Double internally.
+        ///     Dynamically convert from value and unit enum <see cref="ReactivePowerUnit" /> to <see cref="ReactivePower" />.
         /// </summary>
-        /// <param name="other">Other quantity to compare to.</param>
-        /// <param name="maxError">Max error allowed.</param>
-        /// <returns>True if the difference between the two values is not greater than the specified max.</returns>
-        public bool Equals(ReactivePower other, ReactivePower maxError)
+        /// <param name="value">Value to convert from.</param>
+        /// <param name="fromUnit">Unit to convert from.</param>
+        /// <returns>ReactivePower unit value.</returns>
+        public static ReactivePower From(QuantityValue value, ReactivePowerUnit fromUnit)
         {
-            return Math.Abs(_voltamperesReactive - other._voltamperesReactive) <= maxError._voltamperesReactive;
-        }
-
-        public override int GetHashCode()
-        {
-            return _voltamperesReactive.GetHashCode();
+            return new ReactivePower((double)value, fromUnit);
         }
 
         #endregion
 
-        #region Conversion
-
-        /// <summary>
-        ///     Convert to the unit representation <paramref name="unit" />.
-        /// </summary>
-        /// <returns>Value in new unit if successful, exception otherwise.</returns>
-        /// <exception cref="NotImplementedException">If conversion was not successful.</exception>
-        public double As(ReactivePowerUnit unit)
-        {
-            switch (unit)
-            {
-                case ReactivePowerUnit.KilovoltampereReactive:
-                    return KilovoltamperesReactive;
-                case ReactivePowerUnit.MegavoltampereReactive:
-                    return MegavoltamperesReactive;
-                case ReactivePowerUnit.VoltampereReactive:
-                    return VoltamperesReactive;
-
-                default:
-                    throw new NotImplementedException("unit: " + unit);
-            }
-        }
-
-        #endregion
-
-        #region Parsing
+        #region Static Parse Methods
 
         /// <summary>
         ///     Parse a string with one or two quantities of the format "&lt;quantity&gt; &lt;unit&gt;".
@@ -535,7 +300,6 @@ namespace UnitsNet
         ///     Parse a string with one or two quantities of the format "&lt;quantity&gt; &lt;unit&gt;".
         /// </summary>
         /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
-        /// <param name="culture">Format to use when parsing number and unit. If it is null, it defaults to <see cref="NumberFormatInfo.CurrentInfo"/> for parsing the number and <see cref="CultureInfo.CurrentUICulture"/> for parsing the unit abbreviation by culture/language.</param>
         /// <example>
         ///     Length.Parse("5.5 m", new CultureInfo("en-US"));
         /// </example>
@@ -554,23 +318,13 @@ namespace UnitsNet
         ///     We wrap exceptions in <see cref="UnitsNetException" /> to allow you to distinguish
         ///     Units.NET exceptions from other exceptions.
         /// </exception>
-        public static ReactivePower Parse(string str, [CanBeNull] Culture culture)
+        /// <param name="provider">Format to use when parsing number and unit. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public static ReactivePower Parse(string str, IFormatProvider? provider)
         {
-            if (str == null) throw new ArgumentNullException("str");
-
-        // Windows Runtime Component does not support CultureInfo type, so use culture name string for public methods instead: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if WINDOWS_UWP
-            IFormatProvider formatProvider = culture == null ? null : new CultureInfo(culture);
-#else
-            IFormatProvider formatProvider = culture;
-#endif
-            return QuantityParser.Parse<ReactivePower, ReactivePowerUnit>(str, formatProvider,
-                delegate(string value, string unit, IFormatProvider formatProvider2)
-                {
-                    double parsedValue = double.Parse(value, formatProvider2);
-                    ReactivePowerUnit parsedUnit = ParseUnit(unit, formatProvider2);
-                    return From(parsedValue, parsedUnit);
-                }, (x, y) => FromVoltamperesReactive(x.VoltamperesReactive + y.VoltamperesReactive));
+            return QuantityParser.Default.Parse<ReactivePower, ReactivePowerUnit>(
+                str,
+                provider,
+                From);
         }
 
         /// <summary>
@@ -581,7 +335,7 @@ namespace UnitsNet
         /// <example>
         ///     Length.Parse("5.5 m", new CultureInfo("en-US"));
         /// </example>
-        public static bool TryParse([CanBeNull] string str, out ReactivePower result)
+        public static bool TryParse(string? str, out ReactivePower result)
         {
             return TryParse(str, null, out result);
         }
@@ -590,28 +344,25 @@ namespace UnitsNet
         ///     Try to parse a string with one or two quantities of the format "&lt;quantity&gt; &lt;unit&gt;".
         /// </summary>
         /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
-        /// <param name="culture">Format to use when parsing number and unit. If it is null, it defaults to <see cref="NumberFormatInfo.CurrentInfo"/> for parsing the number and <see cref="CultureInfo.CurrentUICulture"/> for parsing the unit abbreviation by culture/language.</param>
         /// <param name="result">Resulting unit quantity if successful.</param>
+        /// <returns>True if successful, otherwise false.</returns>
         /// <example>
         ///     Length.Parse("5.5 m", new CultureInfo("en-US"));
         /// </example>
-        public static bool TryParse([CanBeNull] string str, [CanBeNull] Culture culture, out ReactivePower result)
+        /// <param name="provider">Format to use when parsing number and unit. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public static bool TryParse(string? str, IFormatProvider? provider, out ReactivePower result)
         {
-            try
-            {
-                result = Parse(str, culture);
-                return true;
-            }
-            catch
-            {
-                result = default(ReactivePower);
-                return false;
-            }
+            return QuantityParser.Default.TryParse<ReactivePower, ReactivePowerUnit>(
+                str,
+                provider,
+                From,
+                out result);
         }
 
         /// <summary>
         ///     Parse a unit string.
         /// </summary>
+        /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
         /// <example>
         ///     Length.ParseUnit("m", new CultureInfo("en-US"));
         /// </example>
@@ -619,153 +370,534 @@ namespace UnitsNet
         /// <exception cref="UnitsNetException">Error parsing string.</exception>
         public static ReactivePowerUnit ParseUnit(string str)
         {
-            return ParseUnit(str, (IFormatProvider)null);
+            return ParseUnit(str, null);
         }
 
         /// <summary>
         ///     Parse a unit string.
         /// </summary>
+        /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
+        /// <param name="provider">Format to use when parsing number and unit. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
         /// <example>
         ///     Length.ParseUnit("m", new CultureInfo("en-US"));
         /// </example>
         /// <exception cref="ArgumentNullException">The value of 'str' cannot be null. </exception>
         /// <exception cref="UnitsNetException">Error parsing string.</exception>
-        public static ReactivePowerUnit ParseUnit(string str, [CanBeNull] string cultureName)
+        public static ReactivePowerUnit ParseUnit(string str, IFormatProvider? provider)
         {
-            return ParseUnit(str, cultureName == null ? null : new CultureInfo(cultureName));
+            return UnitParser.Default.Parse<ReactivePowerUnit>(str, provider);
+        }
+
+        /// <inheritdoc cref="TryParseUnit(string,IFormatProvider,out UnitsNet.Units.ReactivePowerUnit)"/>
+        public static bool TryParseUnit(string str, out ReactivePowerUnit unit)
+        {
+            return TryParseUnit(str, null, out unit);
         }
 
         /// <summary>
         ///     Parse a unit string.
         /// </summary>
+        /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
+        /// <param name="unit">The parsed unit if successful.</param>
+        /// <returns>True if successful, otherwise false.</returns>
         /// <example>
-        ///     Length.ParseUnit("m", new CultureInfo("en-US"));
+        ///     Length.TryParseUnit("m", new CultureInfo("en-US"));
         /// </example>
-        /// <exception cref="ArgumentNullException">The value of 'str' cannot be null. </exception>
-        /// <exception cref="UnitsNetException">Error parsing string.</exception>
-
-        // Windows Runtime Component does not allow public methods/ctors with same number of parameters: https://msdn.microsoft.com/en-us/library/br230301.aspx#Overloaded methods
-#if WINDOWS_UWP
-        internal
-#else
-        public
-#endif
-        static ReactivePowerUnit ParseUnit(string str, IFormatProvider formatProvider = null)
+        /// <param name="provider">Format to use when parsing number and unit. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public static bool TryParseUnit(string str, IFormatProvider? provider, out ReactivePowerUnit unit)
         {
-            if (str == null) throw new ArgumentNullException("str");
-
-            var unitSystem = UnitSystem.GetCached(formatProvider);
-            var unit = unitSystem.Parse<ReactivePowerUnit>(str.Trim());
-
-            if (unit == ReactivePowerUnit.Undefined)
-            {
-                var newEx = new UnitsNetException("Error parsing string. The unit is not a recognized ReactivePowerUnit.");
-                newEx.Data["input"] = str;
-                newEx.Data["formatprovider"] = formatProvider?.ToString() ?? "(null)";
-                throw newEx;
-            }
-
-            return unit;
+            return UnitParser.Default.TryParse<ReactivePowerUnit>(str, provider, out unit);
         }
 
         #endregion
 
-        /// <summary>
-        ///     Set the default unit used by ToString(). Default is VoltampereReactive
-        /// </summary>
-        public static ReactivePowerUnit ToStringDefaultUnit { get; set; } = ReactivePowerUnit.VoltampereReactive;
+        #region Arithmetic Operators
+
+        /// <summary>Negate the value.</summary>
+        public static ReactivePower operator -(ReactivePower right)
+        {
+            return new ReactivePower(-right.Value, right.Unit);
+        }
+
+        /// <summary>Get <see cref="ReactivePower"/> from adding two <see cref="ReactivePower"/>.</summary>
+        public static ReactivePower operator +(ReactivePower left, ReactivePower right)
+        {
+            return new ReactivePower(left.Value + right.GetValueAs(left.Unit), left.Unit);
+        }
+
+        /// <summary>Get <see cref="ReactivePower"/> from subtracting two <see cref="ReactivePower"/>.</summary>
+        public static ReactivePower operator -(ReactivePower left, ReactivePower right)
+        {
+            return new ReactivePower(left.Value - right.GetValueAs(left.Unit), left.Unit);
+        }
+
+        /// <summary>Get <see cref="ReactivePower"/> from multiplying value and <see cref="ReactivePower"/>.</summary>
+        public static ReactivePower operator *(double left, ReactivePower right)
+        {
+            return new ReactivePower(left * right.Value, right.Unit);
+        }
+
+        /// <summary>Get <see cref="ReactivePower"/> from multiplying value and <see cref="ReactivePower"/>.</summary>
+        public static ReactivePower operator *(ReactivePower left, double right)
+        {
+            return new ReactivePower(left.Value * right, left.Unit);
+        }
+
+        /// <summary>Get <see cref="ReactivePower"/> from dividing <see cref="ReactivePower"/> by value.</summary>
+        public static ReactivePower operator /(ReactivePower left, double right)
+        {
+            return new ReactivePower(left.Value / right, left.Unit);
+        }
+
+        /// <summary>Get ratio value from dividing <see cref="ReactivePower"/> by <see cref="ReactivePower"/>.</summary>
+        public static double operator /(ReactivePower left, ReactivePower right)
+        {
+            return left.VoltamperesReactive / right.VoltamperesReactive;
+        }
+
+        #endregion
+
+        #region Equality / IComparable
+
+        /// <summary>Returns true if less or equal to.</summary>
+        public static bool operator <=(ReactivePower left, ReactivePower right)
+        {
+            return left.Value <= right.GetValueAs(left.Unit);
+        }
+
+        /// <summary>Returns true if greater than or equal to.</summary>
+        public static bool operator >=(ReactivePower left, ReactivePower right)
+        {
+            return left.Value >= right.GetValueAs(left.Unit);
+        }
+
+        /// <summary>Returns true if less than.</summary>
+        public static bool operator <(ReactivePower left, ReactivePower right)
+        {
+            return left.Value < right.GetValueAs(left.Unit);
+        }
+
+        /// <summary>Returns true if greater than.</summary>
+        public static bool operator >(ReactivePower left, ReactivePower right)
+        {
+            return left.Value > right.GetValueAs(left.Unit);
+        }
+
+        /// <summary>Returns true if exactly equal.</summary>
+        /// <remarks>Consider using <see cref="Equals(ReactivePower, double, ComparisonType)"/> for safely comparing floating point values.</remarks>
+        public static bool operator ==(ReactivePower left, ReactivePower right)
+        {
+            return left.Equals(right);
+        }
+
+        /// <summary>Returns true if not exactly equal.</summary>
+        /// <remarks>Consider using <see cref="Equals(ReactivePower, double, ComparisonType)"/> for safely comparing floating point values.</remarks>
+        public static bool operator !=(ReactivePower left, ReactivePower right)
+        {
+            return !(left == right);
+        }
+
+        /// <inheritdoc />
+        public int CompareTo(object obj)
+        {
+            if(obj is null) throw new ArgumentNullException(nameof(obj));
+            if(!(obj is ReactivePower objReactivePower)) throw new ArgumentException("Expected type ReactivePower.", nameof(obj));
+
+            return CompareTo(objReactivePower);
+        }
+
+        /// <inheritdoc />
+        public int CompareTo(ReactivePower other)
+        {
+            return _value.CompareTo(other.GetValueAs(this.Unit));
+        }
+
+        /// <inheritdoc />
+        /// <remarks>Consider using <see cref="Equals(ReactivePower, double, ComparisonType)"/> for safely comparing floating point values.</remarks>
+        public override bool Equals(object obj)
+        {
+            if(obj is null || !(obj is ReactivePower objReactivePower))
+                return false;
+
+            return Equals(objReactivePower);
+        }
+
+        /// <inheritdoc />
+        /// <remarks>Consider using <see cref="Equals(ReactivePower, double, ComparisonType)"/> for safely comparing floating point values.</remarks>
+        public bool Equals(ReactivePower other)
+        {
+            return _value.Equals(other.GetValueAs(this.Unit));
+        }
 
         /// <summary>
-        ///     Get default string representation of value and unit.
+        ///     <para>
+        ///     Compare equality to another ReactivePower within the given absolute or relative tolerance.
+        ///     </para>
+        ///     <para>
+        ///     Relative tolerance is defined as the maximum allowable absolute difference between this quantity's value and
+        ///     <paramref name="other"/> as a percentage of this quantity's value. <paramref name="other"/> will be converted into
+        ///     this quantity's unit for comparison. A relative tolerance of 0.01 means the absolute difference must be within +/- 1% of
+        ///     this quantity's value to be considered equal.
+        ///     <example>
+        ///     In this example, the two quantities will be equal if the value of b is within +/- 1% of a (0.02m or 2cm).
+        ///     <code>
+        ///     var a = Length.FromMeters(2.0);
+        ///     var b = Length.FromInches(50.0);
+        ///     a.Equals(b, 0.01, ComparisonType.Relative);
+        ///     </code>
+        ///     </example>
+        ///     </para>
+        ///     <para>
+        ///     Absolute tolerance is defined as the maximum allowable absolute difference between this quantity's value and
+        ///     <paramref name="other"/> as a fixed number in this quantity's unit. <paramref name="other"/> will be converted into
+        ///     this quantity's unit for comparison.
+        ///     <example>
+        ///     In this example, the two quantities will be equal if the value of b is within 0.01 of a (0.01m or 1cm).
+        ///     <code>
+        ///     var a = Length.FromMeters(2.0);
+        ///     var b = Length.FromInches(50.0);
+        ///     a.Equals(b, 0.01, ComparisonType.Absolute);
+        ///     </code>
+        ///     </example>
+        ///     </para>
+        ///     <para>
+        ///     Note that it is advised against specifying zero difference, due to the nature
+        ///     of floating point operations and using System.Double internally.
+        ///     </para>
+        /// </summary>
+        /// <param name="other">The other quantity to compare to.</param>
+        /// <param name="tolerance">The absolute or relative tolerance value. Must be greater than or equal to 0.</param>
+        /// <param name="comparisonType">The comparison type: either relative or absolute.</param>
+        /// <returns>True if the absolute difference between the two values is not greater than the specified relative or absolute tolerance.</returns>
+        public bool Equals(ReactivePower other, double tolerance, ComparisonType comparisonType)
+        {
+            if(tolerance < 0)
+                throw new ArgumentOutOfRangeException("tolerance", "Tolerance must be greater than or equal to 0.");
+
+            double thisValue = (double)this.Value;
+            double otherValueInThisUnits = other.As(this.Unit);
+
+            return UnitsNet.Comparison.Equals(thisValue, otherValueInThisUnits, tolerance, comparisonType);
+        }
+
+        /// <summary>
+        ///     Returns the hash code for this instance.
+        /// </summary>
+        /// <returns>A hash code for the current ReactivePower.</returns>
+        public override int GetHashCode()
+        {
+            return new { QuantityType, Value, Unit }.GetHashCode();
+        }
+
+        #endregion
+
+        #region Conversion Methods
+
+        /// <summary>
+        ///     Convert to the unit representation <paramref name="unit" />.
+        /// </summary>
+        /// <returns>Value converted to the specified unit.</returns>
+        public double As(ReactivePowerUnit unit)
+        {
+            if(Unit == unit)
+                return Convert.ToDouble(Value);
+
+            var converted = GetValueAs(unit);
+            return Convert.ToDouble(converted);
+        }
+
+        /// <inheritdoc cref="IQuantity.As(UnitSystem)"/>
+        public double As(UnitSystem unitSystem)
+        {
+            if(unitSystem is null)
+                throw new ArgumentNullException(nameof(unitSystem));
+
+            var unitInfos = Info.GetUnitInfosFor(unitSystem.BaseUnits);
+
+            var firstUnitInfo = unitInfos.FirstOrDefault();
+            if(firstUnitInfo == null)
+                throw new ArgumentException("No units were found for the given UnitSystem.", nameof(unitSystem));
+
+            return As(firstUnitInfo.Value);
+        }
+
+        /// <inheritdoc />
+        double IQuantity.As(Enum unit)
+        {
+            if(!(unit is ReactivePowerUnit unitAsReactivePowerUnit))
+                throw new ArgumentException($"The given unit is of type {unit.GetType()}. Only {typeof(ReactivePowerUnit)} is supported.", nameof(unit));
+
+            return As(unitAsReactivePowerUnit);
+        }
+
+        /// <summary>
+        ///     Converts this ReactivePower to another ReactivePower with the unit representation <paramref name="unit" />.
+        /// </summary>
+        /// <returns>A ReactivePower with the specified unit.</returns>
+        public ReactivePower ToUnit(ReactivePowerUnit unit)
+        {
+            var convertedValue = GetValueAs(unit);
+            return new ReactivePower(convertedValue, unit);
+        }
+
+        /// <inheritdoc />
+        IQuantity IQuantity.ToUnit(Enum unit)
+        {
+            if(!(unit is ReactivePowerUnit unitAsReactivePowerUnit))
+                throw new ArgumentException($"The given unit is of type {unit.GetType()}. Only {typeof(ReactivePowerUnit)} is supported.", nameof(unit));
+
+            return ToUnit(unitAsReactivePowerUnit);
+        }
+
+        /// <inheritdoc cref="IQuantity.ToUnit(UnitSystem)"/>
+        public ReactivePower ToUnit(UnitSystem unitSystem)
+        {
+            if(unitSystem is null)
+                throw new ArgumentNullException(nameof(unitSystem));
+
+            var unitInfos = Info.GetUnitInfosFor(unitSystem.BaseUnits);
+
+            var firstUnitInfo = unitInfos.FirstOrDefault();
+            if(firstUnitInfo == null)
+                throw new ArgumentException("No units were found for the given UnitSystem.", nameof(unitSystem));
+
+            return ToUnit(firstUnitInfo.Value);
+        }
+
+        /// <inheritdoc />
+        IQuantity IQuantity.ToUnit(UnitSystem unitSystem) => ToUnit(unitSystem);
+
+        /// <inheritdoc />
+        IQuantity<ReactivePowerUnit> IQuantity<ReactivePowerUnit>.ToUnit(ReactivePowerUnit unit) => ToUnit(unit);
+
+        /// <inheritdoc />
+        IQuantity<ReactivePowerUnit> IQuantity<ReactivePowerUnit>.ToUnit(UnitSystem unitSystem) => ToUnit(unitSystem);
+
+        /// <summary>
+        ///     Converts the current value + unit to the base unit.
+        ///     This is typically the first step in converting from one unit to another.
+        /// </summary>
+        /// <returns>The value in the base unit representation.</returns>
+        private double GetValueInBaseUnit()
+        {
+            switch(Unit)
+            {
+                case ReactivePowerUnit.GigavoltampereReactive: return (_value) * 1e9d;
+                case ReactivePowerUnit.KilovoltampereReactive: return (_value) * 1e3d;
+                case ReactivePowerUnit.MegavoltampereReactive: return (_value) * 1e6d;
+                case ReactivePowerUnit.VoltampereReactive: return _value;
+                default:
+                    throw new NotImplementedException($"Can not convert {Unit} to base units.");
+            }
+        }
+
+        /// <summary>
+        ///     Converts the current value + unit to the base unit.
+        ///     This is typically the first step in converting from one unit to another.
+        /// </summary>
+        /// <returns>The value in the base unit representation.</returns>
+        internal ReactivePower ToBaseUnit()
+        {
+            var baseUnitValue = GetValueInBaseUnit();
+            return new ReactivePower(baseUnitValue, BaseUnit);
+        }
+
+        private double GetValueAs(ReactivePowerUnit unit)
+        {
+            if(Unit == unit)
+                return _value;
+
+            var baseUnitValue = GetValueInBaseUnit();
+
+            switch(unit)
+            {
+                case ReactivePowerUnit.GigavoltampereReactive: return (baseUnitValue) / 1e9d;
+                case ReactivePowerUnit.KilovoltampereReactive: return (baseUnitValue) / 1e3d;
+                case ReactivePowerUnit.MegavoltampereReactive: return (baseUnitValue) / 1e6d;
+                case ReactivePowerUnit.VoltampereReactive: return baseUnitValue;
+                default:
+                    throw new NotImplementedException($"Can not convert {Unit} to {unit}.");
+            }
+        }
+
+        #endregion
+
+        #region ToString Methods
+
+        /// <summary>
+        ///     Gets the default string representation of value and unit.
         /// </summary>
         /// <returns>String representation.</returns>
         public override string ToString()
         {
-            return ToString(ToStringDefaultUnit);
+            return ToString("g");
         }
 
         /// <summary>
-        ///     Get string representation of value and unit. Using current UI culture and two significant digits after radix.
+        ///     Gets the default string representation of value and unit using the given format provider.
         /// </summary>
-        /// <param name="unit">Unit representation to use.</param>
         /// <returns>String representation.</returns>
-        public string ToString(ReactivePowerUnit unit)
+        /// <param name="provider">Format to use for localization and number formatting. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public string ToString(IFormatProvider? provider)
         {
-            return ToString(unit, null, 2);
-        }
-
-        /// <summary>
-        ///     Get string representation of value and unit. Using two significant digits after radix.
-        /// </summary>
-        /// <param name="unit">Unit representation to use.</param>
-        /// <param name="culture">Culture to use for localization and number formatting.</param>
-        /// <returns>String representation.</returns>
-        public string ToString(ReactivePowerUnit unit, [CanBeNull] Culture culture)
-        {
-            return ToString(unit, culture, 2);
+            return ToString("g", provider);
         }
 
         /// <summary>
         ///     Get string representation of value and unit.
         /// </summary>
-        /// <param name="unit">Unit representation to use.</param>
-        /// <param name="culture">Culture to use for localization and number formatting.</param>
         /// <param name="significantDigitsAfterRadix">The number of significant digits after the radix point.</param>
         /// <returns>String representation.</returns>
-        [UsedImplicitly]
-        public string ToString(ReactivePowerUnit unit, [CanBeNull] Culture culture, int significantDigitsAfterRadix)
+        /// <param name="provider">Format to use for localization and number formatting. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        [Obsolete(@"This method is deprecated and will be removed at a future release. Please use ToString(""s2"") or ToString(""s2"", provider) where 2 is an example of the number passed to significantDigitsAfterRadix.")]
+        public string ToString(IFormatProvider? provider, int significantDigitsAfterRadix)
         {
-            double value = As(unit);
-            string format = UnitFormatter.GetFormat(value, significantDigitsAfterRadix);
-            return ToString(unit, culture, format);
+            var value = Convert.ToDouble(Value);
+            var format = UnitFormatter.GetFormat(value, significantDigitsAfterRadix);
+            return ToString(provider, format);
         }
 
         /// <summary>
         ///     Get string representation of value and unit.
         /// </summary>
-        /// <param name="culture">Culture to use for localization and number formatting.</param>
-        /// <param name="unit">Unit representation to use.</param>
         /// <param name="format">String format to use. Default:  "{0:0.##} {1} for value and unit abbreviation respectively."</param>
-        /// <param name="args">Arguments for string format. Value and unit are implictly included as arguments 0 and 1.</param>
+        /// <param name="args">Arguments for string format. Value and unit are implicitly included as arguments 0 and 1.</param>
         /// <returns>String representation.</returns>
-        [UsedImplicitly]
-        public string ToString(ReactivePowerUnit unit, [CanBeNull] Culture culture, [NotNull] string format,
-            [NotNull] params object[] args)
+        /// <param name="provider">Format to use for localization and number formatting. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        [Obsolete("This method is deprecated and will be removed at a future release. Please use string.Format().")]
+        public string ToString(IFormatProvider? provider, [NotNull] string format, [NotNull] params object[] args)
         {
             if (format == null) throw new ArgumentNullException(nameof(format));
             if (args == null) throw new ArgumentNullException(nameof(args));
 
-        // Windows Runtime Component does not support CultureInfo type, so use culture name string for public methods instead: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if WINDOWS_UWP
-            IFormatProvider formatProvider = culture == null ? null : new CultureInfo(culture);
-#else
-            IFormatProvider formatProvider = culture;
-#endif
-            double value = As(unit);
-            object[] formatArgs = UnitFormatter.GetFormatArgs(unit, value, formatProvider, args);
-            return string.Format(formatProvider, format, formatArgs);
+            provider = provider ?? CultureInfo.CurrentUICulture;
+
+            var value = Convert.ToDouble(Value);
+            var formatArgs = UnitFormatter.GetFormatArgs(Unit, value, provider, args);
+            return string.Format(provider, format, formatArgs);
         }
 
+        /// <inheritdoc cref="QuantityFormatter.Format{TUnitType}(IQuantity{TUnitType}, string, IFormatProvider)"/>
         /// <summary>
-        /// Represents the largest possible value of ReactivePower
+        /// Gets the string representation of this instance in the specified format string using <see cref="CultureInfo.CurrentUICulture" />.
         /// </summary>
-        public static ReactivePower MaxValue
+        /// <param name="format">The format string.</param>
+        /// <returns>The string representation.</returns>
+        public string ToString(string format)
         {
-            get
-            {
-                return new ReactivePower(double.MaxValue);
-            }
+            return ToString(format, CultureInfo.CurrentUICulture);
         }
 
+        /// <inheritdoc cref="QuantityFormatter.Format{TUnitType}(IQuantity{TUnitType}, string, IFormatProvider)"/>
         /// <summary>
-        /// Represents the smallest possible value of ReactivePower
+        /// Gets the string representation of this instance in the specified format string using the specified format provider, or <see cref="CultureInfo.CurrentUICulture" /> if null.
         /// </summary>
-        public static ReactivePower MinValue
+        /// <param name="format">The format string.</param>
+        /// <param name="provider">Format to use for localization and number formatting. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        /// <returns>The string representation.</returns>
+        public string ToString(string format, IFormatProvider? provider)
         {
-            get
-            {
-                return new ReactivePower(double.MinValue);
-            }
+            return QuantityFormatter.Format<ReactivePowerUnit>(this, format, provider);
         }
+
+        #endregion
+
+        #region IConvertible Methods
+
+        TypeCode IConvertible.GetTypeCode()
+        {
+            return TypeCode.Object;
+        }
+
+        bool IConvertible.ToBoolean(IFormatProvider provider)
+        {
+            throw new InvalidCastException($"Converting {typeof(ReactivePower)} to bool is not supported.");
+        }
+
+        byte IConvertible.ToByte(IFormatProvider provider)
+        {
+            return Convert.ToByte(_value);
+        }
+
+        char IConvertible.ToChar(IFormatProvider provider)
+        {
+            throw new InvalidCastException($"Converting {typeof(ReactivePower)} to char is not supported.");
+        }
+
+        DateTime IConvertible.ToDateTime(IFormatProvider provider)
+        {
+            throw new InvalidCastException($"Converting {typeof(ReactivePower)} to DateTime is not supported.");
+        }
+
+        decimal IConvertible.ToDecimal(IFormatProvider provider)
+        {
+            return Convert.ToDecimal(_value);
+        }
+
+        double IConvertible.ToDouble(IFormatProvider provider)
+        {
+            return Convert.ToDouble(_value);
+        }
+
+        short IConvertible.ToInt16(IFormatProvider provider)
+        {
+            return Convert.ToInt16(_value);
+        }
+
+        int IConvertible.ToInt32(IFormatProvider provider)
+        {
+            return Convert.ToInt32(_value);
+        }
+
+        long IConvertible.ToInt64(IFormatProvider provider)
+        {
+            return Convert.ToInt64(_value);
+        }
+
+        sbyte IConvertible.ToSByte(IFormatProvider provider)
+        {
+            return Convert.ToSByte(_value);
+        }
+
+        float IConvertible.ToSingle(IFormatProvider provider)
+        {
+            return Convert.ToSingle(_value);
+        }
+
+        string IConvertible.ToString(IFormatProvider provider)
+        {
+            return ToString("g", provider);
+        }
+
+        object IConvertible.ToType(Type conversionType, IFormatProvider provider)
+        {
+            if(conversionType == typeof(ReactivePower))
+                return this;
+            else if(conversionType == typeof(ReactivePowerUnit))
+                return Unit;
+            else if(conversionType == typeof(QuantityType))
+                return ReactivePower.QuantityType;
+            else if(conversionType == typeof(BaseDimensions))
+                return ReactivePower.BaseDimensions;
+            else
+                throw new InvalidCastException($"Converting {typeof(ReactivePower)} to {conversionType} is not supported.");
+        }
+
+        ushort IConvertible.ToUInt16(IFormatProvider provider)
+        {
+            return Convert.ToUInt16(_value);
+        }
+
+        uint IConvertible.ToUInt32(IFormatProvider provider)
+        {
+            return Convert.ToUInt32(_value);
+        }
+
+        ulong IConvertible.ToUInt64(IFormatProvider provider)
+        {
+            return Convert.ToUInt64(_value);
+        }
+
+        #endregion
     }
 }

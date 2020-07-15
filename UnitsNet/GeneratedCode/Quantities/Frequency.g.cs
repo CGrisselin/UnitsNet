@@ -8,551 +8,231 @@
 //
 //     See https://github.com/angularsen/UnitsNet/wiki/Adding-a-New-Unit for how to add or edit units.
 //
-//     Add CustomCode\Quantities\MyUnit.extra.cs files to add code to generated quantities.
-//     Add Extensions\MyUnitExtensions.cs to decorate quantities with new behavior.
-//     Add UnitDefinitions\MyUnit.json and run GeneratUnits.bat to generate new units or quantities.
+//     Add CustomCode\Quantities\MyQuantity.extra.cs files to add code to generated quantities.
+//     Add UnitDefinitions\MyQuantity.json and run generate-code.bat to generate new units or quantities.
 //
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-// Copyright (c) 2013 Andreas Gullberg Larsen (andreas.larsen84@gmail.com).
-// https://github.com/angularsen/UnitsNet
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
+// Licensed under MIT No Attribution, see LICENSE file at the root.
+// Copyright 2013 Andreas Gullberg Larsen (andreas.larsen84@gmail.com). Maintained at https://github.com/angularsen/UnitsNet.
 
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Text.RegularExpressions;
 using System.Linq;
 using JetBrains.Annotations;
+using UnitsNet.InternalHelpers;
 using UnitsNet.Units;
 
-// Windows Runtime Component does not support CultureInfo type, so use culture name string instead for public methods: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if WINDOWS_UWP
-using Culture = System.String;
-#else
-using Culture = System.IFormatProvider;
-#endif
+#nullable enable
 
 // ReSharper disable once CheckNamespace
 
 namespace UnitsNet
 {
+    /// <inheritdoc />
     /// <summary>
     ///     The number of occurrences of a repeating event per unit time.
     /// </summary>
-    // ReSharper disable once PartialTypeWithSinglePart
-
-    // Windows Runtime Component has constraints on public types: https://msdn.microsoft.com/en-us/library/br230301.aspx#Declaring types in Windows Runtime Components
-    // Public structures can't have any members other than public fields, and those fields must be value types or strings.
-    // Public classes must be sealed (NotInheritable in Visual Basic). If your programming model requires polymorphism, you can create a public interface and implement that interface on the classes that must be polymorphic.
-#if WINDOWS_UWP
-    public sealed partial class Frequency
-#else
-    public partial struct Frequency : IComparable, IComparable<Frequency>
-#endif
+    public partial struct Frequency : IQuantity<FrequencyUnit>, IEquatable<Frequency>, IComparable, IComparable<Frequency>, IConvertible, IFormattable
     {
         /// <summary>
-        ///     Base unit of Frequency.
+        ///     The numeric value this quantity was constructed with.
         /// </summary>
-        private readonly double _hertz;
+        private readonly double _value;
 
-        // Windows Runtime Component requires a default constructor
-#if WINDOWS_UWP
-        public Frequency() : this(0)
-        {
-        }
-#endif
+        /// <summary>
+        ///     The unit this quantity was constructed with.
+        /// </summary>
+        private readonly FrequencyUnit? _unit;
 
-        public Frequency(double hertz)
+        static Frequency()
         {
-            _hertz = Convert.ToDouble(hertz);
-        }
+            BaseDimensions = new BaseDimensions(0, 0, -1, 0, 0, 0, 0);
 
-        // Windows Runtime Component does not allow public methods/ctors with same number of parameters: https://msdn.microsoft.com/en-us/library/br230301.aspx#Overloaded methods
-#if WINDOWS_UWP
-        private
-#else
-        public
-#endif
-        Frequency(long hertz)
-        {
-            _hertz = Convert.ToDouble(hertz);
-        }
-
-        // Windows Runtime Component does not allow public methods/ctors with same number of parameters: https://msdn.microsoft.com/en-us/library/br230301.aspx#Overloaded methods
-        // Windows Runtime Component does not support decimal type
-#if WINDOWS_UWP
-        private
-#else
-        public
-#endif
-        Frequency(decimal hertz)
-        {
-            _hertz = Convert.ToDouble(hertz);
+            Info = new QuantityInfo<FrequencyUnit>(QuantityType.Frequency,
+                new UnitInfo<FrequencyUnit>[] {
+                    new UnitInfo<FrequencyUnit>(FrequencyUnit.BeatPerMinute, BaseUnits.Undefined),
+                    new UnitInfo<FrequencyUnit>(FrequencyUnit.CyclePerHour, BaseUnits.Undefined),
+                    new UnitInfo<FrequencyUnit>(FrequencyUnit.CyclePerMinute, BaseUnits.Undefined),
+                    new UnitInfo<FrequencyUnit>(FrequencyUnit.Gigahertz, BaseUnits.Undefined),
+                    new UnitInfo<FrequencyUnit>(FrequencyUnit.Hertz, BaseUnits.Undefined),
+                    new UnitInfo<FrequencyUnit>(FrequencyUnit.Kilohertz, BaseUnits.Undefined),
+                    new UnitInfo<FrequencyUnit>(FrequencyUnit.Megahertz, BaseUnits.Undefined),
+                    new UnitInfo<FrequencyUnit>(FrequencyUnit.PerSecond, BaseUnits.Undefined),
+                    new UnitInfo<FrequencyUnit>(FrequencyUnit.RadianPerSecond, BaseUnits.Undefined),
+                    new UnitInfo<FrequencyUnit>(FrequencyUnit.Terahertz, BaseUnits.Undefined),
+                },
+                BaseUnit, Zero, BaseDimensions);
         }
 
-        #region Properties
+        /// <summary>
+        ///     Creates the quantity with the given numeric value and unit.
+        /// </summary>
+        /// <param name="value">The numeric value to construct this quantity with.</param>
+        /// <param name="unit">The unit representation to construct this quantity with.</param>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public Frequency(double value, FrequencyUnit unit)
+        {
+            if(unit == FrequencyUnit.Undefined)
+              throw new ArgumentException("The quantity can not be created with an undefined unit.", nameof(unit));
+
+            _value = Guard.EnsureValidNumber(value, nameof(value));
+            _unit = unit;
+        }
+
+        /// <summary>
+        /// Creates an instance of the quantity with the given numeric value in units compatible with the given <see cref="UnitSystem"/>.
+        /// If multiple compatible units were found, the first match is used.
+        /// </summary>
+        /// <param name="value">The numeric value to construct this quantity with.</param>
+        /// <param name="unitSystem">The unit system to create the quantity with.</param>
+        /// <exception cref="ArgumentNullException">The given <see cref="UnitSystem"/> is null.</exception>
+        /// <exception cref="ArgumentException">No unit was found for the given <see cref="UnitSystem"/>.</exception>
+        public Frequency(double value, UnitSystem unitSystem)
+        {
+            if(unitSystem is null) throw new ArgumentNullException(nameof(unitSystem));
+
+            var unitInfos = Info.GetUnitInfosFor(unitSystem.BaseUnits);
+            var firstUnitInfo = unitInfos.FirstOrDefault();
+
+            _value = Guard.EnsureValidNumber(value, nameof(value));
+            _unit = firstUnitInfo?.Value ?? throw new ArgumentException("No units were found for the given UnitSystem.", nameof(unitSystem));
+        }
+
+        #region Static Properties
+
+        /// <inheritdoc cref="IQuantity.QuantityInfo"/>
+        public static QuantityInfo<FrequencyUnit> Info { get; }
+
+        /// <summary>
+        ///     The <see cref="BaseDimensions" /> of this quantity.
+        /// </summary>
+        public static BaseDimensions BaseDimensions { get; }
+
+        /// <summary>
+        ///     The base unit of Frequency, which is Hertz. All conversions go via this value.
+        /// </summary>
+        public static FrequencyUnit BaseUnit { get; } = FrequencyUnit.Hertz;
+
+        /// <summary>
+        /// Represents the largest possible value of Frequency
+        /// </summary>
+        public static Frequency MaxValue { get; } = new Frequency(double.MaxValue, BaseUnit);
+
+        /// <summary>
+        /// Represents the smallest possible value of Frequency
+        /// </summary>
+        public static Frequency MinValue { get; } = new Frequency(double.MinValue, BaseUnit);
 
         /// <summary>
         ///     The <see cref="QuantityType" /> of this quantity.
         /// </summary>
-        public static QuantityType QuantityType => QuantityType.Frequency;
-
-        /// <summary>
-        ///     The base unit representation of this quantity for the numeric value stored internally. All conversions go via this value.
-        /// </summary>
-        public static FrequencyUnit BaseUnit
-        {
-            get { return FrequencyUnit.Hertz; }
-        }
+        public static QuantityType QuantityType { get; } = QuantityType.Frequency;
 
         /// <summary>
         ///     All units of measurement for the Frequency quantity.
         /// </summary>
-        public static FrequencyUnit[] Units { get; } = Enum.GetValues(typeof(FrequencyUnit)).Cast<FrequencyUnit>().ToArray();
+        public static FrequencyUnit[] Units { get; } = Enum.GetValues(typeof(FrequencyUnit)).Cast<FrequencyUnit>().Except(new FrequencyUnit[]{ FrequencyUnit.Undefined }).ToArray();
+
+        /// <summary>
+        ///     Gets an instance of this quantity with a value of 0 in the base unit Hertz.
+        /// </summary>
+        public static Frequency Zero { get; } = new Frequency(0, BaseUnit);
+
+        #endregion
+
+        #region Properties
+
+        /// <summary>
+        ///     The numeric value this quantity was constructed with.
+        /// </summary>
+        public double Value => _value;
+
+        Enum IQuantity.Unit => Unit;
+
+        /// <inheritdoc />
+        public FrequencyUnit Unit => _unit.GetValueOrDefault(BaseUnit);
+
+        /// <inheritdoc />
+        public QuantityInfo<FrequencyUnit> QuantityInfo => Info;
+
+        /// <inheritdoc cref="IQuantity.QuantityInfo"/>
+        QuantityInfo IQuantity.QuantityInfo => Info;
+
+        /// <summary>
+        ///     The <see cref="QuantityType" /> of this quantity.
+        /// </summary>
+        public QuantityType Type => Frequency.QuantityType;
+
+        /// <summary>
+        ///     The <see cref="BaseDimensions" /> of this quantity.
+        /// </summary>
+        public BaseDimensions Dimensions => Frequency.BaseDimensions;
+
+        #endregion
+
+        #region Conversion Properties
+
+        /// <summary>
+        ///     Get Frequency in BeatsPerMinute.
+        /// </summary>
+        public double BeatsPerMinute => As(FrequencyUnit.BeatPerMinute);
 
         /// <summary>
         ///     Get Frequency in CyclesPerHour.
         /// </summary>
-        public double CyclesPerHour
-        {
-            get { return _hertz*3600; }
-        }
+        public double CyclesPerHour => As(FrequencyUnit.CyclePerHour);
 
         /// <summary>
         ///     Get Frequency in CyclesPerMinute.
         /// </summary>
-        public double CyclesPerMinute
-        {
-            get { return _hertz*60; }
-        }
+        public double CyclesPerMinute => As(FrequencyUnit.CyclePerMinute);
 
         /// <summary>
         ///     Get Frequency in Gigahertz.
         /// </summary>
-        public double Gigahertz
-        {
-            get { return (_hertz) / 1e9d; }
-        }
+        public double Gigahertz => As(FrequencyUnit.Gigahertz);
 
         /// <summary>
         ///     Get Frequency in Hertz.
         /// </summary>
-        public double Hertz
-        {
-            get { return _hertz; }
-        }
+        public double Hertz => As(FrequencyUnit.Hertz);
 
         /// <summary>
         ///     Get Frequency in Kilohertz.
         /// </summary>
-        public double Kilohertz
-        {
-            get { return (_hertz) / 1e3d; }
-        }
+        public double Kilohertz => As(FrequencyUnit.Kilohertz);
 
         /// <summary>
         ///     Get Frequency in Megahertz.
         /// </summary>
-        public double Megahertz
-        {
-            get { return (_hertz) / 1e6d; }
-        }
+        public double Megahertz => As(FrequencyUnit.Megahertz);
+
+        /// <summary>
+        ///     Get Frequency in PerSecond.
+        /// </summary>
+        public double PerSecond => As(FrequencyUnit.PerSecond);
 
         /// <summary>
         ///     Get Frequency in RadiansPerSecond.
         /// </summary>
-        public double RadiansPerSecond
-        {
-            get { return _hertz*6.2831853072; }
-        }
+        public double RadiansPerSecond => As(FrequencyUnit.RadianPerSecond);
 
         /// <summary>
         ///     Get Frequency in Terahertz.
         /// </summary>
-        public double Terahertz
-        {
-            get { return (_hertz) / 1e12d; }
-        }
+        public double Terahertz => As(FrequencyUnit.Terahertz);
 
         #endregion
 
-        #region Static
-
-        public static Frequency Zero
-        {
-            get { return new Frequency(); }
-        }
-
-        /// <summary>
-        ///     Get Frequency from CyclesPerHour.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Frequency FromCyclesPerHour(double cyclesperhour)
-        {
-            double value = (double) cyclesperhour;
-            return new Frequency(value/3600);
-        }
-#else
-        public static Frequency FromCyclesPerHour(QuantityValue cyclesperhour)
-        {
-            double value = (double) cyclesperhour;
-            return new Frequency((value/3600));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Frequency from CyclesPerMinute.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Frequency FromCyclesPerMinute(double cyclesperminute)
-        {
-            double value = (double) cyclesperminute;
-            return new Frequency(value/60);
-        }
-#else
-        public static Frequency FromCyclesPerMinute(QuantityValue cyclesperminute)
-        {
-            double value = (double) cyclesperminute;
-            return new Frequency((value/60));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Frequency from Gigahertz.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Frequency FromGigahertz(double gigahertz)
-        {
-            double value = (double) gigahertz;
-            return new Frequency((value) * 1e9d);
-        }
-#else
-        public static Frequency FromGigahertz(QuantityValue gigahertz)
-        {
-            double value = (double) gigahertz;
-            return new Frequency(((value) * 1e9d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Frequency from Hertz.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Frequency FromHertz(double hertz)
-        {
-            double value = (double) hertz;
-            return new Frequency(value);
-        }
-#else
-        public static Frequency FromHertz(QuantityValue hertz)
-        {
-            double value = (double) hertz;
-            return new Frequency((value));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Frequency from Kilohertz.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Frequency FromKilohertz(double kilohertz)
-        {
-            double value = (double) kilohertz;
-            return new Frequency((value) * 1e3d);
-        }
-#else
-        public static Frequency FromKilohertz(QuantityValue kilohertz)
-        {
-            double value = (double) kilohertz;
-            return new Frequency(((value) * 1e3d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Frequency from Megahertz.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Frequency FromMegahertz(double megahertz)
-        {
-            double value = (double) megahertz;
-            return new Frequency((value) * 1e6d);
-        }
-#else
-        public static Frequency FromMegahertz(QuantityValue megahertz)
-        {
-            double value = (double) megahertz;
-            return new Frequency(((value) * 1e6d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Frequency from RadiansPerSecond.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Frequency FromRadiansPerSecond(double radianspersecond)
-        {
-            double value = (double) radianspersecond;
-            return new Frequency(value/6.2831853072);
-        }
-#else
-        public static Frequency FromRadiansPerSecond(QuantityValue radianspersecond)
-        {
-            double value = (double) radianspersecond;
-            return new Frequency((value/6.2831853072));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Frequency from Terahertz.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Frequency FromTerahertz(double terahertz)
-        {
-            double value = (double) terahertz;
-            return new Frequency((value) * 1e12d);
-        }
-#else
-        public static Frequency FromTerahertz(QuantityValue terahertz)
-        {
-            double value = (double) terahertz;
-            return new Frequency(((value) * 1e12d));
-        }
-#endif
-
-        // Windows Runtime Component does not support nullable types (double?): https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if !WINDOWS_UWP
-        /// <summary>
-        ///     Get nullable Frequency from nullable CyclesPerHour.
-        /// </summary>
-        public static Frequency? FromCyclesPerHour(QuantityValue? cyclesperhour)
-        {
-            if (cyclesperhour.HasValue)
-            {
-                return FromCyclesPerHour(cyclesperhour.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Frequency from nullable CyclesPerMinute.
-        /// </summary>
-        public static Frequency? FromCyclesPerMinute(QuantityValue? cyclesperminute)
-        {
-            if (cyclesperminute.HasValue)
-            {
-                return FromCyclesPerMinute(cyclesperminute.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Frequency from nullable Gigahertz.
-        /// </summary>
-        public static Frequency? FromGigahertz(QuantityValue? gigahertz)
-        {
-            if (gigahertz.HasValue)
-            {
-                return FromGigahertz(gigahertz.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Frequency from nullable Hertz.
-        /// </summary>
-        public static Frequency? FromHertz(QuantityValue? hertz)
-        {
-            if (hertz.HasValue)
-            {
-                return FromHertz(hertz.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Frequency from nullable Kilohertz.
-        /// </summary>
-        public static Frequency? FromKilohertz(QuantityValue? kilohertz)
-        {
-            if (kilohertz.HasValue)
-            {
-                return FromKilohertz(kilohertz.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Frequency from nullable Megahertz.
-        /// </summary>
-        public static Frequency? FromMegahertz(QuantityValue? megahertz)
-        {
-            if (megahertz.HasValue)
-            {
-                return FromMegahertz(megahertz.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Frequency from nullable RadiansPerSecond.
-        /// </summary>
-        public static Frequency? FromRadiansPerSecond(QuantityValue? radianspersecond)
-        {
-            if (radianspersecond.HasValue)
-            {
-                return FromRadiansPerSecond(radianspersecond.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Frequency from nullable Terahertz.
-        /// </summary>
-        public static Frequency? FromTerahertz(QuantityValue? terahertz)
-        {
-            if (terahertz.HasValue)
-            {
-                return FromTerahertz(terahertz.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-#endif
-
-        /// <summary>
-        ///     Dynamically convert from value and unit enum <see cref="FrequencyUnit" /> to <see cref="Frequency" />.
-        /// </summary>
-        /// <param name="value">Value to convert from.</param>
-        /// <param name="fromUnit">Unit to convert from.</param>
-        /// <returns>Frequency unit value.</returns>
-#if WINDOWS_UWP
-        // Fix name conflict with parameter "value"
-        [return: System.Runtime.InteropServices.WindowsRuntime.ReturnValueName("returnValue")]
-        public static Frequency From(double value, FrequencyUnit fromUnit)
-#else
-        public static Frequency From(QuantityValue value, FrequencyUnit fromUnit)
-#endif
-        {
-            switch (fromUnit)
-            {
-                case FrequencyUnit.CyclePerHour:
-                    return FromCyclesPerHour(value);
-                case FrequencyUnit.CyclePerMinute:
-                    return FromCyclesPerMinute(value);
-                case FrequencyUnit.Gigahertz:
-                    return FromGigahertz(value);
-                case FrequencyUnit.Hertz:
-                    return FromHertz(value);
-                case FrequencyUnit.Kilohertz:
-                    return FromKilohertz(value);
-                case FrequencyUnit.Megahertz:
-                    return FromMegahertz(value);
-                case FrequencyUnit.RadianPerSecond:
-                    return FromRadiansPerSecond(value);
-                case FrequencyUnit.Terahertz:
-                    return FromTerahertz(value);
-
-                default:
-                    throw new NotImplementedException("fromUnit: " + fromUnit);
-            }
-        }
-
-        // Windows Runtime Component does not support nullable types (double?): https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if !WINDOWS_UWP
-        /// <summary>
-        ///     Dynamically convert from value and unit enum <see cref="FrequencyUnit" /> to <see cref="Frequency" />.
-        /// </summary>
-        /// <param name="value">Value to convert from.</param>
-        /// <param name="fromUnit">Unit to convert from.</param>
-        /// <returns>Frequency unit value.</returns>
-        public static Frequency? From(QuantityValue? value, FrequencyUnit fromUnit)
-        {
-            if (!value.HasValue)
-            {
-                return null;
-            }
-            switch (fromUnit)
-            {
-                case FrequencyUnit.CyclePerHour:
-                    return FromCyclesPerHour(value.Value);
-                case FrequencyUnit.CyclePerMinute:
-                    return FromCyclesPerMinute(value.Value);
-                case FrequencyUnit.Gigahertz:
-                    return FromGigahertz(value.Value);
-                case FrequencyUnit.Hertz:
-                    return FromHertz(value.Value);
-                case FrequencyUnit.Kilohertz:
-                    return FromKilohertz(value.Value);
-                case FrequencyUnit.Megahertz:
-                    return FromMegahertz(value.Value);
-                case FrequencyUnit.RadianPerSecond:
-                    return FromRadiansPerSecond(value.Value);
-                case FrequencyUnit.Terahertz:
-                    return FromTerahertz(value.Value);
-
-                default:
-                    throw new NotImplementedException("fromUnit: " + fromUnit);
-            }
-        }
-#endif
+        #region Static Methods
 
         /// <summary>
         ///     Get unit abbreviation string.
         /// </summary>
         /// <param name="unit">Unit to get abbreviation for.</param>
         /// <returns>Unit abbreviation string.</returns>
-        [UsedImplicitly]
         public static string GetAbbreviation(FrequencyUnit unit)
         {
             return GetAbbreviation(unit, null);
@@ -562,182 +242,122 @@ namespace UnitsNet
         ///     Get unit abbreviation string.
         /// </summary>
         /// <param name="unit">Unit to get abbreviation for.</param>
-        /// <param name="culture">Culture to use for localization. Defaults to Thread.CurrentUICulture.</param>
         /// <returns>Unit abbreviation string.</returns>
-        [UsedImplicitly]
-        public static string GetAbbreviation(FrequencyUnit unit, [CanBeNull] Culture culture)
+        /// <param name="provider">Format to use for localization. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public static string GetAbbreviation(FrequencyUnit unit, IFormatProvider? provider)
         {
-            return UnitSystem.GetCached(culture).GetDefaultAbbreviation(unit);
+            return UnitAbbreviationsCache.Default.GetDefaultAbbreviation(unit, provider);
         }
 
         #endregion
 
-        #region Arithmetic Operators
+        #region Static Factory Methods
 
-        // Windows Runtime Component does not allow operator overloads: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if !WINDOWS_UWP
-        public static Frequency operator -(Frequency right)
+        /// <summary>
+        ///     Get Frequency from BeatsPerMinute.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Frequency FromBeatsPerMinute(QuantityValue beatsperminute)
         {
-            return new Frequency(-right._hertz);
+            double value = (double) beatsperminute;
+            return new Frequency(value, FrequencyUnit.BeatPerMinute);
         }
-
-        public static Frequency operator +(Frequency left, Frequency right)
+        /// <summary>
+        ///     Get Frequency from CyclesPerHour.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Frequency FromCyclesPerHour(QuantityValue cyclesperhour)
         {
-            return new Frequency(left._hertz + right._hertz);
+            double value = (double) cyclesperhour;
+            return new Frequency(value, FrequencyUnit.CyclePerHour);
         }
-
-        public static Frequency operator -(Frequency left, Frequency right)
+        /// <summary>
+        ///     Get Frequency from CyclesPerMinute.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Frequency FromCyclesPerMinute(QuantityValue cyclesperminute)
         {
-            return new Frequency(left._hertz - right._hertz);
+            double value = (double) cyclesperminute;
+            return new Frequency(value, FrequencyUnit.CyclePerMinute);
         }
-
-        public static Frequency operator *(double left, Frequency right)
+        /// <summary>
+        ///     Get Frequency from Gigahertz.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Frequency FromGigahertz(QuantityValue gigahertz)
         {
-            return new Frequency(left*right._hertz);
+            double value = (double) gigahertz;
+            return new Frequency(value, FrequencyUnit.Gigahertz);
         }
-
-        public static Frequency operator *(Frequency left, double right)
+        /// <summary>
+        ///     Get Frequency from Hertz.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Frequency FromHertz(QuantityValue hertz)
         {
-            return new Frequency(left._hertz*(double)right);
+            double value = (double) hertz;
+            return new Frequency(value, FrequencyUnit.Hertz);
         }
-
-        public static Frequency operator /(Frequency left, double right)
+        /// <summary>
+        ///     Get Frequency from Kilohertz.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Frequency FromKilohertz(QuantityValue kilohertz)
         {
-            return new Frequency(left._hertz/(double)right);
+            double value = (double) kilohertz;
+            return new Frequency(value, FrequencyUnit.Kilohertz);
         }
-
-        public static double operator /(Frequency left, Frequency right)
+        /// <summary>
+        ///     Get Frequency from Megahertz.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Frequency FromMegahertz(QuantityValue megahertz)
         {
-            return Convert.ToDouble(left._hertz/right._hertz);
+            double value = (double) megahertz;
+            return new Frequency(value, FrequencyUnit.Megahertz);
         }
-#endif
-
-        #endregion
-
-        #region Equality / IComparable
-
-        public int CompareTo(object obj)
+        /// <summary>
+        ///     Get Frequency from PerSecond.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Frequency FromPerSecond(QuantityValue persecond)
         {
-            if (obj == null) throw new ArgumentNullException("obj");
-            if (!(obj is Frequency)) throw new ArgumentException("Expected type Frequency.", "obj");
-            return CompareTo((Frequency) obj);
+            double value = (double) persecond;
+            return new Frequency(value, FrequencyUnit.PerSecond);
         }
-
-        // Windows Runtime Component does not allow public methods/ctors with same number of parameters: https://msdn.microsoft.com/en-us/library/br230301.aspx#Overloaded methods
-#if WINDOWS_UWP
-        internal
-#else
-        public
-#endif
-        int CompareTo(Frequency other)
+        /// <summary>
+        ///     Get Frequency from RadiansPerSecond.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Frequency FromRadiansPerSecond(QuantityValue radianspersecond)
         {
-            return _hertz.CompareTo(other._hertz);
+            double value = (double) radianspersecond;
+            return new Frequency(value, FrequencyUnit.RadianPerSecond);
         }
-
-        // Windows Runtime Component does not allow operator overloads: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if !WINDOWS_UWP
-        public static bool operator <=(Frequency left, Frequency right)
+        /// <summary>
+        ///     Get Frequency from Terahertz.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Frequency FromTerahertz(QuantityValue terahertz)
         {
-            return left._hertz <= right._hertz;
-        }
-
-        public static bool operator >=(Frequency left, Frequency right)
-        {
-            return left._hertz >= right._hertz;
-        }
-
-        public static bool operator <(Frequency left, Frequency right)
-        {
-            return left._hertz < right._hertz;
-        }
-
-        public static bool operator >(Frequency left, Frequency right)
-        {
-            return left._hertz > right._hertz;
-        }
-
-        [Obsolete("It is not safe to compare equality due to using System.Double as the internal representation. It is very easy to get slightly different values due to floating point operations. Instead use Equals(other, maxError) to provide the max allowed error.")]
-        public static bool operator ==(Frequency left, Frequency right)
-        {
-            // ReSharper disable once CompareOfFloatsByEqualityOperator
-            return left._hertz == right._hertz;
-        }
-
-        [Obsolete("It is not safe to compare equality due to using System.Double as the internal representation. It is very easy to get slightly different values due to floating point operations. Instead use Equals(other, maxError) to provide the max allowed error.")]
-        public static bool operator !=(Frequency left, Frequency right)
-        {
-            // ReSharper disable once CompareOfFloatsByEqualityOperator
-            return left._hertz != right._hertz;
-        }
-#endif
-
-        [Obsolete("It is not safe to compare equality due to using System.Double as the internal representation. It is very easy to get slightly different values due to floating point operations. Instead use Equals(other, maxError) to provide the max allowed error.")]
-        public override bool Equals(object obj)
-        {
-            if (obj == null || GetType() != obj.GetType())
-            {
-                return false;
-            }
-
-            return _hertz.Equals(((Frequency) obj)._hertz);
+            double value = (double) terahertz;
+            return new Frequency(value, FrequencyUnit.Terahertz);
         }
 
         /// <summary>
-        ///     Compare equality to another Frequency by specifying a max allowed difference.
-        ///     Note that it is advised against specifying zero difference, due to the nature
-        ///     of floating point operations and using System.Double internally.
+        ///     Dynamically convert from value and unit enum <see cref="FrequencyUnit" /> to <see cref="Frequency" />.
         /// </summary>
-        /// <param name="other">Other quantity to compare to.</param>
-        /// <param name="maxError">Max error allowed.</param>
-        /// <returns>True if the difference between the two values is not greater than the specified max.</returns>
-        public bool Equals(Frequency other, Frequency maxError)
+        /// <param name="value">Value to convert from.</param>
+        /// <param name="fromUnit">Unit to convert from.</param>
+        /// <returns>Frequency unit value.</returns>
+        public static Frequency From(QuantityValue value, FrequencyUnit fromUnit)
         {
-            return Math.Abs(_hertz - other._hertz) <= maxError._hertz;
-        }
-
-        public override int GetHashCode()
-        {
-            return _hertz.GetHashCode();
+            return new Frequency((double)value, fromUnit);
         }
 
         #endregion
 
-        #region Conversion
-
-        /// <summary>
-        ///     Convert to the unit representation <paramref name="unit" />.
-        /// </summary>
-        /// <returns>Value in new unit if successful, exception otherwise.</returns>
-        /// <exception cref="NotImplementedException">If conversion was not successful.</exception>
-        public double As(FrequencyUnit unit)
-        {
-            switch (unit)
-            {
-                case FrequencyUnit.CyclePerHour:
-                    return CyclesPerHour;
-                case FrequencyUnit.CyclePerMinute:
-                    return CyclesPerMinute;
-                case FrequencyUnit.Gigahertz:
-                    return Gigahertz;
-                case FrequencyUnit.Hertz:
-                    return Hertz;
-                case FrequencyUnit.Kilohertz:
-                    return Kilohertz;
-                case FrequencyUnit.Megahertz:
-                    return Megahertz;
-                case FrequencyUnit.RadianPerSecond:
-                    return RadiansPerSecond;
-                case FrequencyUnit.Terahertz:
-                    return Terahertz;
-
-                default:
-                    throw new NotImplementedException("unit: " + unit);
-            }
-        }
-
-        #endregion
-
-        #region Parsing
+        #region Static Parse Methods
 
         /// <summary>
         ///     Parse a string with one or two quantities of the format "&lt;quantity&gt; &lt;unit&gt;".
@@ -770,7 +390,6 @@ namespace UnitsNet
         ///     Parse a string with one or two quantities of the format "&lt;quantity&gt; &lt;unit&gt;".
         /// </summary>
         /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
-        /// <param name="culture">Format to use when parsing number and unit. If it is null, it defaults to <see cref="NumberFormatInfo.CurrentInfo"/> for parsing the number and <see cref="CultureInfo.CurrentUICulture"/> for parsing the unit abbreviation by culture/language.</param>
         /// <example>
         ///     Length.Parse("5.5 m", new CultureInfo("en-US"));
         /// </example>
@@ -789,23 +408,13 @@ namespace UnitsNet
         ///     We wrap exceptions in <see cref="UnitsNetException" /> to allow you to distinguish
         ///     Units.NET exceptions from other exceptions.
         /// </exception>
-        public static Frequency Parse(string str, [CanBeNull] Culture culture)
+        /// <param name="provider">Format to use when parsing number and unit. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public static Frequency Parse(string str, IFormatProvider? provider)
         {
-            if (str == null) throw new ArgumentNullException("str");
-
-        // Windows Runtime Component does not support CultureInfo type, so use culture name string for public methods instead: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if WINDOWS_UWP
-            IFormatProvider formatProvider = culture == null ? null : new CultureInfo(culture);
-#else
-            IFormatProvider formatProvider = culture;
-#endif
-            return QuantityParser.Parse<Frequency, FrequencyUnit>(str, formatProvider,
-                delegate(string value, string unit, IFormatProvider formatProvider2)
-                {
-                    double parsedValue = double.Parse(value, formatProvider2);
-                    FrequencyUnit parsedUnit = ParseUnit(unit, formatProvider2);
-                    return From(parsedValue, parsedUnit);
-                }, (x, y) => FromHertz(x.Hertz + y.Hertz));
+            return QuantityParser.Default.Parse<Frequency, FrequencyUnit>(
+                str,
+                provider,
+                From);
         }
 
         /// <summary>
@@ -816,7 +425,7 @@ namespace UnitsNet
         /// <example>
         ///     Length.Parse("5.5 m", new CultureInfo("en-US"));
         /// </example>
-        public static bool TryParse([CanBeNull] string str, out Frequency result)
+        public static bool TryParse(string? str, out Frequency result)
         {
             return TryParse(str, null, out result);
         }
@@ -825,28 +434,25 @@ namespace UnitsNet
         ///     Try to parse a string with one or two quantities of the format "&lt;quantity&gt; &lt;unit&gt;".
         /// </summary>
         /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
-        /// <param name="culture">Format to use when parsing number and unit. If it is null, it defaults to <see cref="NumberFormatInfo.CurrentInfo"/> for parsing the number and <see cref="CultureInfo.CurrentUICulture"/> for parsing the unit abbreviation by culture/language.</param>
         /// <param name="result">Resulting unit quantity if successful.</param>
+        /// <returns>True if successful, otherwise false.</returns>
         /// <example>
         ///     Length.Parse("5.5 m", new CultureInfo("en-US"));
         /// </example>
-        public static bool TryParse([CanBeNull] string str, [CanBeNull] Culture culture, out Frequency result)
+        /// <param name="provider">Format to use when parsing number and unit. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public static bool TryParse(string? str, IFormatProvider? provider, out Frequency result)
         {
-            try
-            {
-                result = Parse(str, culture);
-                return true;
-            }
-            catch
-            {
-                result = default(Frequency);
-                return false;
-            }
+            return QuantityParser.Default.TryParse<Frequency, FrequencyUnit>(
+                str,
+                provider,
+                From,
+                out result);
         }
 
         /// <summary>
         ///     Parse a unit string.
         /// </summary>
+        /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
         /// <example>
         ///     Length.ParseUnit("m", new CultureInfo("en-US"));
         /// </example>
@@ -854,153 +460,546 @@ namespace UnitsNet
         /// <exception cref="UnitsNetException">Error parsing string.</exception>
         public static FrequencyUnit ParseUnit(string str)
         {
-            return ParseUnit(str, (IFormatProvider)null);
+            return ParseUnit(str, null);
         }
 
         /// <summary>
         ///     Parse a unit string.
         /// </summary>
+        /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
+        /// <param name="provider">Format to use when parsing number and unit. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
         /// <example>
         ///     Length.ParseUnit("m", new CultureInfo("en-US"));
         /// </example>
         /// <exception cref="ArgumentNullException">The value of 'str' cannot be null. </exception>
         /// <exception cref="UnitsNetException">Error parsing string.</exception>
-        public static FrequencyUnit ParseUnit(string str, [CanBeNull] string cultureName)
+        public static FrequencyUnit ParseUnit(string str, IFormatProvider? provider)
         {
-            return ParseUnit(str, cultureName == null ? null : new CultureInfo(cultureName));
+            return UnitParser.Default.Parse<FrequencyUnit>(str, provider);
+        }
+
+        /// <inheritdoc cref="TryParseUnit(string,IFormatProvider,out UnitsNet.Units.FrequencyUnit)"/>
+        public static bool TryParseUnit(string str, out FrequencyUnit unit)
+        {
+            return TryParseUnit(str, null, out unit);
         }
 
         /// <summary>
         ///     Parse a unit string.
         /// </summary>
+        /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
+        /// <param name="unit">The parsed unit if successful.</param>
+        /// <returns>True if successful, otherwise false.</returns>
         /// <example>
-        ///     Length.ParseUnit("m", new CultureInfo("en-US"));
+        ///     Length.TryParseUnit("m", new CultureInfo("en-US"));
         /// </example>
-        /// <exception cref="ArgumentNullException">The value of 'str' cannot be null. </exception>
-        /// <exception cref="UnitsNetException">Error parsing string.</exception>
-
-        // Windows Runtime Component does not allow public methods/ctors with same number of parameters: https://msdn.microsoft.com/en-us/library/br230301.aspx#Overloaded methods
-#if WINDOWS_UWP
-        internal
-#else
-        public
-#endif
-        static FrequencyUnit ParseUnit(string str, IFormatProvider formatProvider = null)
+        /// <param name="provider">Format to use when parsing number and unit. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public static bool TryParseUnit(string str, IFormatProvider? provider, out FrequencyUnit unit)
         {
-            if (str == null) throw new ArgumentNullException("str");
-
-            var unitSystem = UnitSystem.GetCached(formatProvider);
-            var unit = unitSystem.Parse<FrequencyUnit>(str.Trim());
-
-            if (unit == FrequencyUnit.Undefined)
-            {
-                var newEx = new UnitsNetException("Error parsing string. The unit is not a recognized FrequencyUnit.");
-                newEx.Data["input"] = str;
-                newEx.Data["formatprovider"] = formatProvider?.ToString() ?? "(null)";
-                throw newEx;
-            }
-
-            return unit;
+            return UnitParser.Default.TryParse<FrequencyUnit>(str, provider, out unit);
         }
 
         #endregion
 
-        /// <summary>
-        ///     Set the default unit used by ToString(). Default is Hertz
-        /// </summary>
-        public static FrequencyUnit ToStringDefaultUnit { get; set; } = FrequencyUnit.Hertz;
+        #region Arithmetic Operators
+
+        /// <summary>Negate the value.</summary>
+        public static Frequency operator -(Frequency right)
+        {
+            return new Frequency(-right.Value, right.Unit);
+        }
+
+        /// <summary>Get <see cref="Frequency"/> from adding two <see cref="Frequency"/>.</summary>
+        public static Frequency operator +(Frequency left, Frequency right)
+        {
+            return new Frequency(left.Value + right.GetValueAs(left.Unit), left.Unit);
+        }
+
+        /// <summary>Get <see cref="Frequency"/> from subtracting two <see cref="Frequency"/>.</summary>
+        public static Frequency operator -(Frequency left, Frequency right)
+        {
+            return new Frequency(left.Value - right.GetValueAs(left.Unit), left.Unit);
+        }
+
+        /// <summary>Get <see cref="Frequency"/> from multiplying value and <see cref="Frequency"/>.</summary>
+        public static Frequency operator *(double left, Frequency right)
+        {
+            return new Frequency(left * right.Value, right.Unit);
+        }
+
+        /// <summary>Get <see cref="Frequency"/> from multiplying value and <see cref="Frequency"/>.</summary>
+        public static Frequency operator *(Frequency left, double right)
+        {
+            return new Frequency(left.Value * right, left.Unit);
+        }
+
+        /// <summary>Get <see cref="Frequency"/> from dividing <see cref="Frequency"/> by value.</summary>
+        public static Frequency operator /(Frequency left, double right)
+        {
+            return new Frequency(left.Value / right, left.Unit);
+        }
+
+        /// <summary>Get ratio value from dividing <see cref="Frequency"/> by <see cref="Frequency"/>.</summary>
+        public static double operator /(Frequency left, Frequency right)
+        {
+            return left.Hertz / right.Hertz;
+        }
+
+        #endregion
+
+        #region Equality / IComparable
+
+        /// <summary>Returns true if less or equal to.</summary>
+        public static bool operator <=(Frequency left, Frequency right)
+        {
+            return left.Value <= right.GetValueAs(left.Unit);
+        }
+
+        /// <summary>Returns true if greater than or equal to.</summary>
+        public static bool operator >=(Frequency left, Frequency right)
+        {
+            return left.Value >= right.GetValueAs(left.Unit);
+        }
+
+        /// <summary>Returns true if less than.</summary>
+        public static bool operator <(Frequency left, Frequency right)
+        {
+            return left.Value < right.GetValueAs(left.Unit);
+        }
+
+        /// <summary>Returns true if greater than.</summary>
+        public static bool operator >(Frequency left, Frequency right)
+        {
+            return left.Value > right.GetValueAs(left.Unit);
+        }
+
+        /// <summary>Returns true if exactly equal.</summary>
+        /// <remarks>Consider using <see cref="Equals(Frequency, double, ComparisonType)"/> for safely comparing floating point values.</remarks>
+        public static bool operator ==(Frequency left, Frequency right)
+        {
+            return left.Equals(right);
+        }
+
+        /// <summary>Returns true if not exactly equal.</summary>
+        /// <remarks>Consider using <see cref="Equals(Frequency, double, ComparisonType)"/> for safely comparing floating point values.</remarks>
+        public static bool operator !=(Frequency left, Frequency right)
+        {
+            return !(left == right);
+        }
+
+        /// <inheritdoc />
+        public int CompareTo(object obj)
+        {
+            if(obj is null) throw new ArgumentNullException(nameof(obj));
+            if(!(obj is Frequency objFrequency)) throw new ArgumentException("Expected type Frequency.", nameof(obj));
+
+            return CompareTo(objFrequency);
+        }
+
+        /// <inheritdoc />
+        public int CompareTo(Frequency other)
+        {
+            return _value.CompareTo(other.GetValueAs(this.Unit));
+        }
+
+        /// <inheritdoc />
+        /// <remarks>Consider using <see cref="Equals(Frequency, double, ComparisonType)"/> for safely comparing floating point values.</remarks>
+        public override bool Equals(object obj)
+        {
+            if(obj is null || !(obj is Frequency objFrequency))
+                return false;
+
+            return Equals(objFrequency);
+        }
+
+        /// <inheritdoc />
+        /// <remarks>Consider using <see cref="Equals(Frequency, double, ComparisonType)"/> for safely comparing floating point values.</remarks>
+        public bool Equals(Frequency other)
+        {
+            return _value.Equals(other.GetValueAs(this.Unit));
+        }
 
         /// <summary>
-        ///     Get default string representation of value and unit.
+        ///     <para>
+        ///     Compare equality to another Frequency within the given absolute or relative tolerance.
+        ///     </para>
+        ///     <para>
+        ///     Relative tolerance is defined as the maximum allowable absolute difference between this quantity's value and
+        ///     <paramref name="other"/> as a percentage of this quantity's value. <paramref name="other"/> will be converted into
+        ///     this quantity's unit for comparison. A relative tolerance of 0.01 means the absolute difference must be within +/- 1% of
+        ///     this quantity's value to be considered equal.
+        ///     <example>
+        ///     In this example, the two quantities will be equal if the value of b is within +/- 1% of a (0.02m or 2cm).
+        ///     <code>
+        ///     var a = Length.FromMeters(2.0);
+        ///     var b = Length.FromInches(50.0);
+        ///     a.Equals(b, 0.01, ComparisonType.Relative);
+        ///     </code>
+        ///     </example>
+        ///     </para>
+        ///     <para>
+        ///     Absolute tolerance is defined as the maximum allowable absolute difference between this quantity's value and
+        ///     <paramref name="other"/> as a fixed number in this quantity's unit. <paramref name="other"/> will be converted into
+        ///     this quantity's unit for comparison.
+        ///     <example>
+        ///     In this example, the two quantities will be equal if the value of b is within 0.01 of a (0.01m or 1cm).
+        ///     <code>
+        ///     var a = Length.FromMeters(2.0);
+        ///     var b = Length.FromInches(50.0);
+        ///     a.Equals(b, 0.01, ComparisonType.Absolute);
+        ///     </code>
+        ///     </example>
+        ///     </para>
+        ///     <para>
+        ///     Note that it is advised against specifying zero difference, due to the nature
+        ///     of floating point operations and using System.Double internally.
+        ///     </para>
+        /// </summary>
+        /// <param name="other">The other quantity to compare to.</param>
+        /// <param name="tolerance">The absolute or relative tolerance value. Must be greater than or equal to 0.</param>
+        /// <param name="comparisonType">The comparison type: either relative or absolute.</param>
+        /// <returns>True if the absolute difference between the two values is not greater than the specified relative or absolute tolerance.</returns>
+        public bool Equals(Frequency other, double tolerance, ComparisonType comparisonType)
+        {
+            if(tolerance < 0)
+                throw new ArgumentOutOfRangeException("tolerance", "Tolerance must be greater than or equal to 0.");
+
+            double thisValue = (double)this.Value;
+            double otherValueInThisUnits = other.As(this.Unit);
+
+            return UnitsNet.Comparison.Equals(thisValue, otherValueInThisUnits, tolerance, comparisonType);
+        }
+
+        /// <summary>
+        ///     Returns the hash code for this instance.
+        /// </summary>
+        /// <returns>A hash code for the current Frequency.</returns>
+        public override int GetHashCode()
+        {
+            return new { QuantityType, Value, Unit }.GetHashCode();
+        }
+
+        #endregion
+
+        #region Conversion Methods
+
+        /// <summary>
+        ///     Convert to the unit representation <paramref name="unit" />.
+        /// </summary>
+        /// <returns>Value converted to the specified unit.</returns>
+        public double As(FrequencyUnit unit)
+        {
+            if(Unit == unit)
+                return Convert.ToDouble(Value);
+
+            var converted = GetValueAs(unit);
+            return Convert.ToDouble(converted);
+        }
+
+        /// <inheritdoc cref="IQuantity.As(UnitSystem)"/>
+        public double As(UnitSystem unitSystem)
+        {
+            if(unitSystem is null)
+                throw new ArgumentNullException(nameof(unitSystem));
+
+            var unitInfos = Info.GetUnitInfosFor(unitSystem.BaseUnits);
+
+            var firstUnitInfo = unitInfos.FirstOrDefault();
+            if(firstUnitInfo == null)
+                throw new ArgumentException("No units were found for the given UnitSystem.", nameof(unitSystem));
+
+            return As(firstUnitInfo.Value);
+        }
+
+        /// <inheritdoc />
+        double IQuantity.As(Enum unit)
+        {
+            if(!(unit is FrequencyUnit unitAsFrequencyUnit))
+                throw new ArgumentException($"The given unit is of type {unit.GetType()}. Only {typeof(FrequencyUnit)} is supported.", nameof(unit));
+
+            return As(unitAsFrequencyUnit);
+        }
+
+        /// <summary>
+        ///     Converts this Frequency to another Frequency with the unit representation <paramref name="unit" />.
+        /// </summary>
+        /// <returns>A Frequency with the specified unit.</returns>
+        public Frequency ToUnit(FrequencyUnit unit)
+        {
+            var convertedValue = GetValueAs(unit);
+            return new Frequency(convertedValue, unit);
+        }
+
+        /// <inheritdoc />
+        IQuantity IQuantity.ToUnit(Enum unit)
+        {
+            if(!(unit is FrequencyUnit unitAsFrequencyUnit))
+                throw new ArgumentException($"The given unit is of type {unit.GetType()}. Only {typeof(FrequencyUnit)} is supported.", nameof(unit));
+
+            return ToUnit(unitAsFrequencyUnit);
+        }
+
+        /// <inheritdoc cref="IQuantity.ToUnit(UnitSystem)"/>
+        public Frequency ToUnit(UnitSystem unitSystem)
+        {
+            if(unitSystem is null)
+                throw new ArgumentNullException(nameof(unitSystem));
+
+            var unitInfos = Info.GetUnitInfosFor(unitSystem.BaseUnits);
+
+            var firstUnitInfo = unitInfos.FirstOrDefault();
+            if(firstUnitInfo == null)
+                throw new ArgumentException("No units were found for the given UnitSystem.", nameof(unitSystem));
+
+            return ToUnit(firstUnitInfo.Value);
+        }
+
+        /// <inheritdoc />
+        IQuantity IQuantity.ToUnit(UnitSystem unitSystem) => ToUnit(unitSystem);
+
+        /// <inheritdoc />
+        IQuantity<FrequencyUnit> IQuantity<FrequencyUnit>.ToUnit(FrequencyUnit unit) => ToUnit(unit);
+
+        /// <inheritdoc />
+        IQuantity<FrequencyUnit> IQuantity<FrequencyUnit>.ToUnit(UnitSystem unitSystem) => ToUnit(unitSystem);
+
+        /// <summary>
+        ///     Converts the current value + unit to the base unit.
+        ///     This is typically the first step in converting from one unit to another.
+        /// </summary>
+        /// <returns>The value in the base unit representation.</returns>
+        private double GetValueInBaseUnit()
+        {
+            switch(Unit)
+            {
+                case FrequencyUnit.BeatPerMinute: return _value/60;
+                case FrequencyUnit.CyclePerHour: return _value/3600;
+                case FrequencyUnit.CyclePerMinute: return _value/60;
+                case FrequencyUnit.Gigahertz: return (_value) * 1e9d;
+                case FrequencyUnit.Hertz: return _value;
+                case FrequencyUnit.Kilohertz: return (_value) * 1e3d;
+                case FrequencyUnit.Megahertz: return (_value) * 1e6d;
+                case FrequencyUnit.PerSecond: return _value;
+                case FrequencyUnit.RadianPerSecond: return _value/6.2831853072;
+                case FrequencyUnit.Terahertz: return (_value) * 1e12d;
+                default:
+                    throw new NotImplementedException($"Can not convert {Unit} to base units.");
+            }
+        }
+
+        /// <summary>
+        ///     Converts the current value + unit to the base unit.
+        ///     This is typically the first step in converting from one unit to another.
+        /// </summary>
+        /// <returns>The value in the base unit representation.</returns>
+        internal Frequency ToBaseUnit()
+        {
+            var baseUnitValue = GetValueInBaseUnit();
+            return new Frequency(baseUnitValue, BaseUnit);
+        }
+
+        private double GetValueAs(FrequencyUnit unit)
+        {
+            if(Unit == unit)
+                return _value;
+
+            var baseUnitValue = GetValueInBaseUnit();
+
+            switch(unit)
+            {
+                case FrequencyUnit.BeatPerMinute: return baseUnitValue*60;
+                case FrequencyUnit.CyclePerHour: return baseUnitValue*3600;
+                case FrequencyUnit.CyclePerMinute: return baseUnitValue*60;
+                case FrequencyUnit.Gigahertz: return (baseUnitValue) / 1e9d;
+                case FrequencyUnit.Hertz: return baseUnitValue;
+                case FrequencyUnit.Kilohertz: return (baseUnitValue) / 1e3d;
+                case FrequencyUnit.Megahertz: return (baseUnitValue) / 1e6d;
+                case FrequencyUnit.PerSecond: return baseUnitValue;
+                case FrequencyUnit.RadianPerSecond: return baseUnitValue*6.2831853072;
+                case FrequencyUnit.Terahertz: return (baseUnitValue) / 1e12d;
+                default:
+                    throw new NotImplementedException($"Can not convert {Unit} to {unit}.");
+            }
+        }
+
+        #endregion
+
+        #region ToString Methods
+
+        /// <summary>
+        ///     Gets the default string representation of value and unit.
         /// </summary>
         /// <returns>String representation.</returns>
         public override string ToString()
         {
-            return ToString(ToStringDefaultUnit);
+            return ToString("g");
         }
 
         /// <summary>
-        ///     Get string representation of value and unit. Using current UI culture and two significant digits after radix.
+        ///     Gets the default string representation of value and unit using the given format provider.
         /// </summary>
-        /// <param name="unit">Unit representation to use.</param>
         /// <returns>String representation.</returns>
-        public string ToString(FrequencyUnit unit)
+        /// <param name="provider">Format to use for localization and number formatting. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public string ToString(IFormatProvider? provider)
         {
-            return ToString(unit, null, 2);
-        }
-
-        /// <summary>
-        ///     Get string representation of value and unit. Using two significant digits after radix.
-        /// </summary>
-        /// <param name="unit">Unit representation to use.</param>
-        /// <param name="culture">Culture to use for localization and number formatting.</param>
-        /// <returns>String representation.</returns>
-        public string ToString(FrequencyUnit unit, [CanBeNull] Culture culture)
-        {
-            return ToString(unit, culture, 2);
+            return ToString("g", provider);
         }
 
         /// <summary>
         ///     Get string representation of value and unit.
         /// </summary>
-        /// <param name="unit">Unit representation to use.</param>
-        /// <param name="culture">Culture to use for localization and number formatting.</param>
         /// <param name="significantDigitsAfterRadix">The number of significant digits after the radix point.</param>
         /// <returns>String representation.</returns>
-        [UsedImplicitly]
-        public string ToString(FrequencyUnit unit, [CanBeNull] Culture culture, int significantDigitsAfterRadix)
+        /// <param name="provider">Format to use for localization and number formatting. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        [Obsolete(@"This method is deprecated and will be removed at a future release. Please use ToString(""s2"") or ToString(""s2"", provider) where 2 is an example of the number passed to significantDigitsAfterRadix.")]
+        public string ToString(IFormatProvider? provider, int significantDigitsAfterRadix)
         {
-            double value = As(unit);
-            string format = UnitFormatter.GetFormat(value, significantDigitsAfterRadix);
-            return ToString(unit, culture, format);
+            var value = Convert.ToDouble(Value);
+            var format = UnitFormatter.GetFormat(value, significantDigitsAfterRadix);
+            return ToString(provider, format);
         }
 
         /// <summary>
         ///     Get string representation of value and unit.
         /// </summary>
-        /// <param name="culture">Culture to use for localization and number formatting.</param>
-        /// <param name="unit">Unit representation to use.</param>
         /// <param name="format">String format to use. Default:  "{0:0.##} {1} for value and unit abbreviation respectively."</param>
-        /// <param name="args">Arguments for string format. Value and unit are implictly included as arguments 0 and 1.</param>
+        /// <param name="args">Arguments for string format. Value and unit are implicitly included as arguments 0 and 1.</param>
         /// <returns>String representation.</returns>
-        [UsedImplicitly]
-        public string ToString(FrequencyUnit unit, [CanBeNull] Culture culture, [NotNull] string format,
-            [NotNull] params object[] args)
+        /// <param name="provider">Format to use for localization and number formatting. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        [Obsolete("This method is deprecated and will be removed at a future release. Please use string.Format().")]
+        public string ToString(IFormatProvider? provider, [NotNull] string format, [NotNull] params object[] args)
         {
             if (format == null) throw new ArgumentNullException(nameof(format));
             if (args == null) throw new ArgumentNullException(nameof(args));
 
-        // Windows Runtime Component does not support CultureInfo type, so use culture name string for public methods instead: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if WINDOWS_UWP
-            IFormatProvider formatProvider = culture == null ? null : new CultureInfo(culture);
-#else
-            IFormatProvider formatProvider = culture;
-#endif
-            double value = As(unit);
-            object[] formatArgs = UnitFormatter.GetFormatArgs(unit, value, formatProvider, args);
-            return string.Format(formatProvider, format, formatArgs);
+            provider = provider ?? CultureInfo.CurrentUICulture;
+
+            var value = Convert.ToDouble(Value);
+            var formatArgs = UnitFormatter.GetFormatArgs(Unit, value, provider, args);
+            return string.Format(provider, format, formatArgs);
         }
 
+        /// <inheritdoc cref="QuantityFormatter.Format{TUnitType}(IQuantity{TUnitType}, string, IFormatProvider)"/>
         /// <summary>
-        /// Represents the largest possible value of Frequency
+        /// Gets the string representation of this instance in the specified format string using <see cref="CultureInfo.CurrentUICulture" />.
         /// </summary>
-        public static Frequency MaxValue
+        /// <param name="format">The format string.</param>
+        /// <returns>The string representation.</returns>
+        public string ToString(string format)
         {
-            get
-            {
-                return new Frequency(double.MaxValue);
-            }
+            return ToString(format, CultureInfo.CurrentUICulture);
         }
 
+        /// <inheritdoc cref="QuantityFormatter.Format{TUnitType}(IQuantity{TUnitType}, string, IFormatProvider)"/>
         /// <summary>
-        /// Represents the smallest possible value of Frequency
+        /// Gets the string representation of this instance in the specified format string using the specified format provider, or <see cref="CultureInfo.CurrentUICulture" /> if null.
         /// </summary>
-        public static Frequency MinValue
+        /// <param name="format">The format string.</param>
+        /// <param name="provider">Format to use for localization and number formatting. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        /// <returns>The string representation.</returns>
+        public string ToString(string format, IFormatProvider? provider)
         {
-            get
-            {
-                return new Frequency(double.MinValue);
-            }
+            return QuantityFormatter.Format<FrequencyUnit>(this, format, provider);
         }
+
+        #endregion
+
+        #region IConvertible Methods
+
+        TypeCode IConvertible.GetTypeCode()
+        {
+            return TypeCode.Object;
+        }
+
+        bool IConvertible.ToBoolean(IFormatProvider provider)
+        {
+            throw new InvalidCastException($"Converting {typeof(Frequency)} to bool is not supported.");
+        }
+
+        byte IConvertible.ToByte(IFormatProvider provider)
+        {
+            return Convert.ToByte(_value);
+        }
+
+        char IConvertible.ToChar(IFormatProvider provider)
+        {
+            throw new InvalidCastException($"Converting {typeof(Frequency)} to char is not supported.");
+        }
+
+        DateTime IConvertible.ToDateTime(IFormatProvider provider)
+        {
+            throw new InvalidCastException($"Converting {typeof(Frequency)} to DateTime is not supported.");
+        }
+
+        decimal IConvertible.ToDecimal(IFormatProvider provider)
+        {
+            return Convert.ToDecimal(_value);
+        }
+
+        double IConvertible.ToDouble(IFormatProvider provider)
+        {
+            return Convert.ToDouble(_value);
+        }
+
+        short IConvertible.ToInt16(IFormatProvider provider)
+        {
+            return Convert.ToInt16(_value);
+        }
+
+        int IConvertible.ToInt32(IFormatProvider provider)
+        {
+            return Convert.ToInt32(_value);
+        }
+
+        long IConvertible.ToInt64(IFormatProvider provider)
+        {
+            return Convert.ToInt64(_value);
+        }
+
+        sbyte IConvertible.ToSByte(IFormatProvider provider)
+        {
+            return Convert.ToSByte(_value);
+        }
+
+        float IConvertible.ToSingle(IFormatProvider provider)
+        {
+            return Convert.ToSingle(_value);
+        }
+
+        string IConvertible.ToString(IFormatProvider provider)
+        {
+            return ToString("g", provider);
+        }
+
+        object IConvertible.ToType(Type conversionType, IFormatProvider provider)
+        {
+            if(conversionType == typeof(Frequency))
+                return this;
+            else if(conversionType == typeof(FrequencyUnit))
+                return Unit;
+            else if(conversionType == typeof(QuantityType))
+                return Frequency.QuantityType;
+            else if(conversionType == typeof(BaseDimensions))
+                return Frequency.BaseDimensions;
+            else
+                throw new InvalidCastException($"Converting {typeof(Frequency)} to {conversionType} is not supported.");
+        }
+
+        ushort IConvertible.ToUInt16(IFormatProvider provider)
+        {
+            return Convert.ToUInt16(_value);
+        }
+
+        uint IConvertible.ToUInt32(IFormatProvider provider)
+        {
+            return Convert.ToUInt32(_value);
+        }
+
+        ulong IConvertible.ToUInt64(IFormatProvider provider)
+        {
+            return Convert.ToUInt64(_value);
+        }
+
+        #endregion
     }
 }

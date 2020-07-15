@@ -8,919 +8,225 @@
 //
 //     See https://github.com/angularsen/UnitsNet/wiki/Adding-a-New-Unit for how to add or edit units.
 //
-//     Add CustomCode\Quantities\MyUnit.extra.cs files to add code to generated quantities.
-//     Add Extensions\MyUnitExtensions.cs to decorate quantities with new behavior.
-//     Add UnitDefinitions\MyUnit.json and run GeneratUnits.bat to generate new units or quantities.
+//     Add CustomCode\Quantities\MyQuantity.extra.cs files to add code to generated quantities.
+//     Add UnitDefinitions\MyQuantity.json and run generate-code.bat to generate new units or quantities.
 //
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-// Copyright (c) 2013 Andreas Gullberg Larsen (andreas.larsen84@gmail.com).
-// https://github.com/angularsen/UnitsNet
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
+// Licensed under MIT No Attribution, see LICENSE file at the root.
+// Copyright 2013 Andreas Gullberg Larsen (andreas.larsen84@gmail.com). Maintained at https://github.com/angularsen/UnitsNet.
 
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Text.RegularExpressions;
 using System.Linq;
 using JetBrains.Annotations;
+using UnitsNet.InternalHelpers;
 using UnitsNet.Units;
 
-// Windows Runtime Component does not support CultureInfo type, so use culture name string instead for public methods: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if WINDOWS_UWP
-using Culture = System.String;
-#else
-using Culture = System.IFormatProvider;
-#endif
+#nullable enable
 
 // ReSharper disable once CheckNamespace
 
 namespace UnitsNet
 {
+    /// <inheritdoc />
     /// <summary>
     ///     Difference between two temperatures. The conversions are different than for Temperature.
     /// </summary>
-    // ReSharper disable once PartialTypeWithSinglePart
-
-    // Windows Runtime Component has constraints on public types: https://msdn.microsoft.com/en-us/library/br230301.aspx#Declaring types in Windows Runtime Components
-    // Public structures can't have any members other than public fields, and those fields must be value types or strings.
-    // Public classes must be sealed (NotInheritable in Visual Basic). If your programming model requires polymorphism, you can create a public interface and implement that interface on the classes that must be polymorphic.
-#if WINDOWS_UWP
-    public sealed partial class TemperatureDelta
-#else
-    public partial struct TemperatureDelta : IComparable, IComparable<TemperatureDelta>
-#endif
+    public partial struct TemperatureDelta : IQuantity<TemperatureDeltaUnit>, IEquatable<TemperatureDelta>, IComparable, IComparable<TemperatureDelta>, IConvertible, IFormattable
     {
         /// <summary>
-        ///     Base unit of TemperatureDelta.
+        ///     The numeric value this quantity was constructed with.
         /// </summary>
-        private readonly double _kelvins;
+        private readonly double _value;
 
-        // Windows Runtime Component requires a default constructor
-#if WINDOWS_UWP
-        public TemperatureDelta() : this(0)
-        {
-        }
-#endif
+        /// <summary>
+        ///     The unit this quantity was constructed with.
+        /// </summary>
+        private readonly TemperatureDeltaUnit? _unit;
 
-        public TemperatureDelta(double kelvins)
+        static TemperatureDelta()
         {
-            _kelvins = Convert.ToDouble(kelvins);
-        }
+            BaseDimensions = BaseDimensions.Dimensionless;
 
-        // Windows Runtime Component does not allow public methods/ctors with same number of parameters: https://msdn.microsoft.com/en-us/library/br230301.aspx#Overloaded methods
-#if WINDOWS_UWP
-        private
-#else
-        public
-#endif
-        TemperatureDelta(long kelvins)
-        {
-            _kelvins = Convert.ToDouble(kelvins);
-        }
-
-        // Windows Runtime Component does not allow public methods/ctors with same number of parameters: https://msdn.microsoft.com/en-us/library/br230301.aspx#Overloaded methods
-        // Windows Runtime Component does not support decimal type
-#if WINDOWS_UWP
-        private
-#else
-        public
-#endif
-        TemperatureDelta(decimal kelvins)
-        {
-            _kelvins = Convert.ToDouble(kelvins);
+            Info = new QuantityInfo<TemperatureDeltaUnit>(QuantityType.TemperatureDelta,
+                new UnitInfo<TemperatureDeltaUnit>[] {
+                    new UnitInfo<TemperatureDeltaUnit>(TemperatureDeltaUnit.DegreeCelsius, BaseUnits.Undefined),
+                    new UnitInfo<TemperatureDeltaUnit>(TemperatureDeltaUnit.DegreeDelisle, BaseUnits.Undefined),
+                    new UnitInfo<TemperatureDeltaUnit>(TemperatureDeltaUnit.DegreeFahrenheit, BaseUnits.Undefined),
+                    new UnitInfo<TemperatureDeltaUnit>(TemperatureDeltaUnit.DegreeNewton, BaseUnits.Undefined),
+                    new UnitInfo<TemperatureDeltaUnit>(TemperatureDeltaUnit.DegreeRankine, BaseUnits.Undefined),
+                    new UnitInfo<TemperatureDeltaUnit>(TemperatureDeltaUnit.DegreeReaumur, BaseUnits.Undefined),
+                    new UnitInfo<TemperatureDeltaUnit>(TemperatureDeltaUnit.DegreeRoemer, BaseUnits.Undefined),
+                    new UnitInfo<TemperatureDeltaUnit>(TemperatureDeltaUnit.Kelvin, BaseUnits.Undefined),
+                    new UnitInfo<TemperatureDeltaUnit>(TemperatureDeltaUnit.MillidegreeCelsius, BaseUnits.Undefined),
+                },
+                BaseUnit, Zero, BaseDimensions);
         }
 
-        #region Properties
+        /// <summary>
+        ///     Creates the quantity with the given numeric value and unit.
+        /// </summary>
+        /// <param name="value">The numeric value to construct this quantity with.</param>
+        /// <param name="unit">The unit representation to construct this quantity with.</param>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public TemperatureDelta(double value, TemperatureDeltaUnit unit)
+        {
+            if(unit == TemperatureDeltaUnit.Undefined)
+              throw new ArgumentException("The quantity can not be created with an undefined unit.", nameof(unit));
+
+            _value = Guard.EnsureValidNumber(value, nameof(value));
+            _unit = unit;
+        }
+
+        /// <summary>
+        /// Creates an instance of the quantity with the given numeric value in units compatible with the given <see cref="UnitSystem"/>.
+        /// If multiple compatible units were found, the first match is used.
+        /// </summary>
+        /// <param name="value">The numeric value to construct this quantity with.</param>
+        /// <param name="unitSystem">The unit system to create the quantity with.</param>
+        /// <exception cref="ArgumentNullException">The given <see cref="UnitSystem"/> is null.</exception>
+        /// <exception cref="ArgumentException">No unit was found for the given <see cref="UnitSystem"/>.</exception>
+        public TemperatureDelta(double value, UnitSystem unitSystem)
+        {
+            if(unitSystem is null) throw new ArgumentNullException(nameof(unitSystem));
+
+            var unitInfos = Info.GetUnitInfosFor(unitSystem.BaseUnits);
+            var firstUnitInfo = unitInfos.FirstOrDefault();
+
+            _value = Guard.EnsureValidNumber(value, nameof(value));
+            _unit = firstUnitInfo?.Value ?? throw new ArgumentException("No units were found for the given UnitSystem.", nameof(unitSystem));
+        }
+
+        #region Static Properties
+
+        /// <inheritdoc cref="IQuantity.QuantityInfo"/>
+        public static QuantityInfo<TemperatureDeltaUnit> Info { get; }
+
+        /// <summary>
+        ///     The <see cref="BaseDimensions" /> of this quantity.
+        /// </summary>
+        public static BaseDimensions BaseDimensions { get; }
+
+        /// <summary>
+        ///     The base unit of TemperatureDelta, which is Kelvin. All conversions go via this value.
+        /// </summary>
+        public static TemperatureDeltaUnit BaseUnit { get; } = TemperatureDeltaUnit.Kelvin;
+
+        /// <summary>
+        /// Represents the largest possible value of TemperatureDelta
+        /// </summary>
+        public static TemperatureDelta MaxValue { get; } = new TemperatureDelta(double.MaxValue, BaseUnit);
+
+        /// <summary>
+        /// Represents the smallest possible value of TemperatureDelta
+        /// </summary>
+        public static TemperatureDelta MinValue { get; } = new TemperatureDelta(double.MinValue, BaseUnit);
 
         /// <summary>
         ///     The <see cref="QuantityType" /> of this quantity.
         /// </summary>
-        public static QuantityType QuantityType => QuantityType.TemperatureDelta;
-
-        /// <summary>
-        ///     The base unit representation of this quantity for the numeric value stored internally. All conversions go via this value.
-        /// </summary>
-        public static TemperatureDeltaUnit BaseUnit
-        {
-            get { return TemperatureDeltaUnit.Kelvin; }
-        }
+        public static QuantityType QuantityType { get; } = QuantityType.TemperatureDelta;
 
         /// <summary>
         ///     All units of measurement for the TemperatureDelta quantity.
         /// </summary>
-        public static TemperatureDeltaUnit[] Units { get; } = Enum.GetValues(typeof(TemperatureDeltaUnit)).Cast<TemperatureDeltaUnit>().ToArray();
+        public static TemperatureDeltaUnit[] Units { get; } = Enum.GetValues(typeof(TemperatureDeltaUnit)).Cast<TemperatureDeltaUnit>().Except(new TemperatureDeltaUnit[]{ TemperatureDeltaUnit.Undefined }).ToArray();
+
+        /// <summary>
+        ///     Gets an instance of this quantity with a value of 0 in the base unit Kelvin.
+        /// </summary>
+        public static TemperatureDelta Zero { get; } = new TemperatureDelta(0, BaseUnit);
+
+        #endregion
+
+        #region Properties
+
+        /// <summary>
+        ///     The numeric value this quantity was constructed with.
+        /// </summary>
+        public double Value => _value;
+
+        Enum IQuantity.Unit => Unit;
+
+        /// <inheritdoc />
+        public TemperatureDeltaUnit Unit => _unit.GetValueOrDefault(BaseUnit);
+
+        /// <inheritdoc />
+        public QuantityInfo<TemperatureDeltaUnit> QuantityInfo => Info;
+
+        /// <inheritdoc cref="IQuantity.QuantityInfo"/>
+        QuantityInfo IQuantity.QuantityInfo => Info;
+
+        /// <summary>
+        ///     The <see cref="QuantityType" /> of this quantity.
+        /// </summary>
+        public QuantityType Type => TemperatureDelta.QuantityType;
+
+        /// <summary>
+        ///     The <see cref="BaseDimensions" /> of this quantity.
+        /// </summary>
+        public BaseDimensions Dimensions => TemperatureDelta.BaseDimensions;
+
+        #endregion
+
+        #region Conversion Properties
 
         /// <summary>
         ///     Get TemperatureDelta in DegreesCelsius.
         /// </summary>
-        public double DegreesCelsius
-        {
-            get { return _kelvins; }
-        }
-
-        /// <summary>
-        ///     Get TemperatureDelta in DegreesCelsiusDelta.
-        /// </summary>
-        [System.Obsolete("Deprecated due to github issue #180, please use DegreeCelsius instead")]
-        public double DegreesCelsiusDelta
-        {
-            get { return _kelvins; }
-        }
+        public double DegreesCelsius => As(TemperatureDeltaUnit.DegreeCelsius);
 
         /// <summary>
         ///     Get TemperatureDelta in DegreesDelisle.
         /// </summary>
-        public double DegreesDelisle
-        {
-            get { return _kelvins*-3/2; }
-        }
-
-        /// <summary>
-        ///     Get TemperatureDelta in DegreesDelisleDelta.
-        /// </summary>
-        [System.Obsolete("Deprecated due to github issue #180, please use DegreeDelisle instead")]
-        public double DegreesDelisleDelta
-        {
-            get { return _kelvins*-3/2; }
-        }
+        public double DegreesDelisle => As(TemperatureDeltaUnit.DegreeDelisle);
 
         /// <summary>
         ///     Get TemperatureDelta in DegreesFahrenheit.
         /// </summary>
-        public double DegreesFahrenheit
-        {
-            get { return _kelvins*9/5; }
-        }
-
-        /// <summary>
-        ///     Get TemperatureDelta in DegreesFahrenheitDelta.
-        /// </summary>
-        [System.Obsolete("Deprecated due to github issue #180, please use DegreeFahrenheit instead")]
-        public double DegreesFahrenheitDelta
-        {
-            get { return _kelvins*9/5; }
-        }
+        public double DegreesFahrenheit => As(TemperatureDeltaUnit.DegreeFahrenheit);
 
         /// <summary>
         ///     Get TemperatureDelta in DegreesNewton.
         /// </summary>
-        public double DegreesNewton
-        {
-            get { return _kelvins*33/100; }
-        }
-
-        /// <summary>
-        ///     Get TemperatureDelta in DegreesNewtonDelta.
-        /// </summary>
-        [System.Obsolete("Deprecated due to github issue #180, please use DegreeNewton instead")]
-        public double DegreesNewtonDelta
-        {
-            get { return _kelvins*33/100; }
-        }
+        public double DegreesNewton => As(TemperatureDeltaUnit.DegreeNewton);
 
         /// <summary>
         ///     Get TemperatureDelta in DegreesRankine.
         /// </summary>
-        public double DegreesRankine
-        {
-            get { return _kelvins*9/5; }
-        }
-
-        /// <summary>
-        ///     Get TemperatureDelta in DegreesRankineDelta.
-        /// </summary>
-        [System.Obsolete("Deprecated due to github issue #180, please use DegreeRankine instead")]
-        public double DegreesRankineDelta
-        {
-            get { return _kelvins*9/5; }
-        }
+        public double DegreesRankine => As(TemperatureDeltaUnit.DegreeRankine);
 
         /// <summary>
         ///     Get TemperatureDelta in DegreesReaumur.
         /// </summary>
-        public double DegreesReaumur
-        {
-            get { return _kelvins*4/5; }
-        }
-
-        /// <summary>
-        ///     Get TemperatureDelta in DegreesReaumurDelta.
-        /// </summary>
-        [System.Obsolete("Deprecated due to github issue #180, please use DegreeReaumur instead")]
-        public double DegreesReaumurDelta
-        {
-            get { return _kelvins*4/5; }
-        }
+        public double DegreesReaumur => As(TemperatureDeltaUnit.DegreeReaumur);
 
         /// <summary>
         ///     Get TemperatureDelta in DegreesRoemer.
         /// </summary>
-        public double DegreesRoemer
-        {
-            get { return _kelvins*21/40; }
-        }
-
-        /// <summary>
-        ///     Get TemperatureDelta in DegreesRoemerDelta.
-        /// </summary>
-        [System.Obsolete("Deprecated due to github issue #180, please use DegreeRoemer instead")]
-        public double DegreesRoemerDelta
-        {
-            get { return _kelvins*21/40; }
-        }
+        public double DegreesRoemer => As(TemperatureDeltaUnit.DegreeRoemer);
 
         /// <summary>
         ///     Get TemperatureDelta in Kelvins.
         /// </summary>
-        public double Kelvins
-        {
-            get { return _kelvins; }
-        }
+        public double Kelvins => As(TemperatureDeltaUnit.Kelvin);
 
         /// <summary>
-        ///     Get TemperatureDelta in KelvinsDelta.
+        ///     Get TemperatureDelta in MillidegreesCelsius.
         /// </summary>
-        [System.Obsolete("Deprecated due to github issue #180, please use Kelvin instead")]
-        public double KelvinsDelta
-        {
-            get { return _kelvins; }
-        }
+        public double MillidegreesCelsius => As(TemperatureDeltaUnit.MillidegreeCelsius);
 
         #endregion
 
-        #region Static
-
-        public static TemperatureDelta Zero
-        {
-            get { return new TemperatureDelta(); }
-        }
-
-        /// <summary>
-        ///     Get TemperatureDelta from DegreesCelsius.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static TemperatureDelta FromDegreesCelsius(double degreescelsius)
-        {
-            double value = (double) degreescelsius;
-            return new TemperatureDelta(value);
-        }
-#else
-        public static TemperatureDelta FromDegreesCelsius(QuantityValue degreescelsius)
-        {
-            double value = (double) degreescelsius;
-            return new TemperatureDelta((value));
-        }
-#endif
-
-        /// <summary>
-        ///     Get TemperatureDelta from DegreesCelsiusDelta.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static TemperatureDelta FromDegreesCelsiusDelta(double degreescelsiusdelta)
-        {
-            double value = (double) degreescelsiusdelta;
-            return new TemperatureDelta(value);
-        }
-#else
-        public static TemperatureDelta FromDegreesCelsiusDelta(QuantityValue degreescelsiusdelta)
-        {
-            double value = (double) degreescelsiusdelta;
-            return new TemperatureDelta((value));
-        }
-#endif
-
-        /// <summary>
-        ///     Get TemperatureDelta from DegreesDelisle.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static TemperatureDelta FromDegreesDelisle(double degreesdelisle)
-        {
-            double value = (double) degreesdelisle;
-            return new TemperatureDelta(value*-2/3);
-        }
-#else
-        public static TemperatureDelta FromDegreesDelisle(QuantityValue degreesdelisle)
-        {
-            double value = (double) degreesdelisle;
-            return new TemperatureDelta((value*-2/3));
-        }
-#endif
-
-        /// <summary>
-        ///     Get TemperatureDelta from DegreesDelisleDelta.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static TemperatureDelta FromDegreesDelisleDelta(double degreesdelisledelta)
-        {
-            double value = (double) degreesdelisledelta;
-            return new TemperatureDelta(value*-2/3);
-        }
-#else
-        public static TemperatureDelta FromDegreesDelisleDelta(QuantityValue degreesdelisledelta)
-        {
-            double value = (double) degreesdelisledelta;
-            return new TemperatureDelta((value*-2/3));
-        }
-#endif
-
-        /// <summary>
-        ///     Get TemperatureDelta from DegreesFahrenheit.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static TemperatureDelta FromDegreesFahrenheit(double degreesfahrenheit)
-        {
-            double value = (double) degreesfahrenheit;
-            return new TemperatureDelta(value*5/9);
-        }
-#else
-        public static TemperatureDelta FromDegreesFahrenheit(QuantityValue degreesfahrenheit)
-        {
-            double value = (double) degreesfahrenheit;
-            return new TemperatureDelta((value*5/9));
-        }
-#endif
-
-        /// <summary>
-        ///     Get TemperatureDelta from DegreesFahrenheitDelta.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static TemperatureDelta FromDegreesFahrenheitDelta(double degreesfahrenheitdelta)
-        {
-            double value = (double) degreesfahrenheitdelta;
-            return new TemperatureDelta(value*5/9);
-        }
-#else
-        public static TemperatureDelta FromDegreesFahrenheitDelta(QuantityValue degreesfahrenheitdelta)
-        {
-            double value = (double) degreesfahrenheitdelta;
-            return new TemperatureDelta((value*5/9));
-        }
-#endif
-
-        /// <summary>
-        ///     Get TemperatureDelta from DegreesNewton.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static TemperatureDelta FromDegreesNewton(double degreesnewton)
-        {
-            double value = (double) degreesnewton;
-            return new TemperatureDelta(value*100/33);
-        }
-#else
-        public static TemperatureDelta FromDegreesNewton(QuantityValue degreesnewton)
-        {
-            double value = (double) degreesnewton;
-            return new TemperatureDelta((value*100/33));
-        }
-#endif
-
-        /// <summary>
-        ///     Get TemperatureDelta from DegreesNewtonDelta.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static TemperatureDelta FromDegreesNewtonDelta(double degreesnewtondelta)
-        {
-            double value = (double) degreesnewtondelta;
-            return new TemperatureDelta(value*100/33);
-        }
-#else
-        public static TemperatureDelta FromDegreesNewtonDelta(QuantityValue degreesnewtondelta)
-        {
-            double value = (double) degreesnewtondelta;
-            return new TemperatureDelta((value*100/33));
-        }
-#endif
-
-        /// <summary>
-        ///     Get TemperatureDelta from DegreesRankine.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static TemperatureDelta FromDegreesRankine(double degreesrankine)
-        {
-            double value = (double) degreesrankine;
-            return new TemperatureDelta(value*5/9);
-        }
-#else
-        public static TemperatureDelta FromDegreesRankine(QuantityValue degreesrankine)
-        {
-            double value = (double) degreesrankine;
-            return new TemperatureDelta((value*5/9));
-        }
-#endif
-
-        /// <summary>
-        ///     Get TemperatureDelta from DegreesRankineDelta.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static TemperatureDelta FromDegreesRankineDelta(double degreesrankinedelta)
-        {
-            double value = (double) degreesrankinedelta;
-            return new TemperatureDelta(value*5/9);
-        }
-#else
-        public static TemperatureDelta FromDegreesRankineDelta(QuantityValue degreesrankinedelta)
-        {
-            double value = (double) degreesrankinedelta;
-            return new TemperatureDelta((value*5/9));
-        }
-#endif
-
-        /// <summary>
-        ///     Get TemperatureDelta from DegreesReaumur.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static TemperatureDelta FromDegreesReaumur(double degreesreaumur)
-        {
-            double value = (double) degreesreaumur;
-            return new TemperatureDelta(value*5/4);
-        }
-#else
-        public static TemperatureDelta FromDegreesReaumur(QuantityValue degreesreaumur)
-        {
-            double value = (double) degreesreaumur;
-            return new TemperatureDelta((value*5/4));
-        }
-#endif
-
-        /// <summary>
-        ///     Get TemperatureDelta from DegreesReaumurDelta.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static TemperatureDelta FromDegreesReaumurDelta(double degreesreaumurdelta)
-        {
-            double value = (double) degreesreaumurdelta;
-            return new TemperatureDelta(value*5/4);
-        }
-#else
-        public static TemperatureDelta FromDegreesReaumurDelta(QuantityValue degreesreaumurdelta)
-        {
-            double value = (double) degreesreaumurdelta;
-            return new TemperatureDelta((value*5/4));
-        }
-#endif
-
-        /// <summary>
-        ///     Get TemperatureDelta from DegreesRoemer.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static TemperatureDelta FromDegreesRoemer(double degreesroemer)
-        {
-            double value = (double) degreesroemer;
-            return new TemperatureDelta(value*40/21);
-        }
-#else
-        public static TemperatureDelta FromDegreesRoemer(QuantityValue degreesroemer)
-        {
-            double value = (double) degreesroemer;
-            return new TemperatureDelta((value*40/21));
-        }
-#endif
-
-        /// <summary>
-        ///     Get TemperatureDelta from DegreesRoemerDelta.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static TemperatureDelta FromDegreesRoemerDelta(double degreesroemerdelta)
-        {
-            double value = (double) degreesroemerdelta;
-            return new TemperatureDelta(value*40/21);
-        }
-#else
-        public static TemperatureDelta FromDegreesRoemerDelta(QuantityValue degreesroemerdelta)
-        {
-            double value = (double) degreesroemerdelta;
-            return new TemperatureDelta((value*40/21));
-        }
-#endif
-
-        /// <summary>
-        ///     Get TemperatureDelta from Kelvins.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static TemperatureDelta FromKelvins(double kelvins)
-        {
-            double value = (double) kelvins;
-            return new TemperatureDelta(value);
-        }
-#else
-        public static TemperatureDelta FromKelvins(QuantityValue kelvins)
-        {
-            double value = (double) kelvins;
-            return new TemperatureDelta((value));
-        }
-#endif
-
-        /// <summary>
-        ///     Get TemperatureDelta from KelvinsDelta.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static TemperatureDelta FromKelvinsDelta(double kelvinsdelta)
-        {
-            double value = (double) kelvinsdelta;
-            return new TemperatureDelta(value);
-        }
-#else
-        public static TemperatureDelta FromKelvinsDelta(QuantityValue kelvinsdelta)
-        {
-            double value = (double) kelvinsdelta;
-            return new TemperatureDelta((value));
-        }
-#endif
-
-        // Windows Runtime Component does not support nullable types (double?): https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if !WINDOWS_UWP
-        /// <summary>
-        ///     Get nullable TemperatureDelta from nullable DegreesCelsius.
-        /// </summary>
-        public static TemperatureDelta? FromDegreesCelsius(QuantityValue? degreescelsius)
-        {
-            if (degreescelsius.HasValue)
-            {
-                return FromDegreesCelsius(degreescelsius.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable TemperatureDelta from nullable DegreesCelsiusDelta.
-        /// </summary>
-        public static TemperatureDelta? FromDegreesCelsiusDelta(QuantityValue? degreescelsiusdelta)
-        {
-            if (degreescelsiusdelta.HasValue)
-            {
-                return FromDegreesCelsiusDelta(degreescelsiusdelta.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable TemperatureDelta from nullable DegreesDelisle.
-        /// </summary>
-        public static TemperatureDelta? FromDegreesDelisle(QuantityValue? degreesdelisle)
-        {
-            if (degreesdelisle.HasValue)
-            {
-                return FromDegreesDelisle(degreesdelisle.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable TemperatureDelta from nullable DegreesDelisleDelta.
-        /// </summary>
-        public static TemperatureDelta? FromDegreesDelisleDelta(QuantityValue? degreesdelisledelta)
-        {
-            if (degreesdelisledelta.HasValue)
-            {
-                return FromDegreesDelisleDelta(degreesdelisledelta.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable TemperatureDelta from nullable DegreesFahrenheit.
-        /// </summary>
-        public static TemperatureDelta? FromDegreesFahrenheit(QuantityValue? degreesfahrenheit)
-        {
-            if (degreesfahrenheit.HasValue)
-            {
-                return FromDegreesFahrenheit(degreesfahrenheit.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable TemperatureDelta from nullable DegreesFahrenheitDelta.
-        /// </summary>
-        public static TemperatureDelta? FromDegreesFahrenheitDelta(QuantityValue? degreesfahrenheitdelta)
-        {
-            if (degreesfahrenheitdelta.HasValue)
-            {
-                return FromDegreesFahrenheitDelta(degreesfahrenheitdelta.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable TemperatureDelta from nullable DegreesNewton.
-        /// </summary>
-        public static TemperatureDelta? FromDegreesNewton(QuantityValue? degreesnewton)
-        {
-            if (degreesnewton.HasValue)
-            {
-                return FromDegreesNewton(degreesnewton.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable TemperatureDelta from nullable DegreesNewtonDelta.
-        /// </summary>
-        public static TemperatureDelta? FromDegreesNewtonDelta(QuantityValue? degreesnewtondelta)
-        {
-            if (degreesnewtondelta.HasValue)
-            {
-                return FromDegreesNewtonDelta(degreesnewtondelta.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable TemperatureDelta from nullable DegreesRankine.
-        /// </summary>
-        public static TemperatureDelta? FromDegreesRankine(QuantityValue? degreesrankine)
-        {
-            if (degreesrankine.HasValue)
-            {
-                return FromDegreesRankine(degreesrankine.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable TemperatureDelta from nullable DegreesRankineDelta.
-        /// </summary>
-        public static TemperatureDelta? FromDegreesRankineDelta(QuantityValue? degreesrankinedelta)
-        {
-            if (degreesrankinedelta.HasValue)
-            {
-                return FromDegreesRankineDelta(degreesrankinedelta.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable TemperatureDelta from nullable DegreesReaumur.
-        /// </summary>
-        public static TemperatureDelta? FromDegreesReaumur(QuantityValue? degreesreaumur)
-        {
-            if (degreesreaumur.HasValue)
-            {
-                return FromDegreesReaumur(degreesreaumur.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable TemperatureDelta from nullable DegreesReaumurDelta.
-        /// </summary>
-        public static TemperatureDelta? FromDegreesReaumurDelta(QuantityValue? degreesreaumurdelta)
-        {
-            if (degreesreaumurdelta.HasValue)
-            {
-                return FromDegreesReaumurDelta(degreesreaumurdelta.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable TemperatureDelta from nullable DegreesRoemer.
-        /// </summary>
-        public static TemperatureDelta? FromDegreesRoemer(QuantityValue? degreesroemer)
-        {
-            if (degreesroemer.HasValue)
-            {
-                return FromDegreesRoemer(degreesroemer.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable TemperatureDelta from nullable DegreesRoemerDelta.
-        /// </summary>
-        public static TemperatureDelta? FromDegreesRoemerDelta(QuantityValue? degreesroemerdelta)
-        {
-            if (degreesroemerdelta.HasValue)
-            {
-                return FromDegreesRoemerDelta(degreesroemerdelta.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable TemperatureDelta from nullable Kelvins.
-        /// </summary>
-        public static TemperatureDelta? FromKelvins(QuantityValue? kelvins)
-        {
-            if (kelvins.HasValue)
-            {
-                return FromKelvins(kelvins.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable TemperatureDelta from nullable KelvinsDelta.
-        /// </summary>
-        public static TemperatureDelta? FromKelvinsDelta(QuantityValue? kelvinsdelta)
-        {
-            if (kelvinsdelta.HasValue)
-            {
-                return FromKelvinsDelta(kelvinsdelta.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-#endif
-
-        /// <summary>
-        ///     Dynamically convert from value and unit enum <see cref="TemperatureDeltaUnit" /> to <see cref="TemperatureDelta" />.
-        /// </summary>
-        /// <param name="value">Value to convert from.</param>
-        /// <param name="fromUnit">Unit to convert from.</param>
-        /// <returns>TemperatureDelta unit value.</returns>
-#if WINDOWS_UWP
-        // Fix name conflict with parameter "value"
-        [return: System.Runtime.InteropServices.WindowsRuntime.ReturnValueName("returnValue")]
-        public static TemperatureDelta From(double value, TemperatureDeltaUnit fromUnit)
-#else
-        public static TemperatureDelta From(QuantityValue value, TemperatureDeltaUnit fromUnit)
-#endif
-        {
-            switch (fromUnit)
-            {
-                case TemperatureDeltaUnit.DegreeCelsius:
-                    return FromDegreesCelsius(value);
-                case TemperatureDeltaUnit.DegreeCelsiusDelta:
-                    return FromDegreesCelsiusDelta(value);
-                case TemperatureDeltaUnit.DegreeDelisle:
-                    return FromDegreesDelisle(value);
-                case TemperatureDeltaUnit.DegreeDelisleDelta:
-                    return FromDegreesDelisleDelta(value);
-                case TemperatureDeltaUnit.DegreeFahrenheit:
-                    return FromDegreesFahrenheit(value);
-                case TemperatureDeltaUnit.DegreeFahrenheitDelta:
-                    return FromDegreesFahrenheitDelta(value);
-                case TemperatureDeltaUnit.DegreeNewton:
-                    return FromDegreesNewton(value);
-                case TemperatureDeltaUnit.DegreeNewtonDelta:
-                    return FromDegreesNewtonDelta(value);
-                case TemperatureDeltaUnit.DegreeRankine:
-                    return FromDegreesRankine(value);
-                case TemperatureDeltaUnit.DegreeRankineDelta:
-                    return FromDegreesRankineDelta(value);
-                case TemperatureDeltaUnit.DegreeReaumur:
-                    return FromDegreesReaumur(value);
-                case TemperatureDeltaUnit.DegreeReaumurDelta:
-                    return FromDegreesReaumurDelta(value);
-                case TemperatureDeltaUnit.DegreeRoemer:
-                    return FromDegreesRoemer(value);
-                case TemperatureDeltaUnit.DegreeRoemerDelta:
-                    return FromDegreesRoemerDelta(value);
-                case TemperatureDeltaUnit.Kelvin:
-                    return FromKelvins(value);
-                case TemperatureDeltaUnit.KelvinDelta:
-                    return FromKelvinsDelta(value);
-
-                default:
-                    throw new NotImplementedException("fromUnit: " + fromUnit);
-            }
-        }
-
-        // Windows Runtime Component does not support nullable types (double?): https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if !WINDOWS_UWP
-        /// <summary>
-        ///     Dynamically convert from value and unit enum <see cref="TemperatureDeltaUnit" /> to <see cref="TemperatureDelta" />.
-        /// </summary>
-        /// <param name="value">Value to convert from.</param>
-        /// <param name="fromUnit">Unit to convert from.</param>
-        /// <returns>TemperatureDelta unit value.</returns>
-        public static TemperatureDelta? From(QuantityValue? value, TemperatureDeltaUnit fromUnit)
-        {
-            if (!value.HasValue)
-            {
-                return null;
-            }
-            switch (fromUnit)
-            {
-                case TemperatureDeltaUnit.DegreeCelsius:
-                    return FromDegreesCelsius(value.Value);
-                case TemperatureDeltaUnit.DegreeCelsiusDelta:
-                    return FromDegreesCelsiusDelta(value.Value);
-                case TemperatureDeltaUnit.DegreeDelisle:
-                    return FromDegreesDelisle(value.Value);
-                case TemperatureDeltaUnit.DegreeDelisleDelta:
-                    return FromDegreesDelisleDelta(value.Value);
-                case TemperatureDeltaUnit.DegreeFahrenheit:
-                    return FromDegreesFahrenheit(value.Value);
-                case TemperatureDeltaUnit.DegreeFahrenheitDelta:
-                    return FromDegreesFahrenheitDelta(value.Value);
-                case TemperatureDeltaUnit.DegreeNewton:
-                    return FromDegreesNewton(value.Value);
-                case TemperatureDeltaUnit.DegreeNewtonDelta:
-                    return FromDegreesNewtonDelta(value.Value);
-                case TemperatureDeltaUnit.DegreeRankine:
-                    return FromDegreesRankine(value.Value);
-                case TemperatureDeltaUnit.DegreeRankineDelta:
-                    return FromDegreesRankineDelta(value.Value);
-                case TemperatureDeltaUnit.DegreeReaumur:
-                    return FromDegreesReaumur(value.Value);
-                case TemperatureDeltaUnit.DegreeReaumurDelta:
-                    return FromDegreesReaumurDelta(value.Value);
-                case TemperatureDeltaUnit.DegreeRoemer:
-                    return FromDegreesRoemer(value.Value);
-                case TemperatureDeltaUnit.DegreeRoemerDelta:
-                    return FromDegreesRoemerDelta(value.Value);
-                case TemperatureDeltaUnit.Kelvin:
-                    return FromKelvins(value.Value);
-                case TemperatureDeltaUnit.KelvinDelta:
-                    return FromKelvinsDelta(value.Value);
-
-                default:
-                    throw new NotImplementedException("fromUnit: " + fromUnit);
-            }
-        }
-#endif
+        #region Static Methods
 
         /// <summary>
         ///     Get unit abbreviation string.
         /// </summary>
         /// <param name="unit">Unit to get abbreviation for.</param>
         /// <returns>Unit abbreviation string.</returns>
-        [UsedImplicitly]
         public static string GetAbbreviation(TemperatureDeltaUnit unit)
         {
             return GetAbbreviation(unit, null);
@@ -930,198 +236,113 @@ namespace UnitsNet
         ///     Get unit abbreviation string.
         /// </summary>
         /// <param name="unit">Unit to get abbreviation for.</param>
-        /// <param name="culture">Culture to use for localization. Defaults to Thread.CurrentUICulture.</param>
         /// <returns>Unit abbreviation string.</returns>
-        [UsedImplicitly]
-        public static string GetAbbreviation(TemperatureDeltaUnit unit, [CanBeNull] Culture culture)
+        /// <param name="provider">Format to use for localization. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public static string GetAbbreviation(TemperatureDeltaUnit unit, IFormatProvider? provider)
         {
-            return UnitSystem.GetCached(culture).GetDefaultAbbreviation(unit);
+            return UnitAbbreviationsCache.Default.GetDefaultAbbreviation(unit, provider);
         }
 
         #endregion
 
-        #region Arithmetic Operators
+        #region Static Factory Methods
 
-        // Windows Runtime Component does not allow operator overloads: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if !WINDOWS_UWP
-        public static TemperatureDelta operator -(TemperatureDelta right)
+        /// <summary>
+        ///     Get TemperatureDelta from DegreesCelsius.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static TemperatureDelta FromDegreesCelsius(QuantityValue degreescelsius)
         {
-            return new TemperatureDelta(-right._kelvins);
+            double value = (double) degreescelsius;
+            return new TemperatureDelta(value, TemperatureDeltaUnit.DegreeCelsius);
         }
-
-        public static TemperatureDelta operator +(TemperatureDelta left, TemperatureDelta right)
+        /// <summary>
+        ///     Get TemperatureDelta from DegreesDelisle.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static TemperatureDelta FromDegreesDelisle(QuantityValue degreesdelisle)
         {
-            return new TemperatureDelta(left._kelvins + right._kelvins);
+            double value = (double) degreesdelisle;
+            return new TemperatureDelta(value, TemperatureDeltaUnit.DegreeDelisle);
         }
-
-        public static TemperatureDelta operator -(TemperatureDelta left, TemperatureDelta right)
+        /// <summary>
+        ///     Get TemperatureDelta from DegreesFahrenheit.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static TemperatureDelta FromDegreesFahrenheit(QuantityValue degreesfahrenheit)
         {
-            return new TemperatureDelta(left._kelvins - right._kelvins);
+            double value = (double) degreesfahrenheit;
+            return new TemperatureDelta(value, TemperatureDeltaUnit.DegreeFahrenheit);
         }
-
-        public static TemperatureDelta operator *(double left, TemperatureDelta right)
+        /// <summary>
+        ///     Get TemperatureDelta from DegreesNewton.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static TemperatureDelta FromDegreesNewton(QuantityValue degreesnewton)
         {
-            return new TemperatureDelta(left*right._kelvins);
+            double value = (double) degreesnewton;
+            return new TemperatureDelta(value, TemperatureDeltaUnit.DegreeNewton);
         }
-
-        public static TemperatureDelta operator *(TemperatureDelta left, double right)
+        /// <summary>
+        ///     Get TemperatureDelta from DegreesRankine.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static TemperatureDelta FromDegreesRankine(QuantityValue degreesrankine)
         {
-            return new TemperatureDelta(left._kelvins*(double)right);
+            double value = (double) degreesrankine;
+            return new TemperatureDelta(value, TemperatureDeltaUnit.DegreeRankine);
         }
-
-        public static TemperatureDelta operator /(TemperatureDelta left, double right)
+        /// <summary>
+        ///     Get TemperatureDelta from DegreesReaumur.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static TemperatureDelta FromDegreesReaumur(QuantityValue degreesreaumur)
         {
-            return new TemperatureDelta(left._kelvins/(double)right);
+            double value = (double) degreesreaumur;
+            return new TemperatureDelta(value, TemperatureDeltaUnit.DegreeReaumur);
         }
-
-        public static double operator /(TemperatureDelta left, TemperatureDelta right)
+        /// <summary>
+        ///     Get TemperatureDelta from DegreesRoemer.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static TemperatureDelta FromDegreesRoemer(QuantityValue degreesroemer)
         {
-            return Convert.ToDouble(left._kelvins/right._kelvins);
+            double value = (double) degreesroemer;
+            return new TemperatureDelta(value, TemperatureDeltaUnit.DegreeRoemer);
         }
-#endif
-
-        #endregion
-
-        #region Equality / IComparable
-
-        public int CompareTo(object obj)
+        /// <summary>
+        ///     Get TemperatureDelta from Kelvins.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static TemperatureDelta FromKelvins(QuantityValue kelvins)
         {
-            if (obj == null) throw new ArgumentNullException("obj");
-            if (!(obj is TemperatureDelta)) throw new ArgumentException("Expected type TemperatureDelta.", "obj");
-            return CompareTo((TemperatureDelta) obj);
+            double value = (double) kelvins;
+            return new TemperatureDelta(value, TemperatureDeltaUnit.Kelvin);
         }
-
-        // Windows Runtime Component does not allow public methods/ctors with same number of parameters: https://msdn.microsoft.com/en-us/library/br230301.aspx#Overloaded methods
-#if WINDOWS_UWP
-        internal
-#else
-        public
-#endif
-        int CompareTo(TemperatureDelta other)
+        /// <summary>
+        ///     Get TemperatureDelta from MillidegreesCelsius.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static TemperatureDelta FromMillidegreesCelsius(QuantityValue millidegreescelsius)
         {
-            return _kelvins.CompareTo(other._kelvins);
-        }
-
-        // Windows Runtime Component does not allow operator overloads: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if !WINDOWS_UWP
-        public static bool operator <=(TemperatureDelta left, TemperatureDelta right)
-        {
-            return left._kelvins <= right._kelvins;
-        }
-
-        public static bool operator >=(TemperatureDelta left, TemperatureDelta right)
-        {
-            return left._kelvins >= right._kelvins;
-        }
-
-        public static bool operator <(TemperatureDelta left, TemperatureDelta right)
-        {
-            return left._kelvins < right._kelvins;
-        }
-
-        public static bool operator >(TemperatureDelta left, TemperatureDelta right)
-        {
-            return left._kelvins > right._kelvins;
-        }
-
-        [Obsolete("It is not safe to compare equality due to using System.Double as the internal representation. It is very easy to get slightly different values due to floating point operations. Instead use Equals(other, maxError) to provide the max allowed error.")]
-        public static bool operator ==(TemperatureDelta left, TemperatureDelta right)
-        {
-            // ReSharper disable once CompareOfFloatsByEqualityOperator
-            return left._kelvins == right._kelvins;
-        }
-
-        [Obsolete("It is not safe to compare equality due to using System.Double as the internal representation. It is very easy to get slightly different values due to floating point operations. Instead use Equals(other, maxError) to provide the max allowed error.")]
-        public static bool operator !=(TemperatureDelta left, TemperatureDelta right)
-        {
-            // ReSharper disable once CompareOfFloatsByEqualityOperator
-            return left._kelvins != right._kelvins;
-        }
-#endif
-
-        [Obsolete("It is not safe to compare equality due to using System.Double as the internal representation. It is very easy to get slightly different values due to floating point operations. Instead use Equals(other, maxError) to provide the max allowed error.")]
-        public override bool Equals(object obj)
-        {
-            if (obj == null || GetType() != obj.GetType())
-            {
-                return false;
-            }
-
-            return _kelvins.Equals(((TemperatureDelta) obj)._kelvins);
+            double value = (double) millidegreescelsius;
+            return new TemperatureDelta(value, TemperatureDeltaUnit.MillidegreeCelsius);
         }
 
         /// <summary>
-        ///     Compare equality to another TemperatureDelta by specifying a max allowed difference.
-        ///     Note that it is advised against specifying zero difference, due to the nature
-        ///     of floating point operations and using System.Double internally.
+        ///     Dynamically convert from value and unit enum <see cref="TemperatureDeltaUnit" /> to <see cref="TemperatureDelta" />.
         /// </summary>
-        /// <param name="other">Other quantity to compare to.</param>
-        /// <param name="maxError">Max error allowed.</param>
-        /// <returns>True if the difference between the two values is not greater than the specified max.</returns>
-        public bool Equals(TemperatureDelta other, TemperatureDelta maxError)
+        /// <param name="value">Value to convert from.</param>
+        /// <param name="fromUnit">Unit to convert from.</param>
+        /// <returns>TemperatureDelta unit value.</returns>
+        public static TemperatureDelta From(QuantityValue value, TemperatureDeltaUnit fromUnit)
         {
-            return Math.Abs(_kelvins - other._kelvins) <= maxError._kelvins;
-        }
-
-        public override int GetHashCode()
-        {
-            return _kelvins.GetHashCode();
+            return new TemperatureDelta((double)value, fromUnit);
         }
 
         #endregion
 
-        #region Conversion
-
-        /// <summary>
-        ///     Convert to the unit representation <paramref name="unit" />.
-        /// </summary>
-        /// <returns>Value in new unit if successful, exception otherwise.</returns>
-        /// <exception cref="NotImplementedException">If conversion was not successful.</exception>
-        public double As(TemperatureDeltaUnit unit)
-        {
-            switch (unit)
-            {
-                case TemperatureDeltaUnit.DegreeCelsius:
-                    return DegreesCelsius;
-                case TemperatureDeltaUnit.DegreeCelsiusDelta:
-                    return DegreesCelsiusDelta;
-                case TemperatureDeltaUnit.DegreeDelisle:
-                    return DegreesDelisle;
-                case TemperatureDeltaUnit.DegreeDelisleDelta:
-                    return DegreesDelisleDelta;
-                case TemperatureDeltaUnit.DegreeFahrenheit:
-                    return DegreesFahrenheit;
-                case TemperatureDeltaUnit.DegreeFahrenheitDelta:
-                    return DegreesFahrenheitDelta;
-                case TemperatureDeltaUnit.DegreeNewton:
-                    return DegreesNewton;
-                case TemperatureDeltaUnit.DegreeNewtonDelta:
-                    return DegreesNewtonDelta;
-                case TemperatureDeltaUnit.DegreeRankine:
-                    return DegreesRankine;
-                case TemperatureDeltaUnit.DegreeRankineDelta:
-                    return DegreesRankineDelta;
-                case TemperatureDeltaUnit.DegreeReaumur:
-                    return DegreesReaumur;
-                case TemperatureDeltaUnit.DegreeReaumurDelta:
-                    return DegreesReaumurDelta;
-                case TemperatureDeltaUnit.DegreeRoemer:
-                    return DegreesRoemer;
-                case TemperatureDeltaUnit.DegreeRoemerDelta:
-                    return DegreesRoemerDelta;
-                case TemperatureDeltaUnit.Kelvin:
-                    return Kelvins;
-                case TemperatureDeltaUnit.KelvinDelta:
-                    return KelvinsDelta;
-
-                default:
-                    throw new NotImplementedException("unit: " + unit);
-            }
-        }
-
-        #endregion
-
-        #region Parsing
+        #region Static Parse Methods
 
         /// <summary>
         ///     Parse a string with one or two quantities of the format "&lt;quantity&gt; &lt;unit&gt;".
@@ -1154,7 +375,6 @@ namespace UnitsNet
         ///     Parse a string with one or two quantities of the format "&lt;quantity&gt; &lt;unit&gt;".
         /// </summary>
         /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
-        /// <param name="culture">Format to use when parsing number and unit. If it is null, it defaults to <see cref="NumberFormatInfo.CurrentInfo"/> for parsing the number and <see cref="CultureInfo.CurrentUICulture"/> for parsing the unit abbreviation by culture/language.</param>
         /// <example>
         ///     Length.Parse("5.5 m", new CultureInfo("en-US"));
         /// </example>
@@ -1173,23 +393,13 @@ namespace UnitsNet
         ///     We wrap exceptions in <see cref="UnitsNetException" /> to allow you to distinguish
         ///     Units.NET exceptions from other exceptions.
         /// </exception>
-        public static TemperatureDelta Parse(string str, [CanBeNull] Culture culture)
+        /// <param name="provider">Format to use when parsing number and unit. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public static TemperatureDelta Parse(string str, IFormatProvider? provider)
         {
-            if (str == null) throw new ArgumentNullException("str");
-
-        // Windows Runtime Component does not support CultureInfo type, so use culture name string for public methods instead: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if WINDOWS_UWP
-            IFormatProvider formatProvider = culture == null ? null : new CultureInfo(culture);
-#else
-            IFormatProvider formatProvider = culture;
-#endif
-            return QuantityParser.Parse<TemperatureDelta, TemperatureDeltaUnit>(str, formatProvider,
-                delegate(string value, string unit, IFormatProvider formatProvider2)
-                {
-                    double parsedValue = double.Parse(value, formatProvider2);
-                    TemperatureDeltaUnit parsedUnit = ParseUnit(unit, formatProvider2);
-                    return From(parsedValue, parsedUnit);
-                }, (x, y) => FromKelvins(x.Kelvins + y.Kelvins));
+            return QuantityParser.Default.Parse<TemperatureDelta, TemperatureDeltaUnit>(
+                str,
+                provider,
+                From);
         }
 
         /// <summary>
@@ -1200,7 +410,7 @@ namespace UnitsNet
         /// <example>
         ///     Length.Parse("5.5 m", new CultureInfo("en-US"));
         /// </example>
-        public static bool TryParse([CanBeNull] string str, out TemperatureDelta result)
+        public static bool TryParse(string? str, out TemperatureDelta result)
         {
             return TryParse(str, null, out result);
         }
@@ -1209,28 +419,25 @@ namespace UnitsNet
         ///     Try to parse a string with one or two quantities of the format "&lt;quantity&gt; &lt;unit&gt;".
         /// </summary>
         /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
-        /// <param name="culture">Format to use when parsing number and unit. If it is null, it defaults to <see cref="NumberFormatInfo.CurrentInfo"/> for parsing the number and <see cref="CultureInfo.CurrentUICulture"/> for parsing the unit abbreviation by culture/language.</param>
         /// <param name="result">Resulting unit quantity if successful.</param>
+        /// <returns>True if successful, otherwise false.</returns>
         /// <example>
         ///     Length.Parse("5.5 m", new CultureInfo("en-US"));
         /// </example>
-        public static bool TryParse([CanBeNull] string str, [CanBeNull] Culture culture, out TemperatureDelta result)
+        /// <param name="provider">Format to use when parsing number and unit. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public static bool TryParse(string? str, IFormatProvider? provider, out TemperatureDelta result)
         {
-            try
-            {
-                result = Parse(str, culture);
-                return true;
-            }
-            catch
-            {
-                result = default(TemperatureDelta);
-                return false;
-            }
+            return QuantityParser.Default.TryParse<TemperatureDelta, TemperatureDeltaUnit>(
+                str,
+                provider,
+                From,
+                out result);
         }
 
         /// <summary>
         ///     Parse a unit string.
         /// </summary>
+        /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
         /// <example>
         ///     Length.ParseUnit("m", new CultureInfo("en-US"));
         /// </example>
@@ -1238,153 +445,544 @@ namespace UnitsNet
         /// <exception cref="UnitsNetException">Error parsing string.</exception>
         public static TemperatureDeltaUnit ParseUnit(string str)
         {
-            return ParseUnit(str, (IFormatProvider)null);
+            return ParseUnit(str, null);
         }
 
         /// <summary>
         ///     Parse a unit string.
         /// </summary>
+        /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
+        /// <param name="provider">Format to use when parsing number and unit. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
         /// <example>
         ///     Length.ParseUnit("m", new CultureInfo("en-US"));
         /// </example>
         /// <exception cref="ArgumentNullException">The value of 'str' cannot be null. </exception>
         /// <exception cref="UnitsNetException">Error parsing string.</exception>
-        public static TemperatureDeltaUnit ParseUnit(string str, [CanBeNull] string cultureName)
+        public static TemperatureDeltaUnit ParseUnit(string str, IFormatProvider? provider)
         {
-            return ParseUnit(str, cultureName == null ? null : new CultureInfo(cultureName));
+            return UnitParser.Default.Parse<TemperatureDeltaUnit>(str, provider);
+        }
+
+        /// <inheritdoc cref="TryParseUnit(string,IFormatProvider,out UnitsNet.Units.TemperatureDeltaUnit)"/>
+        public static bool TryParseUnit(string str, out TemperatureDeltaUnit unit)
+        {
+            return TryParseUnit(str, null, out unit);
         }
 
         /// <summary>
         ///     Parse a unit string.
         /// </summary>
+        /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
+        /// <param name="unit">The parsed unit if successful.</param>
+        /// <returns>True if successful, otherwise false.</returns>
         /// <example>
-        ///     Length.ParseUnit("m", new CultureInfo("en-US"));
+        ///     Length.TryParseUnit("m", new CultureInfo("en-US"));
         /// </example>
-        /// <exception cref="ArgumentNullException">The value of 'str' cannot be null. </exception>
-        /// <exception cref="UnitsNetException">Error parsing string.</exception>
-
-        // Windows Runtime Component does not allow public methods/ctors with same number of parameters: https://msdn.microsoft.com/en-us/library/br230301.aspx#Overloaded methods
-#if WINDOWS_UWP
-        internal
-#else
-        public
-#endif
-        static TemperatureDeltaUnit ParseUnit(string str, IFormatProvider formatProvider = null)
+        /// <param name="provider">Format to use when parsing number and unit. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public static bool TryParseUnit(string str, IFormatProvider? provider, out TemperatureDeltaUnit unit)
         {
-            if (str == null) throw new ArgumentNullException("str");
-
-            var unitSystem = UnitSystem.GetCached(formatProvider);
-            var unit = unitSystem.Parse<TemperatureDeltaUnit>(str.Trim());
-
-            if (unit == TemperatureDeltaUnit.Undefined)
-            {
-                var newEx = new UnitsNetException("Error parsing string. The unit is not a recognized TemperatureDeltaUnit.");
-                newEx.Data["input"] = str;
-                newEx.Data["formatprovider"] = formatProvider?.ToString() ?? "(null)";
-                throw newEx;
-            }
-
-            return unit;
+            return UnitParser.Default.TryParse<TemperatureDeltaUnit>(str, provider, out unit);
         }
 
         #endregion
 
-        /// <summary>
-        ///     Set the default unit used by ToString(). Default is Kelvin
-        /// </summary>
-        public static TemperatureDeltaUnit ToStringDefaultUnit { get; set; } = TemperatureDeltaUnit.Kelvin;
+        #region Arithmetic Operators
+
+        /// <summary>Negate the value.</summary>
+        public static TemperatureDelta operator -(TemperatureDelta right)
+        {
+            return new TemperatureDelta(-right.Value, right.Unit);
+        }
+
+        /// <summary>Get <see cref="TemperatureDelta"/> from adding two <see cref="TemperatureDelta"/>.</summary>
+        public static TemperatureDelta operator +(TemperatureDelta left, TemperatureDelta right)
+        {
+            return new TemperatureDelta(left.Value + right.GetValueAs(left.Unit), left.Unit);
+        }
+
+        /// <summary>Get <see cref="TemperatureDelta"/> from subtracting two <see cref="TemperatureDelta"/>.</summary>
+        public static TemperatureDelta operator -(TemperatureDelta left, TemperatureDelta right)
+        {
+            return new TemperatureDelta(left.Value - right.GetValueAs(left.Unit), left.Unit);
+        }
+
+        /// <summary>Get <see cref="TemperatureDelta"/> from multiplying value and <see cref="TemperatureDelta"/>.</summary>
+        public static TemperatureDelta operator *(double left, TemperatureDelta right)
+        {
+            return new TemperatureDelta(left * right.Value, right.Unit);
+        }
+
+        /// <summary>Get <see cref="TemperatureDelta"/> from multiplying value and <see cref="TemperatureDelta"/>.</summary>
+        public static TemperatureDelta operator *(TemperatureDelta left, double right)
+        {
+            return new TemperatureDelta(left.Value * right, left.Unit);
+        }
+
+        /// <summary>Get <see cref="TemperatureDelta"/> from dividing <see cref="TemperatureDelta"/> by value.</summary>
+        public static TemperatureDelta operator /(TemperatureDelta left, double right)
+        {
+            return new TemperatureDelta(left.Value / right, left.Unit);
+        }
+
+        /// <summary>Get ratio value from dividing <see cref="TemperatureDelta"/> by <see cref="TemperatureDelta"/>.</summary>
+        public static double operator /(TemperatureDelta left, TemperatureDelta right)
+        {
+            return left.Kelvins / right.Kelvins;
+        }
+
+        #endregion
+
+        #region Equality / IComparable
+
+        /// <summary>Returns true if less or equal to.</summary>
+        public static bool operator <=(TemperatureDelta left, TemperatureDelta right)
+        {
+            return left.Value <= right.GetValueAs(left.Unit);
+        }
+
+        /// <summary>Returns true if greater than or equal to.</summary>
+        public static bool operator >=(TemperatureDelta left, TemperatureDelta right)
+        {
+            return left.Value >= right.GetValueAs(left.Unit);
+        }
+
+        /// <summary>Returns true if less than.</summary>
+        public static bool operator <(TemperatureDelta left, TemperatureDelta right)
+        {
+            return left.Value < right.GetValueAs(left.Unit);
+        }
+
+        /// <summary>Returns true if greater than.</summary>
+        public static bool operator >(TemperatureDelta left, TemperatureDelta right)
+        {
+            return left.Value > right.GetValueAs(left.Unit);
+        }
+
+        /// <summary>Returns true if exactly equal.</summary>
+        /// <remarks>Consider using <see cref="Equals(TemperatureDelta, double, ComparisonType)"/> for safely comparing floating point values.</remarks>
+        public static bool operator ==(TemperatureDelta left, TemperatureDelta right)
+        {
+            return left.Equals(right);
+        }
+
+        /// <summary>Returns true if not exactly equal.</summary>
+        /// <remarks>Consider using <see cref="Equals(TemperatureDelta, double, ComparisonType)"/> for safely comparing floating point values.</remarks>
+        public static bool operator !=(TemperatureDelta left, TemperatureDelta right)
+        {
+            return !(left == right);
+        }
+
+        /// <inheritdoc />
+        public int CompareTo(object obj)
+        {
+            if(obj is null) throw new ArgumentNullException(nameof(obj));
+            if(!(obj is TemperatureDelta objTemperatureDelta)) throw new ArgumentException("Expected type TemperatureDelta.", nameof(obj));
+
+            return CompareTo(objTemperatureDelta);
+        }
+
+        /// <inheritdoc />
+        public int CompareTo(TemperatureDelta other)
+        {
+            return _value.CompareTo(other.GetValueAs(this.Unit));
+        }
+
+        /// <inheritdoc />
+        /// <remarks>Consider using <see cref="Equals(TemperatureDelta, double, ComparisonType)"/> for safely comparing floating point values.</remarks>
+        public override bool Equals(object obj)
+        {
+            if(obj is null || !(obj is TemperatureDelta objTemperatureDelta))
+                return false;
+
+            return Equals(objTemperatureDelta);
+        }
+
+        /// <inheritdoc />
+        /// <remarks>Consider using <see cref="Equals(TemperatureDelta, double, ComparisonType)"/> for safely comparing floating point values.</remarks>
+        public bool Equals(TemperatureDelta other)
+        {
+            return _value.Equals(other.GetValueAs(this.Unit));
+        }
 
         /// <summary>
-        ///     Get default string representation of value and unit.
+        ///     <para>
+        ///     Compare equality to another TemperatureDelta within the given absolute or relative tolerance.
+        ///     </para>
+        ///     <para>
+        ///     Relative tolerance is defined as the maximum allowable absolute difference between this quantity's value and
+        ///     <paramref name="other"/> as a percentage of this quantity's value. <paramref name="other"/> will be converted into
+        ///     this quantity's unit for comparison. A relative tolerance of 0.01 means the absolute difference must be within +/- 1% of
+        ///     this quantity's value to be considered equal.
+        ///     <example>
+        ///     In this example, the two quantities will be equal if the value of b is within +/- 1% of a (0.02m or 2cm).
+        ///     <code>
+        ///     var a = Length.FromMeters(2.0);
+        ///     var b = Length.FromInches(50.0);
+        ///     a.Equals(b, 0.01, ComparisonType.Relative);
+        ///     </code>
+        ///     </example>
+        ///     </para>
+        ///     <para>
+        ///     Absolute tolerance is defined as the maximum allowable absolute difference between this quantity's value and
+        ///     <paramref name="other"/> as a fixed number in this quantity's unit. <paramref name="other"/> will be converted into
+        ///     this quantity's unit for comparison.
+        ///     <example>
+        ///     In this example, the two quantities will be equal if the value of b is within 0.01 of a (0.01m or 1cm).
+        ///     <code>
+        ///     var a = Length.FromMeters(2.0);
+        ///     var b = Length.FromInches(50.0);
+        ///     a.Equals(b, 0.01, ComparisonType.Absolute);
+        ///     </code>
+        ///     </example>
+        ///     </para>
+        ///     <para>
+        ///     Note that it is advised against specifying zero difference, due to the nature
+        ///     of floating point operations and using System.Double internally.
+        ///     </para>
+        /// </summary>
+        /// <param name="other">The other quantity to compare to.</param>
+        /// <param name="tolerance">The absolute or relative tolerance value. Must be greater than or equal to 0.</param>
+        /// <param name="comparisonType">The comparison type: either relative or absolute.</param>
+        /// <returns>True if the absolute difference between the two values is not greater than the specified relative or absolute tolerance.</returns>
+        public bool Equals(TemperatureDelta other, double tolerance, ComparisonType comparisonType)
+        {
+            if(tolerance < 0)
+                throw new ArgumentOutOfRangeException("tolerance", "Tolerance must be greater than or equal to 0.");
+
+            double thisValue = (double)this.Value;
+            double otherValueInThisUnits = other.As(this.Unit);
+
+            return UnitsNet.Comparison.Equals(thisValue, otherValueInThisUnits, tolerance, comparisonType);
+        }
+
+        /// <summary>
+        ///     Returns the hash code for this instance.
+        /// </summary>
+        /// <returns>A hash code for the current TemperatureDelta.</returns>
+        public override int GetHashCode()
+        {
+            return new { QuantityType, Value, Unit }.GetHashCode();
+        }
+
+        #endregion
+
+        #region Conversion Methods
+
+        /// <summary>
+        ///     Convert to the unit representation <paramref name="unit" />.
+        /// </summary>
+        /// <returns>Value converted to the specified unit.</returns>
+        public double As(TemperatureDeltaUnit unit)
+        {
+            if(Unit == unit)
+                return Convert.ToDouble(Value);
+
+            var converted = GetValueAs(unit);
+            return Convert.ToDouble(converted);
+        }
+
+        /// <inheritdoc cref="IQuantity.As(UnitSystem)"/>
+        public double As(UnitSystem unitSystem)
+        {
+            if(unitSystem is null)
+                throw new ArgumentNullException(nameof(unitSystem));
+
+            var unitInfos = Info.GetUnitInfosFor(unitSystem.BaseUnits);
+
+            var firstUnitInfo = unitInfos.FirstOrDefault();
+            if(firstUnitInfo == null)
+                throw new ArgumentException("No units were found for the given UnitSystem.", nameof(unitSystem));
+
+            return As(firstUnitInfo.Value);
+        }
+
+        /// <inheritdoc />
+        double IQuantity.As(Enum unit)
+        {
+            if(!(unit is TemperatureDeltaUnit unitAsTemperatureDeltaUnit))
+                throw new ArgumentException($"The given unit is of type {unit.GetType()}. Only {typeof(TemperatureDeltaUnit)} is supported.", nameof(unit));
+
+            return As(unitAsTemperatureDeltaUnit);
+        }
+
+        /// <summary>
+        ///     Converts this TemperatureDelta to another TemperatureDelta with the unit representation <paramref name="unit" />.
+        /// </summary>
+        /// <returns>A TemperatureDelta with the specified unit.</returns>
+        public TemperatureDelta ToUnit(TemperatureDeltaUnit unit)
+        {
+            var convertedValue = GetValueAs(unit);
+            return new TemperatureDelta(convertedValue, unit);
+        }
+
+        /// <inheritdoc />
+        IQuantity IQuantity.ToUnit(Enum unit)
+        {
+            if(!(unit is TemperatureDeltaUnit unitAsTemperatureDeltaUnit))
+                throw new ArgumentException($"The given unit is of type {unit.GetType()}. Only {typeof(TemperatureDeltaUnit)} is supported.", nameof(unit));
+
+            return ToUnit(unitAsTemperatureDeltaUnit);
+        }
+
+        /// <inheritdoc cref="IQuantity.ToUnit(UnitSystem)"/>
+        public TemperatureDelta ToUnit(UnitSystem unitSystem)
+        {
+            if(unitSystem is null)
+                throw new ArgumentNullException(nameof(unitSystem));
+
+            var unitInfos = Info.GetUnitInfosFor(unitSystem.BaseUnits);
+
+            var firstUnitInfo = unitInfos.FirstOrDefault();
+            if(firstUnitInfo == null)
+                throw new ArgumentException("No units were found for the given UnitSystem.", nameof(unitSystem));
+
+            return ToUnit(firstUnitInfo.Value);
+        }
+
+        /// <inheritdoc />
+        IQuantity IQuantity.ToUnit(UnitSystem unitSystem) => ToUnit(unitSystem);
+
+        /// <inheritdoc />
+        IQuantity<TemperatureDeltaUnit> IQuantity<TemperatureDeltaUnit>.ToUnit(TemperatureDeltaUnit unit) => ToUnit(unit);
+
+        /// <inheritdoc />
+        IQuantity<TemperatureDeltaUnit> IQuantity<TemperatureDeltaUnit>.ToUnit(UnitSystem unitSystem) => ToUnit(unitSystem);
+
+        /// <summary>
+        ///     Converts the current value + unit to the base unit.
+        ///     This is typically the first step in converting from one unit to another.
+        /// </summary>
+        /// <returns>The value in the base unit representation.</returns>
+        private double GetValueInBaseUnit()
+        {
+            switch(Unit)
+            {
+                case TemperatureDeltaUnit.DegreeCelsius: return _value;
+                case TemperatureDeltaUnit.DegreeDelisle: return _value*-2/3;
+                case TemperatureDeltaUnit.DegreeFahrenheit: return _value*5/9;
+                case TemperatureDeltaUnit.DegreeNewton: return _value*100/33;
+                case TemperatureDeltaUnit.DegreeRankine: return _value*5/9;
+                case TemperatureDeltaUnit.DegreeReaumur: return _value*5/4;
+                case TemperatureDeltaUnit.DegreeRoemer: return _value*40/21;
+                case TemperatureDeltaUnit.Kelvin: return _value;
+                case TemperatureDeltaUnit.MillidegreeCelsius: return (_value) * 1e-3d;
+                default:
+                    throw new NotImplementedException($"Can not convert {Unit} to base units.");
+            }
+        }
+
+        /// <summary>
+        ///     Converts the current value + unit to the base unit.
+        ///     This is typically the first step in converting from one unit to another.
+        /// </summary>
+        /// <returns>The value in the base unit representation.</returns>
+        internal TemperatureDelta ToBaseUnit()
+        {
+            var baseUnitValue = GetValueInBaseUnit();
+            return new TemperatureDelta(baseUnitValue, BaseUnit);
+        }
+
+        private double GetValueAs(TemperatureDeltaUnit unit)
+        {
+            if(Unit == unit)
+                return _value;
+
+            var baseUnitValue = GetValueInBaseUnit();
+
+            switch(unit)
+            {
+                case TemperatureDeltaUnit.DegreeCelsius: return baseUnitValue;
+                case TemperatureDeltaUnit.DegreeDelisle: return baseUnitValue*-3/2;
+                case TemperatureDeltaUnit.DegreeFahrenheit: return baseUnitValue*9/5;
+                case TemperatureDeltaUnit.DegreeNewton: return baseUnitValue*33/100;
+                case TemperatureDeltaUnit.DegreeRankine: return baseUnitValue*9/5;
+                case TemperatureDeltaUnit.DegreeReaumur: return baseUnitValue*4/5;
+                case TemperatureDeltaUnit.DegreeRoemer: return baseUnitValue*21/40;
+                case TemperatureDeltaUnit.Kelvin: return baseUnitValue;
+                case TemperatureDeltaUnit.MillidegreeCelsius: return (baseUnitValue) / 1e-3d;
+                default:
+                    throw new NotImplementedException($"Can not convert {Unit} to {unit}.");
+            }
+        }
+
+        #endregion
+
+        #region ToString Methods
+
+        /// <summary>
+        ///     Gets the default string representation of value and unit.
         /// </summary>
         /// <returns>String representation.</returns>
         public override string ToString()
         {
-            return ToString(ToStringDefaultUnit);
+            return ToString("g");
         }
 
         /// <summary>
-        ///     Get string representation of value and unit. Using current UI culture and two significant digits after radix.
+        ///     Gets the default string representation of value and unit using the given format provider.
         /// </summary>
-        /// <param name="unit">Unit representation to use.</param>
         /// <returns>String representation.</returns>
-        public string ToString(TemperatureDeltaUnit unit)
+        /// <param name="provider">Format to use for localization and number formatting. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public string ToString(IFormatProvider? provider)
         {
-            return ToString(unit, null, 2);
-        }
-
-        /// <summary>
-        ///     Get string representation of value and unit. Using two significant digits after radix.
-        /// </summary>
-        /// <param name="unit">Unit representation to use.</param>
-        /// <param name="culture">Culture to use for localization and number formatting.</param>
-        /// <returns>String representation.</returns>
-        public string ToString(TemperatureDeltaUnit unit, [CanBeNull] Culture culture)
-        {
-            return ToString(unit, culture, 2);
+            return ToString("g", provider);
         }
 
         /// <summary>
         ///     Get string representation of value and unit.
         /// </summary>
-        /// <param name="unit">Unit representation to use.</param>
-        /// <param name="culture">Culture to use for localization and number formatting.</param>
         /// <param name="significantDigitsAfterRadix">The number of significant digits after the radix point.</param>
         /// <returns>String representation.</returns>
-        [UsedImplicitly]
-        public string ToString(TemperatureDeltaUnit unit, [CanBeNull] Culture culture, int significantDigitsAfterRadix)
+        /// <param name="provider">Format to use for localization and number formatting. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        [Obsolete(@"This method is deprecated and will be removed at a future release. Please use ToString(""s2"") or ToString(""s2"", provider) where 2 is an example of the number passed to significantDigitsAfterRadix.")]
+        public string ToString(IFormatProvider? provider, int significantDigitsAfterRadix)
         {
-            double value = As(unit);
-            string format = UnitFormatter.GetFormat(value, significantDigitsAfterRadix);
-            return ToString(unit, culture, format);
+            var value = Convert.ToDouble(Value);
+            var format = UnitFormatter.GetFormat(value, significantDigitsAfterRadix);
+            return ToString(provider, format);
         }
 
         /// <summary>
         ///     Get string representation of value and unit.
         /// </summary>
-        /// <param name="culture">Culture to use for localization and number formatting.</param>
-        /// <param name="unit">Unit representation to use.</param>
         /// <param name="format">String format to use. Default:  "{0:0.##} {1} for value and unit abbreviation respectively."</param>
-        /// <param name="args">Arguments for string format. Value and unit are implictly included as arguments 0 and 1.</param>
+        /// <param name="args">Arguments for string format. Value and unit are implicitly included as arguments 0 and 1.</param>
         /// <returns>String representation.</returns>
-        [UsedImplicitly]
-        public string ToString(TemperatureDeltaUnit unit, [CanBeNull] Culture culture, [NotNull] string format,
-            [NotNull] params object[] args)
+        /// <param name="provider">Format to use for localization and number formatting. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        [Obsolete("This method is deprecated and will be removed at a future release. Please use string.Format().")]
+        public string ToString(IFormatProvider? provider, [NotNull] string format, [NotNull] params object[] args)
         {
             if (format == null) throw new ArgumentNullException(nameof(format));
             if (args == null) throw new ArgumentNullException(nameof(args));
 
-        // Windows Runtime Component does not support CultureInfo type, so use culture name string for public methods instead: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if WINDOWS_UWP
-            IFormatProvider formatProvider = culture == null ? null : new CultureInfo(culture);
-#else
-            IFormatProvider formatProvider = culture;
-#endif
-            double value = As(unit);
-            object[] formatArgs = UnitFormatter.GetFormatArgs(unit, value, formatProvider, args);
-            return string.Format(formatProvider, format, formatArgs);
+            provider = provider ?? CultureInfo.CurrentUICulture;
+
+            var value = Convert.ToDouble(Value);
+            var formatArgs = UnitFormatter.GetFormatArgs(Unit, value, provider, args);
+            return string.Format(provider, format, formatArgs);
         }
 
+        /// <inheritdoc cref="QuantityFormatter.Format{TUnitType}(IQuantity{TUnitType}, string, IFormatProvider)"/>
         /// <summary>
-        /// Represents the largest possible value of TemperatureDelta
+        /// Gets the string representation of this instance in the specified format string using <see cref="CultureInfo.CurrentUICulture" />.
         /// </summary>
-        public static TemperatureDelta MaxValue
+        /// <param name="format">The format string.</param>
+        /// <returns>The string representation.</returns>
+        public string ToString(string format)
         {
-            get
-            {
-                return new TemperatureDelta(double.MaxValue);
-            }
+            return ToString(format, CultureInfo.CurrentUICulture);
         }
 
+        /// <inheritdoc cref="QuantityFormatter.Format{TUnitType}(IQuantity{TUnitType}, string, IFormatProvider)"/>
         /// <summary>
-        /// Represents the smallest possible value of TemperatureDelta
+        /// Gets the string representation of this instance in the specified format string using the specified format provider, or <see cref="CultureInfo.CurrentUICulture" /> if null.
         /// </summary>
-        public static TemperatureDelta MinValue
+        /// <param name="format">The format string.</param>
+        /// <param name="provider">Format to use for localization and number formatting. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        /// <returns>The string representation.</returns>
+        public string ToString(string format, IFormatProvider? provider)
         {
-            get
-            {
-                return new TemperatureDelta(double.MinValue);
-            }
+            return QuantityFormatter.Format<TemperatureDeltaUnit>(this, format, provider);
         }
+
+        #endregion
+
+        #region IConvertible Methods
+
+        TypeCode IConvertible.GetTypeCode()
+        {
+            return TypeCode.Object;
+        }
+
+        bool IConvertible.ToBoolean(IFormatProvider provider)
+        {
+            throw new InvalidCastException($"Converting {typeof(TemperatureDelta)} to bool is not supported.");
+        }
+
+        byte IConvertible.ToByte(IFormatProvider provider)
+        {
+            return Convert.ToByte(_value);
+        }
+
+        char IConvertible.ToChar(IFormatProvider provider)
+        {
+            throw new InvalidCastException($"Converting {typeof(TemperatureDelta)} to char is not supported.");
+        }
+
+        DateTime IConvertible.ToDateTime(IFormatProvider provider)
+        {
+            throw new InvalidCastException($"Converting {typeof(TemperatureDelta)} to DateTime is not supported.");
+        }
+
+        decimal IConvertible.ToDecimal(IFormatProvider provider)
+        {
+            return Convert.ToDecimal(_value);
+        }
+
+        double IConvertible.ToDouble(IFormatProvider provider)
+        {
+            return Convert.ToDouble(_value);
+        }
+
+        short IConvertible.ToInt16(IFormatProvider provider)
+        {
+            return Convert.ToInt16(_value);
+        }
+
+        int IConvertible.ToInt32(IFormatProvider provider)
+        {
+            return Convert.ToInt32(_value);
+        }
+
+        long IConvertible.ToInt64(IFormatProvider provider)
+        {
+            return Convert.ToInt64(_value);
+        }
+
+        sbyte IConvertible.ToSByte(IFormatProvider provider)
+        {
+            return Convert.ToSByte(_value);
+        }
+
+        float IConvertible.ToSingle(IFormatProvider provider)
+        {
+            return Convert.ToSingle(_value);
+        }
+
+        string IConvertible.ToString(IFormatProvider provider)
+        {
+            return ToString("g", provider);
+        }
+
+        object IConvertible.ToType(Type conversionType, IFormatProvider provider)
+        {
+            if(conversionType == typeof(TemperatureDelta))
+                return this;
+            else if(conversionType == typeof(TemperatureDeltaUnit))
+                return Unit;
+            else if(conversionType == typeof(QuantityType))
+                return TemperatureDelta.QuantityType;
+            else if(conversionType == typeof(BaseDimensions))
+                return TemperatureDelta.BaseDimensions;
+            else
+                throw new InvalidCastException($"Converting {typeof(TemperatureDelta)} to {conversionType} is not supported.");
+        }
+
+        ushort IConvertible.ToUInt16(IFormatProvider provider)
+        {
+            return Convert.ToUInt16(_value);
+        }
+
+        uint IConvertible.ToUInt32(IFormatProvider provider)
+        {
+            return Convert.ToUInt32(_value);
+        }
+
+        ulong IConvertible.ToUInt64(IFormatProvider provider)
+        {
+            return Convert.ToUInt64(_value);
+        }
+
+        #endregion
     }
 }

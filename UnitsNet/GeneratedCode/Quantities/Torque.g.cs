@@ -8,911 +8,297 @@
 //
 //     See https://github.com/angularsen/UnitsNet/wiki/Adding-a-New-Unit for how to add or edit units.
 //
-//     Add CustomCode\Quantities\MyUnit.extra.cs files to add code to generated quantities.
-//     Add Extensions\MyUnitExtensions.cs to decorate quantities with new behavior.
-//     Add UnitDefinitions\MyUnit.json and run GeneratUnits.bat to generate new units or quantities.
+//     Add CustomCode\Quantities\MyQuantity.extra.cs files to add code to generated quantities.
+//     Add UnitDefinitions\MyQuantity.json and run generate-code.bat to generate new units or quantities.
 //
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-// Copyright (c) 2013 Andreas Gullberg Larsen (andreas.larsen84@gmail.com).
-// https://github.com/angularsen/UnitsNet
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
+// Licensed under MIT No Attribution, see LICENSE file at the root.
+// Copyright 2013 Andreas Gullberg Larsen (andreas.larsen84@gmail.com). Maintained at https://github.com/angularsen/UnitsNet.
 
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Text.RegularExpressions;
 using System.Linq;
 using JetBrains.Annotations;
+using UnitsNet.InternalHelpers;
 using UnitsNet.Units;
 
-// Windows Runtime Component does not support CultureInfo type, so use culture name string instead for public methods: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if WINDOWS_UWP
-using Culture = System.String;
-#else
-using Culture = System.IFormatProvider;
-#endif
+#nullable enable
 
 // ReSharper disable once CheckNamespace
 
 namespace UnitsNet
 {
+    /// <inheritdoc />
     /// <summary>
     ///     Torque, moment or moment of force (see the terminology below), is the tendency of a force to rotate an object about an axis,[1] fulcrum, or pivot. Just as a force is a push or a pull, a torque can be thought of as a twist to an object. Mathematically, torque is defined as the cross product of the lever-arm distance and force, which tends to produce rotation. Loosely speaking, torque is a measure of the turning force on an object such as a bolt or a flywheel. For example, pushing or pulling the handle of a wrench connected to a nut or bolt produces a torque (turning force) that loosens or tightens the nut or bolt.
     /// </summary>
-    // ReSharper disable once PartialTypeWithSinglePart
-
-    // Windows Runtime Component has constraints on public types: https://msdn.microsoft.com/en-us/library/br230301.aspx#Declaring types in Windows Runtime Components
-    // Public structures can't have any members other than public fields, and those fields must be value types or strings.
-    // Public classes must be sealed (NotInheritable in Visual Basic). If your programming model requires polymorphism, you can create a public interface and implement that interface on the classes that must be polymorphic.
-#if WINDOWS_UWP
-    public sealed partial class Torque
-#else
-    public partial struct Torque : IComparable, IComparable<Torque>
-#endif
+    public partial struct Torque : IQuantity<TorqueUnit>, IEquatable<Torque>, IComparable, IComparable<Torque>, IConvertible, IFormattable
     {
         /// <summary>
-        ///     Base unit of Torque.
+        ///     The numeric value this quantity was constructed with.
         /// </summary>
-        private readonly double _newtonMeters;
+        private readonly double _value;
 
-        // Windows Runtime Component requires a default constructor
-#if WINDOWS_UWP
-        public Torque() : this(0)
+        /// <summary>
+        ///     The unit this quantity was constructed with.
+        /// </summary>
+        private readonly TorqueUnit? _unit;
+
+        static Torque()
         {
-        }
-#endif
+            BaseDimensions = new BaseDimensions(2, 1, -2, 0, 0, 0, 0);
 
-        public Torque(double newtonmeters)
+            Info = new QuantityInfo<TorqueUnit>(QuantityType.Torque,
+                new UnitInfo<TorqueUnit>[] {
+                    new UnitInfo<TorqueUnit>(TorqueUnit.KilogramForceCentimeter, BaseUnits.Undefined),
+                    new UnitInfo<TorqueUnit>(TorqueUnit.KilogramForceMeter, BaseUnits.Undefined),
+                    new UnitInfo<TorqueUnit>(TorqueUnit.KilogramForceMillimeter, BaseUnits.Undefined),
+                    new UnitInfo<TorqueUnit>(TorqueUnit.KilonewtonCentimeter, BaseUnits.Undefined),
+                    new UnitInfo<TorqueUnit>(TorqueUnit.KilonewtonMeter, BaseUnits.Undefined),
+                    new UnitInfo<TorqueUnit>(TorqueUnit.KilonewtonMillimeter, BaseUnits.Undefined),
+                    new UnitInfo<TorqueUnit>(TorqueUnit.KilopoundForceFoot, BaseUnits.Undefined),
+                    new UnitInfo<TorqueUnit>(TorqueUnit.KilopoundForceInch, BaseUnits.Undefined),
+                    new UnitInfo<TorqueUnit>(TorqueUnit.MeganewtonCentimeter, BaseUnits.Undefined),
+                    new UnitInfo<TorqueUnit>(TorqueUnit.MeganewtonMeter, BaseUnits.Undefined),
+                    new UnitInfo<TorqueUnit>(TorqueUnit.MeganewtonMillimeter, BaseUnits.Undefined),
+                    new UnitInfo<TorqueUnit>(TorqueUnit.MegapoundForceFoot, BaseUnits.Undefined),
+                    new UnitInfo<TorqueUnit>(TorqueUnit.MegapoundForceInch, BaseUnits.Undefined),
+                    new UnitInfo<TorqueUnit>(TorqueUnit.NewtonCentimeter, BaseUnits.Undefined),
+                    new UnitInfo<TorqueUnit>(TorqueUnit.NewtonMeter, BaseUnits.Undefined),
+                    new UnitInfo<TorqueUnit>(TorqueUnit.NewtonMillimeter, BaseUnits.Undefined),
+                    new UnitInfo<TorqueUnit>(TorqueUnit.PoundForceFoot, BaseUnits.Undefined),
+                    new UnitInfo<TorqueUnit>(TorqueUnit.PoundForceInch, BaseUnits.Undefined),
+                    new UnitInfo<TorqueUnit>(TorqueUnit.TonneForceCentimeter, BaseUnits.Undefined),
+                    new UnitInfo<TorqueUnit>(TorqueUnit.TonneForceMeter, BaseUnits.Undefined),
+                    new UnitInfo<TorqueUnit>(TorqueUnit.TonneForceMillimeter, BaseUnits.Undefined),
+                },
+                BaseUnit, Zero, BaseDimensions);
+        }
+
+        /// <summary>
+        ///     Creates the quantity with the given numeric value and unit.
+        /// </summary>
+        /// <param name="value">The numeric value to construct this quantity with.</param>
+        /// <param name="unit">The unit representation to construct this quantity with.</param>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public Torque(double value, TorqueUnit unit)
         {
-            _newtonMeters = Convert.ToDouble(newtonmeters);
+            if(unit == TorqueUnit.Undefined)
+              throw new ArgumentException("The quantity can not be created with an undefined unit.", nameof(unit));
+
+            _value = Guard.EnsureValidNumber(value, nameof(value));
+            _unit = unit;
         }
 
-        // Windows Runtime Component does not allow public methods/ctors with same number of parameters: https://msdn.microsoft.com/en-us/library/br230301.aspx#Overloaded methods
-#if WINDOWS_UWP
-        private
-#else
-        public
-#endif
-        Torque(long newtonmeters)
+        /// <summary>
+        /// Creates an instance of the quantity with the given numeric value in units compatible with the given <see cref="UnitSystem"/>.
+        /// If multiple compatible units were found, the first match is used.
+        /// </summary>
+        /// <param name="value">The numeric value to construct this quantity with.</param>
+        /// <param name="unitSystem">The unit system to create the quantity with.</param>
+        /// <exception cref="ArgumentNullException">The given <see cref="UnitSystem"/> is null.</exception>
+        /// <exception cref="ArgumentException">No unit was found for the given <see cref="UnitSystem"/>.</exception>
+        public Torque(double value, UnitSystem unitSystem)
         {
-            _newtonMeters = Convert.ToDouble(newtonmeters);
+            if(unitSystem is null) throw new ArgumentNullException(nameof(unitSystem));
+
+            var unitInfos = Info.GetUnitInfosFor(unitSystem.BaseUnits);
+            var firstUnitInfo = unitInfos.FirstOrDefault();
+
+            _value = Guard.EnsureValidNumber(value, nameof(value));
+            _unit = firstUnitInfo?.Value ?? throw new ArgumentException("No units were found for the given UnitSystem.", nameof(unitSystem));
         }
 
-        // Windows Runtime Component does not allow public methods/ctors with same number of parameters: https://msdn.microsoft.com/en-us/library/br230301.aspx#Overloaded methods
-        // Windows Runtime Component does not support decimal type
-#if WINDOWS_UWP
-        private
-#else
-        public
-#endif
-        Torque(decimal newtonmeters)
-        {
-            _newtonMeters = Convert.ToDouble(newtonmeters);
-        }
+        #region Static Properties
 
-        #region Properties
+        /// <inheritdoc cref="IQuantity.QuantityInfo"/>
+        public static QuantityInfo<TorqueUnit> Info { get; }
+
+        /// <summary>
+        ///     The <see cref="BaseDimensions" /> of this quantity.
+        /// </summary>
+        public static BaseDimensions BaseDimensions { get; }
+
+        /// <summary>
+        ///     The base unit of Torque, which is NewtonMeter. All conversions go via this value.
+        /// </summary>
+        public static TorqueUnit BaseUnit { get; } = TorqueUnit.NewtonMeter;
+
+        /// <summary>
+        /// Represents the largest possible value of Torque
+        /// </summary>
+        public static Torque MaxValue { get; } = new Torque(double.MaxValue, BaseUnit);
+
+        /// <summary>
+        /// Represents the smallest possible value of Torque
+        /// </summary>
+        public static Torque MinValue { get; } = new Torque(double.MinValue, BaseUnit);
 
         /// <summary>
         ///     The <see cref="QuantityType" /> of this quantity.
         /// </summary>
-        public static QuantityType QuantityType => QuantityType.Torque;
-
-        /// <summary>
-        ///     The base unit representation of this quantity for the numeric value stored internally. All conversions go via this value.
-        /// </summary>
-        public static TorqueUnit BaseUnit
-        {
-            get { return TorqueUnit.NewtonMeter; }
-        }
+        public static QuantityType QuantityType { get; } = QuantityType.Torque;
 
         /// <summary>
         ///     All units of measurement for the Torque quantity.
         /// </summary>
-        public static TorqueUnit[] Units { get; } = Enum.GetValues(typeof(TorqueUnit)).Cast<TorqueUnit>().ToArray();
+        public static TorqueUnit[] Units { get; } = Enum.GetValues(typeof(TorqueUnit)).Cast<TorqueUnit>().Except(new TorqueUnit[]{ TorqueUnit.Undefined }).ToArray();
+
+        /// <summary>
+        ///     Gets an instance of this quantity with a value of 0 in the base unit NewtonMeter.
+        /// </summary>
+        public static Torque Zero { get; } = new Torque(0, BaseUnit);
+
+        #endregion
+
+        #region Properties
+
+        /// <summary>
+        ///     The numeric value this quantity was constructed with.
+        /// </summary>
+        public double Value => _value;
+
+        Enum IQuantity.Unit => Unit;
+
+        /// <inheritdoc />
+        public TorqueUnit Unit => _unit.GetValueOrDefault(BaseUnit);
+
+        /// <inheritdoc />
+        public QuantityInfo<TorqueUnit> QuantityInfo => Info;
+
+        /// <inheritdoc cref="IQuantity.QuantityInfo"/>
+        QuantityInfo IQuantity.QuantityInfo => Info;
+
+        /// <summary>
+        ///     The <see cref="QuantityType" /> of this quantity.
+        /// </summary>
+        public QuantityType Type => Torque.QuantityType;
+
+        /// <summary>
+        ///     The <see cref="BaseDimensions" /> of this quantity.
+        /// </summary>
+        public BaseDimensions Dimensions => Torque.BaseDimensions;
+
+        #endregion
+
+        #region Conversion Properties
 
         /// <summary>
         ///     Get Torque in KilogramForceCentimeters.
         /// </summary>
-        public double KilogramForceCentimeters
-        {
-            get { return _newtonMeters*10.1971619222242; }
-        }
+        public double KilogramForceCentimeters => As(TorqueUnit.KilogramForceCentimeter);
 
         /// <summary>
         ///     Get Torque in KilogramForceMeters.
         /// </summary>
-        public double KilogramForceMeters
-        {
-            get { return _newtonMeters*0.101971619222242; }
-        }
+        public double KilogramForceMeters => As(TorqueUnit.KilogramForceMeter);
 
         /// <summary>
         ///     Get Torque in KilogramForceMillimeters.
         /// </summary>
-        public double KilogramForceMillimeters
-        {
-            get { return _newtonMeters*101.971619222242; }
-        }
+        public double KilogramForceMillimeters => As(TorqueUnit.KilogramForceMillimeter);
 
         /// <summary>
         ///     Get Torque in KilonewtonCentimeters.
         /// </summary>
-        public double KilonewtonCentimeters
-        {
-            get { return (_newtonMeters*100) / 1e3d; }
-        }
+        public double KilonewtonCentimeters => As(TorqueUnit.KilonewtonCentimeter);
 
         /// <summary>
         ///     Get Torque in KilonewtonMeters.
         /// </summary>
-        public double KilonewtonMeters
-        {
-            get { return (_newtonMeters) / 1e3d; }
-        }
+        public double KilonewtonMeters => As(TorqueUnit.KilonewtonMeter);
 
         /// <summary>
         ///     Get Torque in KilonewtonMillimeters.
         /// </summary>
-        public double KilonewtonMillimeters
-        {
-            get { return (_newtonMeters*1000) / 1e3d; }
-        }
+        public double KilonewtonMillimeters => As(TorqueUnit.KilonewtonMillimeter);
 
         /// <summary>
         ///     Get Torque in KilopoundForceFeet.
         /// </summary>
-        public double KilopoundForceFeet
-        {
-            get { return (_newtonMeters*0.737562085483396) / 1e3d; }
-        }
+        public double KilopoundForceFeet => As(TorqueUnit.KilopoundForceFoot);
 
         /// <summary>
         ///     Get Torque in KilopoundForceInches.
         /// </summary>
-        public double KilopoundForceInches
-        {
-            get { return (_newtonMeters*8.85074502580075) / 1e3d; }
-        }
+        public double KilopoundForceInches => As(TorqueUnit.KilopoundForceInch);
+
+        /// <summary>
+        ///     Get Torque in MeganewtonCentimeters.
+        /// </summary>
+        public double MeganewtonCentimeters => As(TorqueUnit.MeganewtonCentimeter);
+
+        /// <summary>
+        ///     Get Torque in MeganewtonMeters.
+        /// </summary>
+        public double MeganewtonMeters => As(TorqueUnit.MeganewtonMeter);
+
+        /// <summary>
+        ///     Get Torque in MeganewtonMillimeters.
+        /// </summary>
+        public double MeganewtonMillimeters => As(TorqueUnit.MeganewtonMillimeter);
+
+        /// <summary>
+        ///     Get Torque in MegapoundForceFeet.
+        /// </summary>
+        public double MegapoundForceFeet => As(TorqueUnit.MegapoundForceFoot);
+
+        /// <summary>
+        ///     Get Torque in MegapoundForceInches.
+        /// </summary>
+        public double MegapoundForceInches => As(TorqueUnit.MegapoundForceInch);
 
         /// <summary>
         ///     Get Torque in NewtonCentimeters.
         /// </summary>
-        public double NewtonCentimeters
-        {
-            get { return _newtonMeters*100; }
-        }
+        public double NewtonCentimeters => As(TorqueUnit.NewtonCentimeter);
 
         /// <summary>
         ///     Get Torque in NewtonMeters.
         /// </summary>
-        public double NewtonMeters
-        {
-            get { return _newtonMeters; }
-        }
+        public double NewtonMeters => As(TorqueUnit.NewtonMeter);
 
         /// <summary>
         ///     Get Torque in NewtonMillimeters.
         /// </summary>
-        public double NewtonMillimeters
-        {
-            get { return _newtonMeters*1000; }
-        }
+        public double NewtonMillimeters => As(TorqueUnit.NewtonMillimeter);
 
         /// <summary>
         ///     Get Torque in PoundForceFeet.
         /// </summary>
-        public double PoundForceFeet
-        {
-            get { return _newtonMeters*0.737562085483396; }
-        }
+        public double PoundForceFeet => As(TorqueUnit.PoundForceFoot);
 
         /// <summary>
         ///     Get Torque in PoundForceInches.
         /// </summary>
-        public double PoundForceInches
-        {
-            get { return _newtonMeters*8.85074502580075; }
-        }
+        public double PoundForceInches => As(TorqueUnit.PoundForceInch);
 
         /// <summary>
         ///     Get Torque in TonneForceCentimeters.
         /// </summary>
-        public double TonneForceCentimeters
-        {
-            get { return _newtonMeters*0.0101971619222242; }
-        }
+        public double TonneForceCentimeters => As(TorqueUnit.TonneForceCentimeter);
 
         /// <summary>
         ///     Get Torque in TonneForceMeters.
         /// </summary>
-        public double TonneForceMeters
-        {
-            get { return _newtonMeters*0.000101971619222242; }
-        }
+        public double TonneForceMeters => As(TorqueUnit.TonneForceMeter);
 
         /// <summary>
         ///     Get Torque in TonneForceMillimeters.
         /// </summary>
-        public double TonneForceMillimeters
-        {
-            get { return _newtonMeters*0.101971619222242; }
-        }
+        public double TonneForceMillimeters => As(TorqueUnit.TonneForceMillimeter);
 
         #endregion
 
-        #region Static
-
-        public static Torque Zero
-        {
-            get { return new Torque(); }
-        }
-
-        /// <summary>
-        ///     Get Torque from KilogramForceCentimeters.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Torque FromKilogramForceCentimeters(double kilogramforcecentimeters)
-        {
-            double value = (double) kilogramforcecentimeters;
-            return new Torque(value*0.0980665019960652);
-        }
-#else
-        public static Torque FromKilogramForceCentimeters(QuantityValue kilogramforcecentimeters)
-        {
-            double value = (double) kilogramforcecentimeters;
-            return new Torque((value*0.0980665019960652));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Torque from KilogramForceMeters.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Torque FromKilogramForceMeters(double kilogramforcemeters)
-        {
-            double value = (double) kilogramforcemeters;
-            return new Torque(value*9.80665019960652);
-        }
-#else
-        public static Torque FromKilogramForceMeters(QuantityValue kilogramforcemeters)
-        {
-            double value = (double) kilogramforcemeters;
-            return new Torque((value*9.80665019960652));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Torque from KilogramForceMillimeters.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Torque FromKilogramForceMillimeters(double kilogramforcemillimeters)
-        {
-            double value = (double) kilogramforcemillimeters;
-            return new Torque(value*0.00980665019960652);
-        }
-#else
-        public static Torque FromKilogramForceMillimeters(QuantityValue kilogramforcemillimeters)
-        {
-            double value = (double) kilogramforcemillimeters;
-            return new Torque((value*0.00980665019960652));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Torque from KilonewtonCentimeters.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Torque FromKilonewtonCentimeters(double kilonewtoncentimeters)
-        {
-            double value = (double) kilonewtoncentimeters;
-            return new Torque((value*0.01) * 1e3d);
-        }
-#else
-        public static Torque FromKilonewtonCentimeters(QuantityValue kilonewtoncentimeters)
-        {
-            double value = (double) kilonewtoncentimeters;
-            return new Torque(((value*0.01) * 1e3d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Torque from KilonewtonMeters.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Torque FromKilonewtonMeters(double kilonewtonmeters)
-        {
-            double value = (double) kilonewtonmeters;
-            return new Torque((value) * 1e3d);
-        }
-#else
-        public static Torque FromKilonewtonMeters(QuantityValue kilonewtonmeters)
-        {
-            double value = (double) kilonewtonmeters;
-            return new Torque(((value) * 1e3d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Torque from KilonewtonMillimeters.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Torque FromKilonewtonMillimeters(double kilonewtonmillimeters)
-        {
-            double value = (double) kilonewtonmillimeters;
-            return new Torque((value*0.001) * 1e3d);
-        }
-#else
-        public static Torque FromKilonewtonMillimeters(QuantityValue kilonewtonmillimeters)
-        {
-            double value = (double) kilonewtonmillimeters;
-            return new Torque(((value*0.001) * 1e3d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Torque from KilopoundForceFeet.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Torque FromKilopoundForceFeet(double kilopoundforcefeet)
-        {
-            double value = (double) kilopoundforcefeet;
-            return new Torque((value*1.3558180656) * 1e3d);
-        }
-#else
-        public static Torque FromKilopoundForceFeet(QuantityValue kilopoundforcefeet)
-        {
-            double value = (double) kilopoundforcefeet;
-            return new Torque(((value*1.3558180656) * 1e3d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Torque from KilopoundForceInches.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Torque FromKilopoundForceInches(double kilopoundforceinches)
-        {
-            double value = (double) kilopoundforceinches;
-            return new Torque((value*0.1129848388) * 1e3d);
-        }
-#else
-        public static Torque FromKilopoundForceInches(QuantityValue kilopoundforceinches)
-        {
-            double value = (double) kilopoundforceinches;
-            return new Torque(((value*0.1129848388) * 1e3d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Torque from NewtonCentimeters.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Torque FromNewtonCentimeters(double newtoncentimeters)
-        {
-            double value = (double) newtoncentimeters;
-            return new Torque(value*0.01);
-        }
-#else
-        public static Torque FromNewtonCentimeters(QuantityValue newtoncentimeters)
-        {
-            double value = (double) newtoncentimeters;
-            return new Torque((value*0.01));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Torque from NewtonMeters.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Torque FromNewtonMeters(double newtonmeters)
-        {
-            double value = (double) newtonmeters;
-            return new Torque(value);
-        }
-#else
-        public static Torque FromNewtonMeters(QuantityValue newtonmeters)
-        {
-            double value = (double) newtonmeters;
-            return new Torque((value));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Torque from NewtonMillimeters.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Torque FromNewtonMillimeters(double newtonmillimeters)
-        {
-            double value = (double) newtonmillimeters;
-            return new Torque(value*0.001);
-        }
-#else
-        public static Torque FromNewtonMillimeters(QuantityValue newtonmillimeters)
-        {
-            double value = (double) newtonmillimeters;
-            return new Torque((value*0.001));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Torque from PoundForceFeet.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Torque FromPoundForceFeet(double poundforcefeet)
-        {
-            double value = (double) poundforcefeet;
-            return new Torque(value*1.3558180656);
-        }
-#else
-        public static Torque FromPoundForceFeet(QuantityValue poundforcefeet)
-        {
-            double value = (double) poundforcefeet;
-            return new Torque((value*1.3558180656));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Torque from PoundForceInches.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Torque FromPoundForceInches(double poundforceinches)
-        {
-            double value = (double) poundforceinches;
-            return new Torque(value*0.1129848388);
-        }
-#else
-        public static Torque FromPoundForceInches(QuantityValue poundforceinches)
-        {
-            double value = (double) poundforceinches;
-            return new Torque((value*0.1129848388));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Torque from TonneForceCentimeters.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Torque FromTonneForceCentimeters(double tonneforcecentimeters)
-        {
-            double value = (double) tonneforcecentimeters;
-            return new Torque(value*98.0665019960652);
-        }
-#else
-        public static Torque FromTonneForceCentimeters(QuantityValue tonneforcecentimeters)
-        {
-            double value = (double) tonneforcecentimeters;
-            return new Torque((value*98.0665019960652));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Torque from TonneForceMeters.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Torque FromTonneForceMeters(double tonneforcemeters)
-        {
-            double value = (double) tonneforcemeters;
-            return new Torque(value*9806.65019960653);
-        }
-#else
-        public static Torque FromTonneForceMeters(QuantityValue tonneforcemeters)
-        {
-            double value = (double) tonneforcemeters;
-            return new Torque((value*9806.65019960653));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Torque from TonneForceMillimeters.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Torque FromTonneForceMillimeters(double tonneforcemillimeters)
-        {
-            double value = (double) tonneforcemillimeters;
-            return new Torque(value*9.80665019960652);
-        }
-#else
-        public static Torque FromTonneForceMillimeters(QuantityValue tonneforcemillimeters)
-        {
-            double value = (double) tonneforcemillimeters;
-            return new Torque((value*9.80665019960652));
-        }
-#endif
-
-        // Windows Runtime Component does not support nullable types (double?): https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if !WINDOWS_UWP
-        /// <summary>
-        ///     Get nullable Torque from nullable KilogramForceCentimeters.
-        /// </summary>
-        public static Torque? FromKilogramForceCentimeters(QuantityValue? kilogramforcecentimeters)
-        {
-            if (kilogramforcecentimeters.HasValue)
-            {
-                return FromKilogramForceCentimeters(kilogramforcecentimeters.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Torque from nullable KilogramForceMeters.
-        /// </summary>
-        public static Torque? FromKilogramForceMeters(QuantityValue? kilogramforcemeters)
-        {
-            if (kilogramforcemeters.HasValue)
-            {
-                return FromKilogramForceMeters(kilogramforcemeters.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Torque from nullable KilogramForceMillimeters.
-        /// </summary>
-        public static Torque? FromKilogramForceMillimeters(QuantityValue? kilogramforcemillimeters)
-        {
-            if (kilogramforcemillimeters.HasValue)
-            {
-                return FromKilogramForceMillimeters(kilogramforcemillimeters.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Torque from nullable KilonewtonCentimeters.
-        /// </summary>
-        public static Torque? FromKilonewtonCentimeters(QuantityValue? kilonewtoncentimeters)
-        {
-            if (kilonewtoncentimeters.HasValue)
-            {
-                return FromKilonewtonCentimeters(kilonewtoncentimeters.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Torque from nullable KilonewtonMeters.
-        /// </summary>
-        public static Torque? FromKilonewtonMeters(QuantityValue? kilonewtonmeters)
-        {
-            if (kilonewtonmeters.HasValue)
-            {
-                return FromKilonewtonMeters(kilonewtonmeters.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Torque from nullable KilonewtonMillimeters.
-        /// </summary>
-        public static Torque? FromKilonewtonMillimeters(QuantityValue? kilonewtonmillimeters)
-        {
-            if (kilonewtonmillimeters.HasValue)
-            {
-                return FromKilonewtonMillimeters(kilonewtonmillimeters.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Torque from nullable KilopoundForceFeet.
-        /// </summary>
-        public static Torque? FromKilopoundForceFeet(QuantityValue? kilopoundforcefeet)
-        {
-            if (kilopoundforcefeet.HasValue)
-            {
-                return FromKilopoundForceFeet(kilopoundforcefeet.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Torque from nullable KilopoundForceInches.
-        /// </summary>
-        public static Torque? FromKilopoundForceInches(QuantityValue? kilopoundforceinches)
-        {
-            if (kilopoundforceinches.HasValue)
-            {
-                return FromKilopoundForceInches(kilopoundforceinches.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Torque from nullable NewtonCentimeters.
-        /// </summary>
-        public static Torque? FromNewtonCentimeters(QuantityValue? newtoncentimeters)
-        {
-            if (newtoncentimeters.HasValue)
-            {
-                return FromNewtonCentimeters(newtoncentimeters.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Torque from nullable NewtonMeters.
-        /// </summary>
-        public static Torque? FromNewtonMeters(QuantityValue? newtonmeters)
-        {
-            if (newtonmeters.HasValue)
-            {
-                return FromNewtonMeters(newtonmeters.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Torque from nullable NewtonMillimeters.
-        /// </summary>
-        public static Torque? FromNewtonMillimeters(QuantityValue? newtonmillimeters)
-        {
-            if (newtonmillimeters.HasValue)
-            {
-                return FromNewtonMillimeters(newtonmillimeters.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Torque from nullable PoundForceFeet.
-        /// </summary>
-        public static Torque? FromPoundForceFeet(QuantityValue? poundforcefeet)
-        {
-            if (poundforcefeet.HasValue)
-            {
-                return FromPoundForceFeet(poundforcefeet.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Torque from nullable PoundForceInches.
-        /// </summary>
-        public static Torque? FromPoundForceInches(QuantityValue? poundforceinches)
-        {
-            if (poundforceinches.HasValue)
-            {
-                return FromPoundForceInches(poundforceinches.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Torque from nullable TonneForceCentimeters.
-        /// </summary>
-        public static Torque? FromTonneForceCentimeters(QuantityValue? tonneforcecentimeters)
-        {
-            if (tonneforcecentimeters.HasValue)
-            {
-                return FromTonneForceCentimeters(tonneforcecentimeters.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Torque from nullable TonneForceMeters.
-        /// </summary>
-        public static Torque? FromTonneForceMeters(QuantityValue? tonneforcemeters)
-        {
-            if (tonneforcemeters.HasValue)
-            {
-                return FromTonneForceMeters(tonneforcemeters.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Torque from nullable TonneForceMillimeters.
-        /// </summary>
-        public static Torque? FromTonneForceMillimeters(QuantityValue? tonneforcemillimeters)
-        {
-            if (tonneforcemillimeters.HasValue)
-            {
-                return FromTonneForceMillimeters(tonneforcemillimeters.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-#endif
-
-        /// <summary>
-        ///     Dynamically convert from value and unit enum <see cref="TorqueUnit" /> to <see cref="Torque" />.
-        /// </summary>
-        /// <param name="value">Value to convert from.</param>
-        /// <param name="fromUnit">Unit to convert from.</param>
-        /// <returns>Torque unit value.</returns>
-#if WINDOWS_UWP
-        // Fix name conflict with parameter "value"
-        [return: System.Runtime.InteropServices.WindowsRuntime.ReturnValueName("returnValue")]
-        public static Torque From(double value, TorqueUnit fromUnit)
-#else
-        public static Torque From(QuantityValue value, TorqueUnit fromUnit)
-#endif
-        {
-            switch (fromUnit)
-            {
-                case TorqueUnit.KilogramForceCentimeter:
-                    return FromKilogramForceCentimeters(value);
-                case TorqueUnit.KilogramForceMeter:
-                    return FromKilogramForceMeters(value);
-                case TorqueUnit.KilogramForceMillimeter:
-                    return FromKilogramForceMillimeters(value);
-                case TorqueUnit.KilonewtonCentimeter:
-                    return FromKilonewtonCentimeters(value);
-                case TorqueUnit.KilonewtonMeter:
-                    return FromKilonewtonMeters(value);
-                case TorqueUnit.KilonewtonMillimeter:
-                    return FromKilonewtonMillimeters(value);
-                case TorqueUnit.KilopoundForceFoot:
-                    return FromKilopoundForceFeet(value);
-                case TorqueUnit.KilopoundForceInch:
-                    return FromKilopoundForceInches(value);
-                case TorqueUnit.NewtonCentimeter:
-                    return FromNewtonCentimeters(value);
-                case TorqueUnit.NewtonMeter:
-                    return FromNewtonMeters(value);
-                case TorqueUnit.NewtonMillimeter:
-                    return FromNewtonMillimeters(value);
-                case TorqueUnit.PoundForceFoot:
-                    return FromPoundForceFeet(value);
-                case TorqueUnit.PoundForceInch:
-                    return FromPoundForceInches(value);
-                case TorqueUnit.TonneForceCentimeter:
-                    return FromTonneForceCentimeters(value);
-                case TorqueUnit.TonneForceMeter:
-                    return FromTonneForceMeters(value);
-                case TorqueUnit.TonneForceMillimeter:
-                    return FromTonneForceMillimeters(value);
-
-                default:
-                    throw new NotImplementedException("fromUnit: " + fromUnit);
-            }
-        }
-
-        // Windows Runtime Component does not support nullable types (double?): https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if !WINDOWS_UWP
-        /// <summary>
-        ///     Dynamically convert from value and unit enum <see cref="TorqueUnit" /> to <see cref="Torque" />.
-        /// </summary>
-        /// <param name="value">Value to convert from.</param>
-        /// <param name="fromUnit">Unit to convert from.</param>
-        /// <returns>Torque unit value.</returns>
-        public static Torque? From(QuantityValue? value, TorqueUnit fromUnit)
-        {
-            if (!value.HasValue)
-            {
-                return null;
-            }
-            switch (fromUnit)
-            {
-                case TorqueUnit.KilogramForceCentimeter:
-                    return FromKilogramForceCentimeters(value.Value);
-                case TorqueUnit.KilogramForceMeter:
-                    return FromKilogramForceMeters(value.Value);
-                case TorqueUnit.KilogramForceMillimeter:
-                    return FromKilogramForceMillimeters(value.Value);
-                case TorqueUnit.KilonewtonCentimeter:
-                    return FromKilonewtonCentimeters(value.Value);
-                case TorqueUnit.KilonewtonMeter:
-                    return FromKilonewtonMeters(value.Value);
-                case TorqueUnit.KilonewtonMillimeter:
-                    return FromKilonewtonMillimeters(value.Value);
-                case TorqueUnit.KilopoundForceFoot:
-                    return FromKilopoundForceFeet(value.Value);
-                case TorqueUnit.KilopoundForceInch:
-                    return FromKilopoundForceInches(value.Value);
-                case TorqueUnit.NewtonCentimeter:
-                    return FromNewtonCentimeters(value.Value);
-                case TorqueUnit.NewtonMeter:
-                    return FromNewtonMeters(value.Value);
-                case TorqueUnit.NewtonMillimeter:
-                    return FromNewtonMillimeters(value.Value);
-                case TorqueUnit.PoundForceFoot:
-                    return FromPoundForceFeet(value.Value);
-                case TorqueUnit.PoundForceInch:
-                    return FromPoundForceInches(value.Value);
-                case TorqueUnit.TonneForceCentimeter:
-                    return FromTonneForceCentimeters(value.Value);
-                case TorqueUnit.TonneForceMeter:
-                    return FromTonneForceMeters(value.Value);
-                case TorqueUnit.TonneForceMillimeter:
-                    return FromTonneForceMillimeters(value.Value);
-
-                default:
-                    throw new NotImplementedException("fromUnit: " + fromUnit);
-            }
-        }
-#endif
+        #region Static Methods
 
         /// <summary>
         ///     Get unit abbreviation string.
         /// </summary>
         /// <param name="unit">Unit to get abbreviation for.</param>
         /// <returns>Unit abbreviation string.</returns>
-        [UsedImplicitly]
         public static string GetAbbreviation(TorqueUnit unit)
         {
             return GetAbbreviation(unit, null);
@@ -922,198 +308,221 @@ namespace UnitsNet
         ///     Get unit abbreviation string.
         /// </summary>
         /// <param name="unit">Unit to get abbreviation for.</param>
-        /// <param name="culture">Culture to use for localization. Defaults to Thread.CurrentUICulture.</param>
         /// <returns>Unit abbreviation string.</returns>
-        [UsedImplicitly]
-        public static string GetAbbreviation(TorqueUnit unit, [CanBeNull] Culture culture)
+        /// <param name="provider">Format to use for localization. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public static string GetAbbreviation(TorqueUnit unit, IFormatProvider? provider)
         {
-            return UnitSystem.GetCached(culture).GetDefaultAbbreviation(unit);
+            return UnitAbbreviationsCache.Default.GetDefaultAbbreviation(unit, provider);
         }
 
         #endregion
 
-        #region Arithmetic Operators
+        #region Static Factory Methods
 
-        // Windows Runtime Component does not allow operator overloads: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if !WINDOWS_UWP
-        public static Torque operator -(Torque right)
+        /// <summary>
+        ///     Get Torque from KilogramForceCentimeters.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Torque FromKilogramForceCentimeters(QuantityValue kilogramforcecentimeters)
         {
-            return new Torque(-right._newtonMeters);
+            double value = (double) kilogramforcecentimeters;
+            return new Torque(value, TorqueUnit.KilogramForceCentimeter);
         }
-
-        public static Torque operator +(Torque left, Torque right)
+        /// <summary>
+        ///     Get Torque from KilogramForceMeters.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Torque FromKilogramForceMeters(QuantityValue kilogramforcemeters)
         {
-            return new Torque(left._newtonMeters + right._newtonMeters);
+            double value = (double) kilogramforcemeters;
+            return new Torque(value, TorqueUnit.KilogramForceMeter);
         }
-
-        public static Torque operator -(Torque left, Torque right)
+        /// <summary>
+        ///     Get Torque from KilogramForceMillimeters.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Torque FromKilogramForceMillimeters(QuantityValue kilogramforcemillimeters)
         {
-            return new Torque(left._newtonMeters - right._newtonMeters);
+            double value = (double) kilogramforcemillimeters;
+            return new Torque(value, TorqueUnit.KilogramForceMillimeter);
         }
-
-        public static Torque operator *(double left, Torque right)
+        /// <summary>
+        ///     Get Torque from KilonewtonCentimeters.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Torque FromKilonewtonCentimeters(QuantityValue kilonewtoncentimeters)
         {
-            return new Torque(left*right._newtonMeters);
+            double value = (double) kilonewtoncentimeters;
+            return new Torque(value, TorqueUnit.KilonewtonCentimeter);
         }
-
-        public static Torque operator *(Torque left, double right)
+        /// <summary>
+        ///     Get Torque from KilonewtonMeters.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Torque FromKilonewtonMeters(QuantityValue kilonewtonmeters)
         {
-            return new Torque(left._newtonMeters*(double)right);
+            double value = (double) kilonewtonmeters;
+            return new Torque(value, TorqueUnit.KilonewtonMeter);
         }
-
-        public static Torque operator /(Torque left, double right)
+        /// <summary>
+        ///     Get Torque from KilonewtonMillimeters.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Torque FromKilonewtonMillimeters(QuantityValue kilonewtonmillimeters)
         {
-            return new Torque(left._newtonMeters/(double)right);
+            double value = (double) kilonewtonmillimeters;
+            return new Torque(value, TorqueUnit.KilonewtonMillimeter);
         }
-
-        public static double operator /(Torque left, Torque right)
+        /// <summary>
+        ///     Get Torque from KilopoundForceFeet.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Torque FromKilopoundForceFeet(QuantityValue kilopoundforcefeet)
         {
-            return Convert.ToDouble(left._newtonMeters/right._newtonMeters);
+            double value = (double) kilopoundforcefeet;
+            return new Torque(value, TorqueUnit.KilopoundForceFoot);
         }
-#endif
-
-        #endregion
-
-        #region Equality / IComparable
-
-        public int CompareTo(object obj)
+        /// <summary>
+        ///     Get Torque from KilopoundForceInches.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Torque FromKilopoundForceInches(QuantityValue kilopoundforceinches)
         {
-            if (obj == null) throw new ArgumentNullException("obj");
-            if (!(obj is Torque)) throw new ArgumentException("Expected type Torque.", "obj");
-            return CompareTo((Torque) obj);
+            double value = (double) kilopoundforceinches;
+            return new Torque(value, TorqueUnit.KilopoundForceInch);
         }
-
-        // Windows Runtime Component does not allow public methods/ctors with same number of parameters: https://msdn.microsoft.com/en-us/library/br230301.aspx#Overloaded methods
-#if WINDOWS_UWP
-        internal
-#else
-        public
-#endif
-        int CompareTo(Torque other)
+        /// <summary>
+        ///     Get Torque from MeganewtonCentimeters.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Torque FromMeganewtonCentimeters(QuantityValue meganewtoncentimeters)
         {
-            return _newtonMeters.CompareTo(other._newtonMeters);
+            double value = (double) meganewtoncentimeters;
+            return new Torque(value, TorqueUnit.MeganewtonCentimeter);
         }
-
-        // Windows Runtime Component does not allow operator overloads: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if !WINDOWS_UWP
-        public static bool operator <=(Torque left, Torque right)
+        /// <summary>
+        ///     Get Torque from MeganewtonMeters.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Torque FromMeganewtonMeters(QuantityValue meganewtonmeters)
         {
-            return left._newtonMeters <= right._newtonMeters;
+            double value = (double) meganewtonmeters;
+            return new Torque(value, TorqueUnit.MeganewtonMeter);
         }
-
-        public static bool operator >=(Torque left, Torque right)
+        /// <summary>
+        ///     Get Torque from MeganewtonMillimeters.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Torque FromMeganewtonMillimeters(QuantityValue meganewtonmillimeters)
         {
-            return left._newtonMeters >= right._newtonMeters;
+            double value = (double) meganewtonmillimeters;
+            return new Torque(value, TorqueUnit.MeganewtonMillimeter);
         }
-
-        public static bool operator <(Torque left, Torque right)
+        /// <summary>
+        ///     Get Torque from MegapoundForceFeet.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Torque FromMegapoundForceFeet(QuantityValue megapoundforcefeet)
         {
-            return left._newtonMeters < right._newtonMeters;
+            double value = (double) megapoundforcefeet;
+            return new Torque(value, TorqueUnit.MegapoundForceFoot);
         }
-
-        public static bool operator >(Torque left, Torque right)
+        /// <summary>
+        ///     Get Torque from MegapoundForceInches.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Torque FromMegapoundForceInches(QuantityValue megapoundforceinches)
         {
-            return left._newtonMeters > right._newtonMeters;
+            double value = (double) megapoundforceinches;
+            return new Torque(value, TorqueUnit.MegapoundForceInch);
         }
-
-        [Obsolete("It is not safe to compare equality due to using System.Double as the internal representation. It is very easy to get slightly different values due to floating point operations. Instead use Equals(other, maxError) to provide the max allowed error.")]
-        public static bool operator ==(Torque left, Torque right)
+        /// <summary>
+        ///     Get Torque from NewtonCentimeters.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Torque FromNewtonCentimeters(QuantityValue newtoncentimeters)
         {
-            // ReSharper disable once CompareOfFloatsByEqualityOperator
-            return left._newtonMeters == right._newtonMeters;
+            double value = (double) newtoncentimeters;
+            return new Torque(value, TorqueUnit.NewtonCentimeter);
         }
-
-        [Obsolete("It is not safe to compare equality due to using System.Double as the internal representation. It is very easy to get slightly different values due to floating point operations. Instead use Equals(other, maxError) to provide the max allowed error.")]
-        public static bool operator !=(Torque left, Torque right)
+        /// <summary>
+        ///     Get Torque from NewtonMeters.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Torque FromNewtonMeters(QuantityValue newtonmeters)
         {
-            // ReSharper disable once CompareOfFloatsByEqualityOperator
-            return left._newtonMeters != right._newtonMeters;
+            double value = (double) newtonmeters;
+            return new Torque(value, TorqueUnit.NewtonMeter);
         }
-#endif
-
-        [Obsolete("It is not safe to compare equality due to using System.Double as the internal representation. It is very easy to get slightly different values due to floating point operations. Instead use Equals(other, maxError) to provide the max allowed error.")]
-        public override bool Equals(object obj)
+        /// <summary>
+        ///     Get Torque from NewtonMillimeters.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Torque FromNewtonMillimeters(QuantityValue newtonmillimeters)
         {
-            if (obj == null || GetType() != obj.GetType())
-            {
-                return false;
-            }
-
-            return _newtonMeters.Equals(((Torque) obj)._newtonMeters);
+            double value = (double) newtonmillimeters;
+            return new Torque(value, TorqueUnit.NewtonMillimeter);
+        }
+        /// <summary>
+        ///     Get Torque from PoundForceFeet.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Torque FromPoundForceFeet(QuantityValue poundforcefeet)
+        {
+            double value = (double) poundforcefeet;
+            return new Torque(value, TorqueUnit.PoundForceFoot);
+        }
+        /// <summary>
+        ///     Get Torque from PoundForceInches.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Torque FromPoundForceInches(QuantityValue poundforceinches)
+        {
+            double value = (double) poundforceinches;
+            return new Torque(value, TorqueUnit.PoundForceInch);
+        }
+        /// <summary>
+        ///     Get Torque from TonneForceCentimeters.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Torque FromTonneForceCentimeters(QuantityValue tonneforcecentimeters)
+        {
+            double value = (double) tonneforcecentimeters;
+            return new Torque(value, TorqueUnit.TonneForceCentimeter);
+        }
+        /// <summary>
+        ///     Get Torque from TonneForceMeters.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Torque FromTonneForceMeters(QuantityValue tonneforcemeters)
+        {
+            double value = (double) tonneforcemeters;
+            return new Torque(value, TorqueUnit.TonneForceMeter);
+        }
+        /// <summary>
+        ///     Get Torque from TonneForceMillimeters.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Torque FromTonneForceMillimeters(QuantityValue tonneforcemillimeters)
+        {
+            double value = (double) tonneforcemillimeters;
+            return new Torque(value, TorqueUnit.TonneForceMillimeter);
         }
 
         /// <summary>
-        ///     Compare equality to another Torque by specifying a max allowed difference.
-        ///     Note that it is advised against specifying zero difference, due to the nature
-        ///     of floating point operations and using System.Double internally.
+        ///     Dynamically convert from value and unit enum <see cref="TorqueUnit" /> to <see cref="Torque" />.
         /// </summary>
-        /// <param name="other">Other quantity to compare to.</param>
-        /// <param name="maxError">Max error allowed.</param>
-        /// <returns>True if the difference between the two values is not greater than the specified max.</returns>
-        public bool Equals(Torque other, Torque maxError)
+        /// <param name="value">Value to convert from.</param>
+        /// <param name="fromUnit">Unit to convert from.</param>
+        /// <returns>Torque unit value.</returns>
+        public static Torque From(QuantityValue value, TorqueUnit fromUnit)
         {
-            return Math.Abs(_newtonMeters - other._newtonMeters) <= maxError._newtonMeters;
-        }
-
-        public override int GetHashCode()
-        {
-            return _newtonMeters.GetHashCode();
+            return new Torque((double)value, fromUnit);
         }
 
         #endregion
 
-        #region Conversion
-
-        /// <summary>
-        ///     Convert to the unit representation <paramref name="unit" />.
-        /// </summary>
-        /// <returns>Value in new unit if successful, exception otherwise.</returns>
-        /// <exception cref="NotImplementedException">If conversion was not successful.</exception>
-        public double As(TorqueUnit unit)
-        {
-            switch (unit)
-            {
-                case TorqueUnit.KilogramForceCentimeter:
-                    return KilogramForceCentimeters;
-                case TorqueUnit.KilogramForceMeter:
-                    return KilogramForceMeters;
-                case TorqueUnit.KilogramForceMillimeter:
-                    return KilogramForceMillimeters;
-                case TorqueUnit.KilonewtonCentimeter:
-                    return KilonewtonCentimeters;
-                case TorqueUnit.KilonewtonMeter:
-                    return KilonewtonMeters;
-                case TorqueUnit.KilonewtonMillimeter:
-                    return KilonewtonMillimeters;
-                case TorqueUnit.KilopoundForceFoot:
-                    return KilopoundForceFeet;
-                case TorqueUnit.KilopoundForceInch:
-                    return KilopoundForceInches;
-                case TorqueUnit.NewtonCentimeter:
-                    return NewtonCentimeters;
-                case TorqueUnit.NewtonMeter:
-                    return NewtonMeters;
-                case TorqueUnit.NewtonMillimeter:
-                    return NewtonMillimeters;
-                case TorqueUnit.PoundForceFoot:
-                    return PoundForceFeet;
-                case TorqueUnit.PoundForceInch:
-                    return PoundForceInches;
-                case TorqueUnit.TonneForceCentimeter:
-                    return TonneForceCentimeters;
-                case TorqueUnit.TonneForceMeter:
-                    return TonneForceMeters;
-                case TorqueUnit.TonneForceMillimeter:
-                    return TonneForceMillimeters;
-
-                default:
-                    throw new NotImplementedException("unit: " + unit);
-            }
-        }
-
-        #endregion
-
-        #region Parsing
+        #region Static Parse Methods
 
         /// <summary>
         ///     Parse a string with one or two quantities of the format "&lt;quantity&gt; &lt;unit&gt;".
@@ -1146,7 +555,6 @@ namespace UnitsNet
         ///     Parse a string with one or two quantities of the format "&lt;quantity&gt; &lt;unit&gt;".
         /// </summary>
         /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
-        /// <param name="culture">Format to use when parsing number and unit. If it is null, it defaults to <see cref="NumberFormatInfo.CurrentInfo"/> for parsing the number and <see cref="CultureInfo.CurrentUICulture"/> for parsing the unit abbreviation by culture/language.</param>
         /// <example>
         ///     Length.Parse("5.5 m", new CultureInfo("en-US"));
         /// </example>
@@ -1165,23 +573,13 @@ namespace UnitsNet
         ///     We wrap exceptions in <see cref="UnitsNetException" /> to allow you to distinguish
         ///     Units.NET exceptions from other exceptions.
         /// </exception>
-        public static Torque Parse(string str, [CanBeNull] Culture culture)
+        /// <param name="provider">Format to use when parsing number and unit. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public static Torque Parse(string str, IFormatProvider? provider)
         {
-            if (str == null) throw new ArgumentNullException("str");
-
-        // Windows Runtime Component does not support CultureInfo type, so use culture name string for public methods instead: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if WINDOWS_UWP
-            IFormatProvider formatProvider = culture == null ? null : new CultureInfo(culture);
-#else
-            IFormatProvider formatProvider = culture;
-#endif
-            return QuantityParser.Parse<Torque, TorqueUnit>(str, formatProvider,
-                delegate(string value, string unit, IFormatProvider formatProvider2)
-                {
-                    double parsedValue = double.Parse(value, formatProvider2);
-                    TorqueUnit parsedUnit = ParseUnit(unit, formatProvider2);
-                    return From(parsedValue, parsedUnit);
-                }, (x, y) => FromNewtonMeters(x.NewtonMeters + y.NewtonMeters));
+            return QuantityParser.Default.Parse<Torque, TorqueUnit>(
+                str,
+                provider,
+                From);
         }
 
         /// <summary>
@@ -1192,7 +590,7 @@ namespace UnitsNet
         /// <example>
         ///     Length.Parse("5.5 m", new CultureInfo("en-US"));
         /// </example>
-        public static bool TryParse([CanBeNull] string str, out Torque result)
+        public static bool TryParse(string? str, out Torque result)
         {
             return TryParse(str, null, out result);
         }
@@ -1201,28 +599,25 @@ namespace UnitsNet
         ///     Try to parse a string with one or two quantities of the format "&lt;quantity&gt; &lt;unit&gt;".
         /// </summary>
         /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
-        /// <param name="culture">Format to use when parsing number and unit. If it is null, it defaults to <see cref="NumberFormatInfo.CurrentInfo"/> for parsing the number and <see cref="CultureInfo.CurrentUICulture"/> for parsing the unit abbreviation by culture/language.</param>
         /// <param name="result">Resulting unit quantity if successful.</param>
+        /// <returns>True if successful, otherwise false.</returns>
         /// <example>
         ///     Length.Parse("5.5 m", new CultureInfo("en-US"));
         /// </example>
-        public static bool TryParse([CanBeNull] string str, [CanBeNull] Culture culture, out Torque result)
+        /// <param name="provider">Format to use when parsing number and unit. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public static bool TryParse(string? str, IFormatProvider? provider, out Torque result)
         {
-            try
-            {
-                result = Parse(str, culture);
-                return true;
-            }
-            catch
-            {
-                result = default(Torque);
-                return false;
-            }
+            return QuantityParser.Default.TryParse<Torque, TorqueUnit>(
+                str,
+                provider,
+                From,
+                out result);
         }
 
         /// <summary>
         ///     Parse a unit string.
         /// </summary>
+        /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
         /// <example>
         ///     Length.ParseUnit("m", new CultureInfo("en-US"));
         /// </example>
@@ -1230,153 +625,568 @@ namespace UnitsNet
         /// <exception cref="UnitsNetException">Error parsing string.</exception>
         public static TorqueUnit ParseUnit(string str)
         {
-            return ParseUnit(str, (IFormatProvider)null);
+            return ParseUnit(str, null);
         }
 
         /// <summary>
         ///     Parse a unit string.
         /// </summary>
+        /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
+        /// <param name="provider">Format to use when parsing number and unit. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
         /// <example>
         ///     Length.ParseUnit("m", new CultureInfo("en-US"));
         /// </example>
         /// <exception cref="ArgumentNullException">The value of 'str' cannot be null. </exception>
         /// <exception cref="UnitsNetException">Error parsing string.</exception>
-        public static TorqueUnit ParseUnit(string str, [CanBeNull] string cultureName)
+        public static TorqueUnit ParseUnit(string str, IFormatProvider? provider)
         {
-            return ParseUnit(str, cultureName == null ? null : new CultureInfo(cultureName));
+            return UnitParser.Default.Parse<TorqueUnit>(str, provider);
+        }
+
+        /// <inheritdoc cref="TryParseUnit(string,IFormatProvider,out UnitsNet.Units.TorqueUnit)"/>
+        public static bool TryParseUnit(string str, out TorqueUnit unit)
+        {
+            return TryParseUnit(str, null, out unit);
         }
 
         /// <summary>
         ///     Parse a unit string.
         /// </summary>
+        /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
+        /// <param name="unit">The parsed unit if successful.</param>
+        /// <returns>True if successful, otherwise false.</returns>
         /// <example>
-        ///     Length.ParseUnit("m", new CultureInfo("en-US"));
+        ///     Length.TryParseUnit("m", new CultureInfo("en-US"));
         /// </example>
-        /// <exception cref="ArgumentNullException">The value of 'str' cannot be null. </exception>
-        /// <exception cref="UnitsNetException">Error parsing string.</exception>
-
-        // Windows Runtime Component does not allow public methods/ctors with same number of parameters: https://msdn.microsoft.com/en-us/library/br230301.aspx#Overloaded methods
-#if WINDOWS_UWP
-        internal
-#else
-        public
-#endif
-        static TorqueUnit ParseUnit(string str, IFormatProvider formatProvider = null)
+        /// <param name="provider">Format to use when parsing number and unit. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public static bool TryParseUnit(string str, IFormatProvider? provider, out TorqueUnit unit)
         {
-            if (str == null) throw new ArgumentNullException("str");
-
-            var unitSystem = UnitSystem.GetCached(formatProvider);
-            var unit = unitSystem.Parse<TorqueUnit>(str.Trim());
-
-            if (unit == TorqueUnit.Undefined)
-            {
-                var newEx = new UnitsNetException("Error parsing string. The unit is not a recognized TorqueUnit.");
-                newEx.Data["input"] = str;
-                newEx.Data["formatprovider"] = formatProvider?.ToString() ?? "(null)";
-                throw newEx;
-            }
-
-            return unit;
+            return UnitParser.Default.TryParse<TorqueUnit>(str, provider, out unit);
         }
 
         #endregion
 
-        /// <summary>
-        ///     Set the default unit used by ToString(). Default is NewtonMeter
-        /// </summary>
-        public static TorqueUnit ToStringDefaultUnit { get; set; } = TorqueUnit.NewtonMeter;
+        #region Arithmetic Operators
+
+        /// <summary>Negate the value.</summary>
+        public static Torque operator -(Torque right)
+        {
+            return new Torque(-right.Value, right.Unit);
+        }
+
+        /// <summary>Get <see cref="Torque"/> from adding two <see cref="Torque"/>.</summary>
+        public static Torque operator +(Torque left, Torque right)
+        {
+            return new Torque(left.Value + right.GetValueAs(left.Unit), left.Unit);
+        }
+
+        /// <summary>Get <see cref="Torque"/> from subtracting two <see cref="Torque"/>.</summary>
+        public static Torque operator -(Torque left, Torque right)
+        {
+            return new Torque(left.Value - right.GetValueAs(left.Unit), left.Unit);
+        }
+
+        /// <summary>Get <see cref="Torque"/> from multiplying value and <see cref="Torque"/>.</summary>
+        public static Torque operator *(double left, Torque right)
+        {
+            return new Torque(left * right.Value, right.Unit);
+        }
+
+        /// <summary>Get <see cref="Torque"/> from multiplying value and <see cref="Torque"/>.</summary>
+        public static Torque operator *(Torque left, double right)
+        {
+            return new Torque(left.Value * right, left.Unit);
+        }
+
+        /// <summary>Get <see cref="Torque"/> from dividing <see cref="Torque"/> by value.</summary>
+        public static Torque operator /(Torque left, double right)
+        {
+            return new Torque(left.Value / right, left.Unit);
+        }
+
+        /// <summary>Get ratio value from dividing <see cref="Torque"/> by <see cref="Torque"/>.</summary>
+        public static double operator /(Torque left, Torque right)
+        {
+            return left.NewtonMeters / right.NewtonMeters;
+        }
+
+        #endregion
+
+        #region Equality / IComparable
+
+        /// <summary>Returns true if less or equal to.</summary>
+        public static bool operator <=(Torque left, Torque right)
+        {
+            return left.Value <= right.GetValueAs(left.Unit);
+        }
+
+        /// <summary>Returns true if greater than or equal to.</summary>
+        public static bool operator >=(Torque left, Torque right)
+        {
+            return left.Value >= right.GetValueAs(left.Unit);
+        }
+
+        /// <summary>Returns true if less than.</summary>
+        public static bool operator <(Torque left, Torque right)
+        {
+            return left.Value < right.GetValueAs(left.Unit);
+        }
+
+        /// <summary>Returns true if greater than.</summary>
+        public static bool operator >(Torque left, Torque right)
+        {
+            return left.Value > right.GetValueAs(left.Unit);
+        }
+
+        /// <summary>Returns true if exactly equal.</summary>
+        /// <remarks>Consider using <see cref="Equals(Torque, double, ComparisonType)"/> for safely comparing floating point values.</remarks>
+        public static bool operator ==(Torque left, Torque right)
+        {
+            return left.Equals(right);
+        }
+
+        /// <summary>Returns true if not exactly equal.</summary>
+        /// <remarks>Consider using <see cref="Equals(Torque, double, ComparisonType)"/> for safely comparing floating point values.</remarks>
+        public static bool operator !=(Torque left, Torque right)
+        {
+            return !(left == right);
+        }
+
+        /// <inheritdoc />
+        public int CompareTo(object obj)
+        {
+            if(obj is null) throw new ArgumentNullException(nameof(obj));
+            if(!(obj is Torque objTorque)) throw new ArgumentException("Expected type Torque.", nameof(obj));
+
+            return CompareTo(objTorque);
+        }
+
+        /// <inheritdoc />
+        public int CompareTo(Torque other)
+        {
+            return _value.CompareTo(other.GetValueAs(this.Unit));
+        }
+
+        /// <inheritdoc />
+        /// <remarks>Consider using <see cref="Equals(Torque, double, ComparisonType)"/> for safely comparing floating point values.</remarks>
+        public override bool Equals(object obj)
+        {
+            if(obj is null || !(obj is Torque objTorque))
+                return false;
+
+            return Equals(objTorque);
+        }
+
+        /// <inheritdoc />
+        /// <remarks>Consider using <see cref="Equals(Torque, double, ComparisonType)"/> for safely comparing floating point values.</remarks>
+        public bool Equals(Torque other)
+        {
+            return _value.Equals(other.GetValueAs(this.Unit));
+        }
 
         /// <summary>
-        ///     Get default string representation of value and unit.
+        ///     <para>
+        ///     Compare equality to another Torque within the given absolute or relative tolerance.
+        ///     </para>
+        ///     <para>
+        ///     Relative tolerance is defined as the maximum allowable absolute difference between this quantity's value and
+        ///     <paramref name="other"/> as a percentage of this quantity's value. <paramref name="other"/> will be converted into
+        ///     this quantity's unit for comparison. A relative tolerance of 0.01 means the absolute difference must be within +/- 1% of
+        ///     this quantity's value to be considered equal.
+        ///     <example>
+        ///     In this example, the two quantities will be equal if the value of b is within +/- 1% of a (0.02m or 2cm).
+        ///     <code>
+        ///     var a = Length.FromMeters(2.0);
+        ///     var b = Length.FromInches(50.0);
+        ///     a.Equals(b, 0.01, ComparisonType.Relative);
+        ///     </code>
+        ///     </example>
+        ///     </para>
+        ///     <para>
+        ///     Absolute tolerance is defined as the maximum allowable absolute difference between this quantity's value and
+        ///     <paramref name="other"/> as a fixed number in this quantity's unit. <paramref name="other"/> will be converted into
+        ///     this quantity's unit for comparison.
+        ///     <example>
+        ///     In this example, the two quantities will be equal if the value of b is within 0.01 of a (0.01m or 1cm).
+        ///     <code>
+        ///     var a = Length.FromMeters(2.0);
+        ///     var b = Length.FromInches(50.0);
+        ///     a.Equals(b, 0.01, ComparisonType.Absolute);
+        ///     </code>
+        ///     </example>
+        ///     </para>
+        ///     <para>
+        ///     Note that it is advised against specifying zero difference, due to the nature
+        ///     of floating point operations and using System.Double internally.
+        ///     </para>
+        /// </summary>
+        /// <param name="other">The other quantity to compare to.</param>
+        /// <param name="tolerance">The absolute or relative tolerance value. Must be greater than or equal to 0.</param>
+        /// <param name="comparisonType">The comparison type: either relative or absolute.</param>
+        /// <returns>True if the absolute difference between the two values is not greater than the specified relative or absolute tolerance.</returns>
+        public bool Equals(Torque other, double tolerance, ComparisonType comparisonType)
+        {
+            if(tolerance < 0)
+                throw new ArgumentOutOfRangeException("tolerance", "Tolerance must be greater than or equal to 0.");
+
+            double thisValue = (double)this.Value;
+            double otherValueInThisUnits = other.As(this.Unit);
+
+            return UnitsNet.Comparison.Equals(thisValue, otherValueInThisUnits, tolerance, comparisonType);
+        }
+
+        /// <summary>
+        ///     Returns the hash code for this instance.
+        /// </summary>
+        /// <returns>A hash code for the current Torque.</returns>
+        public override int GetHashCode()
+        {
+            return new { QuantityType, Value, Unit }.GetHashCode();
+        }
+
+        #endregion
+
+        #region Conversion Methods
+
+        /// <summary>
+        ///     Convert to the unit representation <paramref name="unit" />.
+        /// </summary>
+        /// <returns>Value converted to the specified unit.</returns>
+        public double As(TorqueUnit unit)
+        {
+            if(Unit == unit)
+                return Convert.ToDouble(Value);
+
+            var converted = GetValueAs(unit);
+            return Convert.ToDouble(converted);
+        }
+
+        /// <inheritdoc cref="IQuantity.As(UnitSystem)"/>
+        public double As(UnitSystem unitSystem)
+        {
+            if(unitSystem is null)
+                throw new ArgumentNullException(nameof(unitSystem));
+
+            var unitInfos = Info.GetUnitInfosFor(unitSystem.BaseUnits);
+
+            var firstUnitInfo = unitInfos.FirstOrDefault();
+            if(firstUnitInfo == null)
+                throw new ArgumentException("No units were found for the given UnitSystem.", nameof(unitSystem));
+
+            return As(firstUnitInfo.Value);
+        }
+
+        /// <inheritdoc />
+        double IQuantity.As(Enum unit)
+        {
+            if(!(unit is TorqueUnit unitAsTorqueUnit))
+                throw new ArgumentException($"The given unit is of type {unit.GetType()}. Only {typeof(TorqueUnit)} is supported.", nameof(unit));
+
+            return As(unitAsTorqueUnit);
+        }
+
+        /// <summary>
+        ///     Converts this Torque to another Torque with the unit representation <paramref name="unit" />.
+        /// </summary>
+        /// <returns>A Torque with the specified unit.</returns>
+        public Torque ToUnit(TorqueUnit unit)
+        {
+            var convertedValue = GetValueAs(unit);
+            return new Torque(convertedValue, unit);
+        }
+
+        /// <inheritdoc />
+        IQuantity IQuantity.ToUnit(Enum unit)
+        {
+            if(!(unit is TorqueUnit unitAsTorqueUnit))
+                throw new ArgumentException($"The given unit is of type {unit.GetType()}. Only {typeof(TorqueUnit)} is supported.", nameof(unit));
+
+            return ToUnit(unitAsTorqueUnit);
+        }
+
+        /// <inheritdoc cref="IQuantity.ToUnit(UnitSystem)"/>
+        public Torque ToUnit(UnitSystem unitSystem)
+        {
+            if(unitSystem is null)
+                throw new ArgumentNullException(nameof(unitSystem));
+
+            var unitInfos = Info.GetUnitInfosFor(unitSystem.BaseUnits);
+
+            var firstUnitInfo = unitInfos.FirstOrDefault();
+            if(firstUnitInfo == null)
+                throw new ArgumentException("No units were found for the given UnitSystem.", nameof(unitSystem));
+
+            return ToUnit(firstUnitInfo.Value);
+        }
+
+        /// <inheritdoc />
+        IQuantity IQuantity.ToUnit(UnitSystem unitSystem) => ToUnit(unitSystem);
+
+        /// <inheritdoc />
+        IQuantity<TorqueUnit> IQuantity<TorqueUnit>.ToUnit(TorqueUnit unit) => ToUnit(unit);
+
+        /// <inheritdoc />
+        IQuantity<TorqueUnit> IQuantity<TorqueUnit>.ToUnit(UnitSystem unitSystem) => ToUnit(unitSystem);
+
+        /// <summary>
+        ///     Converts the current value + unit to the base unit.
+        ///     This is typically the first step in converting from one unit to another.
+        /// </summary>
+        /// <returns>The value in the base unit representation.</returns>
+        private double GetValueInBaseUnit()
+        {
+            switch(Unit)
+            {
+                case TorqueUnit.KilogramForceCentimeter: return _value*0.0980665019960652;
+                case TorqueUnit.KilogramForceMeter: return _value*9.80665019960652;
+                case TorqueUnit.KilogramForceMillimeter: return _value*0.00980665019960652;
+                case TorqueUnit.KilonewtonCentimeter: return (_value*0.01) * 1e3d;
+                case TorqueUnit.KilonewtonMeter: return (_value) * 1e3d;
+                case TorqueUnit.KilonewtonMillimeter: return (_value*0.001) * 1e3d;
+                case TorqueUnit.KilopoundForceFoot: return (_value*1.3558179483314) * 1e3d;
+                case TorqueUnit.KilopoundForceInch: return (_value*1.129848290276167e-1) * 1e3d;
+                case TorqueUnit.MeganewtonCentimeter: return (_value*0.01) * 1e6d;
+                case TorqueUnit.MeganewtonMeter: return (_value) * 1e6d;
+                case TorqueUnit.MeganewtonMillimeter: return (_value*0.001) * 1e6d;
+                case TorqueUnit.MegapoundForceFoot: return (_value*1.3558179483314) * 1e6d;
+                case TorqueUnit.MegapoundForceInch: return (_value*1.129848290276167e-1) * 1e6d;
+                case TorqueUnit.NewtonCentimeter: return _value*0.01;
+                case TorqueUnit.NewtonMeter: return _value;
+                case TorqueUnit.NewtonMillimeter: return _value*0.001;
+                case TorqueUnit.PoundForceFoot: return _value*1.3558179483314;
+                case TorqueUnit.PoundForceInch: return _value*1.129848290276167e-1;
+                case TorqueUnit.TonneForceCentimeter: return _value*98.0665019960652;
+                case TorqueUnit.TonneForceMeter: return _value*9806.65019960653;
+                case TorqueUnit.TonneForceMillimeter: return _value*9.80665019960652;
+                default:
+                    throw new NotImplementedException($"Can not convert {Unit} to base units.");
+            }
+        }
+
+        /// <summary>
+        ///     Converts the current value + unit to the base unit.
+        ///     This is typically the first step in converting from one unit to another.
+        /// </summary>
+        /// <returns>The value in the base unit representation.</returns>
+        internal Torque ToBaseUnit()
+        {
+            var baseUnitValue = GetValueInBaseUnit();
+            return new Torque(baseUnitValue, BaseUnit);
+        }
+
+        private double GetValueAs(TorqueUnit unit)
+        {
+            if(Unit == unit)
+                return _value;
+
+            var baseUnitValue = GetValueInBaseUnit();
+
+            switch(unit)
+            {
+                case TorqueUnit.KilogramForceCentimeter: return baseUnitValue*10.1971619222242;
+                case TorqueUnit.KilogramForceMeter: return baseUnitValue*0.101971619222242;
+                case TorqueUnit.KilogramForceMillimeter: return baseUnitValue*101.971619222242;
+                case TorqueUnit.KilonewtonCentimeter: return (baseUnitValue*100) / 1e3d;
+                case TorqueUnit.KilonewtonMeter: return (baseUnitValue) / 1e3d;
+                case TorqueUnit.KilonewtonMillimeter: return (baseUnitValue*1000) / 1e3d;
+                case TorqueUnit.KilopoundForceFoot: return (baseUnitValue/1.3558179483314) / 1e3d;
+                case TorqueUnit.KilopoundForceInch: return (baseUnitValue/1.129848290276167e-1) / 1e3d;
+                case TorqueUnit.MeganewtonCentimeter: return (baseUnitValue*100) / 1e6d;
+                case TorqueUnit.MeganewtonMeter: return (baseUnitValue) / 1e6d;
+                case TorqueUnit.MeganewtonMillimeter: return (baseUnitValue*1000) / 1e6d;
+                case TorqueUnit.MegapoundForceFoot: return (baseUnitValue/1.3558179483314) / 1e6d;
+                case TorqueUnit.MegapoundForceInch: return (baseUnitValue/1.129848290276167e-1) / 1e6d;
+                case TorqueUnit.NewtonCentimeter: return baseUnitValue*100;
+                case TorqueUnit.NewtonMeter: return baseUnitValue;
+                case TorqueUnit.NewtonMillimeter: return baseUnitValue*1000;
+                case TorqueUnit.PoundForceFoot: return baseUnitValue/1.3558179483314;
+                case TorqueUnit.PoundForceInch: return baseUnitValue/1.129848290276167e-1;
+                case TorqueUnit.TonneForceCentimeter: return baseUnitValue*0.0101971619222242;
+                case TorqueUnit.TonneForceMeter: return baseUnitValue*0.000101971619222242;
+                case TorqueUnit.TonneForceMillimeter: return baseUnitValue*0.101971619222242;
+                default:
+                    throw new NotImplementedException($"Can not convert {Unit} to {unit}.");
+            }
+        }
+
+        #endregion
+
+        #region ToString Methods
+
+        /// <summary>
+        ///     Gets the default string representation of value and unit.
         /// </summary>
         /// <returns>String representation.</returns>
         public override string ToString()
         {
-            return ToString(ToStringDefaultUnit);
+            return ToString("g");
         }
 
         /// <summary>
-        ///     Get string representation of value and unit. Using current UI culture and two significant digits after radix.
+        ///     Gets the default string representation of value and unit using the given format provider.
         /// </summary>
-        /// <param name="unit">Unit representation to use.</param>
         /// <returns>String representation.</returns>
-        public string ToString(TorqueUnit unit)
+        /// <param name="provider">Format to use for localization and number formatting. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public string ToString(IFormatProvider? provider)
         {
-            return ToString(unit, null, 2);
-        }
-
-        /// <summary>
-        ///     Get string representation of value and unit. Using two significant digits after radix.
-        /// </summary>
-        /// <param name="unit">Unit representation to use.</param>
-        /// <param name="culture">Culture to use for localization and number formatting.</param>
-        /// <returns>String representation.</returns>
-        public string ToString(TorqueUnit unit, [CanBeNull] Culture culture)
-        {
-            return ToString(unit, culture, 2);
+            return ToString("g", provider);
         }
 
         /// <summary>
         ///     Get string representation of value and unit.
         /// </summary>
-        /// <param name="unit">Unit representation to use.</param>
-        /// <param name="culture">Culture to use for localization and number formatting.</param>
         /// <param name="significantDigitsAfterRadix">The number of significant digits after the radix point.</param>
         /// <returns>String representation.</returns>
-        [UsedImplicitly]
-        public string ToString(TorqueUnit unit, [CanBeNull] Culture culture, int significantDigitsAfterRadix)
+        /// <param name="provider">Format to use for localization and number formatting. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        [Obsolete(@"This method is deprecated and will be removed at a future release. Please use ToString(""s2"") or ToString(""s2"", provider) where 2 is an example of the number passed to significantDigitsAfterRadix.")]
+        public string ToString(IFormatProvider? provider, int significantDigitsAfterRadix)
         {
-            double value = As(unit);
-            string format = UnitFormatter.GetFormat(value, significantDigitsAfterRadix);
-            return ToString(unit, culture, format);
+            var value = Convert.ToDouble(Value);
+            var format = UnitFormatter.GetFormat(value, significantDigitsAfterRadix);
+            return ToString(provider, format);
         }
 
         /// <summary>
         ///     Get string representation of value and unit.
         /// </summary>
-        /// <param name="culture">Culture to use for localization and number formatting.</param>
-        /// <param name="unit">Unit representation to use.</param>
         /// <param name="format">String format to use. Default:  "{0:0.##} {1} for value and unit abbreviation respectively."</param>
-        /// <param name="args">Arguments for string format. Value and unit are implictly included as arguments 0 and 1.</param>
+        /// <param name="args">Arguments for string format. Value and unit are implicitly included as arguments 0 and 1.</param>
         /// <returns>String representation.</returns>
-        [UsedImplicitly]
-        public string ToString(TorqueUnit unit, [CanBeNull] Culture culture, [NotNull] string format,
-            [NotNull] params object[] args)
+        /// <param name="provider">Format to use for localization and number formatting. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        [Obsolete("This method is deprecated and will be removed at a future release. Please use string.Format().")]
+        public string ToString(IFormatProvider? provider, [NotNull] string format, [NotNull] params object[] args)
         {
             if (format == null) throw new ArgumentNullException(nameof(format));
             if (args == null) throw new ArgumentNullException(nameof(args));
 
-        // Windows Runtime Component does not support CultureInfo type, so use culture name string for public methods instead: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if WINDOWS_UWP
-            IFormatProvider formatProvider = culture == null ? null : new CultureInfo(culture);
-#else
-            IFormatProvider formatProvider = culture;
-#endif
-            double value = As(unit);
-            object[] formatArgs = UnitFormatter.GetFormatArgs(unit, value, formatProvider, args);
-            return string.Format(formatProvider, format, formatArgs);
+            provider = provider ?? CultureInfo.CurrentUICulture;
+
+            var value = Convert.ToDouble(Value);
+            var formatArgs = UnitFormatter.GetFormatArgs(Unit, value, provider, args);
+            return string.Format(provider, format, formatArgs);
         }
 
+        /// <inheritdoc cref="QuantityFormatter.Format{TUnitType}(IQuantity{TUnitType}, string, IFormatProvider)"/>
         /// <summary>
-        /// Represents the largest possible value of Torque
+        /// Gets the string representation of this instance in the specified format string using <see cref="CultureInfo.CurrentUICulture" />.
         /// </summary>
-        public static Torque MaxValue
+        /// <param name="format">The format string.</param>
+        /// <returns>The string representation.</returns>
+        public string ToString(string format)
         {
-            get
-            {
-                return new Torque(double.MaxValue);
-            }
+            return ToString(format, CultureInfo.CurrentUICulture);
         }
 
+        /// <inheritdoc cref="QuantityFormatter.Format{TUnitType}(IQuantity{TUnitType}, string, IFormatProvider)"/>
         /// <summary>
-        /// Represents the smallest possible value of Torque
+        /// Gets the string representation of this instance in the specified format string using the specified format provider, or <see cref="CultureInfo.CurrentUICulture" /> if null.
         /// </summary>
-        public static Torque MinValue
+        /// <param name="format">The format string.</param>
+        /// <param name="provider">Format to use for localization and number formatting. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        /// <returns>The string representation.</returns>
+        public string ToString(string format, IFormatProvider? provider)
         {
-            get
-            {
-                return new Torque(double.MinValue);
-            }
+            return QuantityFormatter.Format<TorqueUnit>(this, format, provider);
         }
+
+        #endregion
+
+        #region IConvertible Methods
+
+        TypeCode IConvertible.GetTypeCode()
+        {
+            return TypeCode.Object;
+        }
+
+        bool IConvertible.ToBoolean(IFormatProvider provider)
+        {
+            throw new InvalidCastException($"Converting {typeof(Torque)} to bool is not supported.");
+        }
+
+        byte IConvertible.ToByte(IFormatProvider provider)
+        {
+            return Convert.ToByte(_value);
+        }
+
+        char IConvertible.ToChar(IFormatProvider provider)
+        {
+            throw new InvalidCastException($"Converting {typeof(Torque)} to char is not supported.");
+        }
+
+        DateTime IConvertible.ToDateTime(IFormatProvider provider)
+        {
+            throw new InvalidCastException($"Converting {typeof(Torque)} to DateTime is not supported.");
+        }
+
+        decimal IConvertible.ToDecimal(IFormatProvider provider)
+        {
+            return Convert.ToDecimal(_value);
+        }
+
+        double IConvertible.ToDouble(IFormatProvider provider)
+        {
+            return Convert.ToDouble(_value);
+        }
+
+        short IConvertible.ToInt16(IFormatProvider provider)
+        {
+            return Convert.ToInt16(_value);
+        }
+
+        int IConvertible.ToInt32(IFormatProvider provider)
+        {
+            return Convert.ToInt32(_value);
+        }
+
+        long IConvertible.ToInt64(IFormatProvider provider)
+        {
+            return Convert.ToInt64(_value);
+        }
+
+        sbyte IConvertible.ToSByte(IFormatProvider provider)
+        {
+            return Convert.ToSByte(_value);
+        }
+
+        float IConvertible.ToSingle(IFormatProvider provider)
+        {
+            return Convert.ToSingle(_value);
+        }
+
+        string IConvertible.ToString(IFormatProvider provider)
+        {
+            return ToString("g", provider);
+        }
+
+        object IConvertible.ToType(Type conversionType, IFormatProvider provider)
+        {
+            if(conversionType == typeof(Torque))
+                return this;
+            else if(conversionType == typeof(TorqueUnit))
+                return Unit;
+            else if(conversionType == typeof(QuantityType))
+                return Torque.QuantityType;
+            else if(conversionType == typeof(BaseDimensions))
+                return Torque.BaseDimensions;
+            else
+                throw new InvalidCastException($"Converting {typeof(Torque)} to {conversionType} is not supported.");
+        }
+
+        ushort IConvertible.ToUInt16(IFormatProvider provider)
+        {
+            return Convert.ToUInt16(_value);
+        }
+
+        uint IConvertible.ToUInt32(IFormatProvider provider)
+        {
+            return Convert.ToUInt32(_value);
+        }
+
+        ulong IConvertible.ToUInt64(IFormatProvider provider)
+        {
+            return Convert.ToUInt64(_value);
+        }
+
+        #endregion
     }
 }

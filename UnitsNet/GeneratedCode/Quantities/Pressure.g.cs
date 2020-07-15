@@ -8,1857 +8,423 @@
 //
 //     See https://github.com/angularsen/UnitsNet/wiki/Adding-a-New-Unit for how to add or edit units.
 //
-//     Add CustomCode\Quantities\MyUnit.extra.cs files to add code to generated quantities.
-//     Add Extensions\MyUnitExtensions.cs to decorate quantities with new behavior.
-//     Add UnitDefinitions\MyUnit.json and run GeneratUnits.bat to generate new units or quantities.
+//     Add CustomCode\Quantities\MyQuantity.extra.cs files to add code to generated quantities.
+//     Add UnitDefinitions\MyQuantity.json and run generate-code.bat to generate new units or quantities.
 //
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-// Copyright (c) 2013 Andreas Gullberg Larsen (andreas.larsen84@gmail.com).
-// https://github.com/angularsen/UnitsNet
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
+// Licensed under MIT No Attribution, see LICENSE file at the root.
+// Copyright 2013 Andreas Gullberg Larsen (andreas.larsen84@gmail.com). Maintained at https://github.com/angularsen/UnitsNet.
 
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Text.RegularExpressions;
 using System.Linq;
 using JetBrains.Annotations;
+using UnitsNet.InternalHelpers;
 using UnitsNet.Units;
 
-// Windows Runtime Component does not support CultureInfo type, so use culture name string instead for public methods: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if WINDOWS_UWP
-using Culture = System.String;
-#else
-using Culture = System.IFormatProvider;
-#endif
+#nullable enable
 
 // ReSharper disable once CheckNamespace
 
 namespace UnitsNet
 {
+    /// <inheritdoc />
     /// <summary>
     ///     Pressure (symbol: P or p) is the ratio of force to the area over which that force is distributed. Pressure is force per unit area applied in a direction perpendicular to the surface of an object. Gauge pressure (also spelled gage pressure)[a] is the pressure relative to the local atmospheric or ambient pressure. Pressure is measured in any unit of force divided by any unit of area. The SI unit of pressure is the newton per square metre, which is called the pascal (Pa) after the seventeenth-century philosopher and scientist Blaise Pascal. A pressure of 1 Pa is small; it approximately equals the pressure exerted by a dollar bill resting flat on a table. Everyday pressures are often stated in kilopascals (1 kPa = 1000 Pa).
     /// </summary>
-    // ReSharper disable once PartialTypeWithSinglePart
-
-    // Windows Runtime Component has constraints on public types: https://msdn.microsoft.com/en-us/library/br230301.aspx#Declaring types in Windows Runtime Components
-    // Public structures can't have any members other than public fields, and those fields must be value types or strings.
-    // Public classes must be sealed (NotInheritable in Visual Basic). If your programming model requires polymorphism, you can create a public interface and implement that interface on the classes that must be polymorphic.
-#if WINDOWS_UWP
-    public sealed partial class Pressure
-#else
-    public partial struct Pressure : IComparable, IComparable<Pressure>
-#endif
+    public partial struct Pressure : IQuantity<PressureUnit>, IEquatable<Pressure>, IComparable, IComparable<Pressure>, IConvertible, IFormattable
     {
         /// <summary>
-        ///     Base unit of Pressure.
+        ///     The numeric value this quantity was constructed with.
         /// </summary>
-        private readonly double _pascals;
+        private readonly double _value;
 
-        // Windows Runtime Component requires a default constructor
-#if WINDOWS_UWP
-        public Pressure() : this(0)
+        /// <summary>
+        ///     The unit this quantity was constructed with.
+        /// </summary>
+        private readonly PressureUnit? _unit;
+
+        static Pressure()
         {
-        }
-#endif
+            BaseDimensions = new BaseDimensions(-1, 1, -2, 0, 0, 0, 0);
 
-        public Pressure(double pascals)
+            Info = new QuantityInfo<PressureUnit>(QuantityType.Pressure,
+                new UnitInfo<PressureUnit>[] {
+                    new UnitInfo<PressureUnit>(PressureUnit.Atmosphere, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.Bar, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.Centibar, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.Decapascal, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.Decibar, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.DynePerSquareCentimeter, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.FootOfHead, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.Gigapascal, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.Hectopascal, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.InchOfMercury, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.InchOfWaterColumn, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.Kilobar, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.KilogramForcePerSquareCentimeter, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.KilogramForcePerSquareMeter, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.KilogramForcePerSquareMillimeter, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.KilonewtonPerSquareCentimeter, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.KilonewtonPerSquareMeter, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.KilonewtonPerSquareMillimeter, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.Kilopascal, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.KilopoundForcePerSquareFoot, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.KilopoundForcePerSquareInch, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.Megabar, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.MeganewtonPerSquareMeter, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.Megapascal, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.MeterOfHead, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.Microbar, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.Micropascal, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.Millibar, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.MillimeterOfMercury, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.Millipascal, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.NewtonPerSquareCentimeter, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.NewtonPerSquareMeter, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.NewtonPerSquareMillimeter, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.Pascal, new BaseUnits(length: LengthUnit.Meter, mass: MassUnit.Kilogram, time: DurationUnit.Second)),
+                    new UnitInfo<PressureUnit>(PressureUnit.PoundForcePerSquareFoot, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.PoundForcePerSquareInch, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.PoundPerInchSecondSquared, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.TechnicalAtmosphere, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.TonneForcePerSquareCentimeter, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.TonneForcePerSquareMeter, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.TonneForcePerSquareMillimeter, BaseUnits.Undefined),
+                    new UnitInfo<PressureUnit>(PressureUnit.Torr, BaseUnits.Undefined),
+                },
+                BaseUnit, Zero, BaseDimensions);
+        }
+
+        /// <summary>
+        ///     Creates the quantity with the given numeric value and unit.
+        /// </summary>
+        /// <param name="value">The numeric value to construct this quantity with.</param>
+        /// <param name="unit">The unit representation to construct this quantity with.</param>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public Pressure(double value, PressureUnit unit)
         {
-            _pascals = Convert.ToDouble(pascals);
+            if(unit == PressureUnit.Undefined)
+              throw new ArgumentException("The quantity can not be created with an undefined unit.", nameof(unit));
+
+            _value = Guard.EnsureValidNumber(value, nameof(value));
+            _unit = unit;
         }
 
-        // Windows Runtime Component does not allow public methods/ctors with same number of parameters: https://msdn.microsoft.com/en-us/library/br230301.aspx#Overloaded methods
-#if WINDOWS_UWP
-        private
-#else
-        public
-#endif
-        Pressure(long pascals)
+        /// <summary>
+        /// Creates an instance of the quantity with the given numeric value in units compatible with the given <see cref="UnitSystem"/>.
+        /// If multiple compatible units were found, the first match is used.
+        /// </summary>
+        /// <param name="value">The numeric value to construct this quantity with.</param>
+        /// <param name="unitSystem">The unit system to create the quantity with.</param>
+        /// <exception cref="ArgumentNullException">The given <see cref="UnitSystem"/> is null.</exception>
+        /// <exception cref="ArgumentException">No unit was found for the given <see cref="UnitSystem"/>.</exception>
+        public Pressure(double value, UnitSystem unitSystem)
         {
-            _pascals = Convert.ToDouble(pascals);
+            if(unitSystem is null) throw new ArgumentNullException(nameof(unitSystem));
+
+            var unitInfos = Info.GetUnitInfosFor(unitSystem.BaseUnits);
+            var firstUnitInfo = unitInfos.FirstOrDefault();
+
+            _value = Guard.EnsureValidNumber(value, nameof(value));
+            _unit = firstUnitInfo?.Value ?? throw new ArgumentException("No units were found for the given UnitSystem.", nameof(unitSystem));
         }
 
-        // Windows Runtime Component does not allow public methods/ctors with same number of parameters: https://msdn.microsoft.com/en-us/library/br230301.aspx#Overloaded methods
-        // Windows Runtime Component does not support decimal type
-#if WINDOWS_UWP
-        private
-#else
-        public
-#endif
-        Pressure(decimal pascals)
-        {
-            _pascals = Convert.ToDouble(pascals);
-        }
+        #region Static Properties
 
-        #region Properties
+        /// <inheritdoc cref="IQuantity.QuantityInfo"/>
+        public static QuantityInfo<PressureUnit> Info { get; }
+
+        /// <summary>
+        ///     The <see cref="BaseDimensions" /> of this quantity.
+        /// </summary>
+        public static BaseDimensions BaseDimensions { get; }
+
+        /// <summary>
+        ///     The base unit of Pressure, which is Pascal. All conversions go via this value.
+        /// </summary>
+        public static PressureUnit BaseUnit { get; } = PressureUnit.Pascal;
+
+        /// <summary>
+        /// Represents the largest possible value of Pressure
+        /// </summary>
+        public static Pressure MaxValue { get; } = new Pressure(double.MaxValue, BaseUnit);
+
+        /// <summary>
+        /// Represents the smallest possible value of Pressure
+        /// </summary>
+        public static Pressure MinValue { get; } = new Pressure(double.MinValue, BaseUnit);
 
         /// <summary>
         ///     The <see cref="QuantityType" /> of this quantity.
         /// </summary>
-        public static QuantityType QuantityType => QuantityType.Pressure;
-
-        /// <summary>
-        ///     The base unit representation of this quantity for the numeric value stored internally. All conversions go via this value.
-        /// </summary>
-        public static PressureUnit BaseUnit
-        {
-            get { return PressureUnit.Pascal; }
-        }
+        public static QuantityType QuantityType { get; } = QuantityType.Pressure;
 
         /// <summary>
         ///     All units of measurement for the Pressure quantity.
         /// </summary>
-        public static PressureUnit[] Units { get; } = Enum.GetValues(typeof(PressureUnit)).Cast<PressureUnit>().ToArray();
+        public static PressureUnit[] Units { get; } = Enum.GetValues(typeof(PressureUnit)).Cast<PressureUnit>().Except(new PressureUnit[]{ PressureUnit.Undefined }).ToArray();
+
+        /// <summary>
+        ///     Gets an instance of this quantity with a value of 0 in the base unit Pascal.
+        /// </summary>
+        public static Pressure Zero { get; } = new Pressure(0, BaseUnit);
+
+        #endregion
+
+        #region Properties
+
+        /// <summary>
+        ///     The numeric value this quantity was constructed with.
+        /// </summary>
+        public double Value => _value;
+
+        Enum IQuantity.Unit => Unit;
+
+        /// <inheritdoc />
+        public PressureUnit Unit => _unit.GetValueOrDefault(BaseUnit);
+
+        /// <inheritdoc />
+        public QuantityInfo<PressureUnit> QuantityInfo => Info;
+
+        /// <inheritdoc cref="IQuantity.QuantityInfo"/>
+        QuantityInfo IQuantity.QuantityInfo => Info;
+
+        /// <summary>
+        ///     The <see cref="QuantityType" /> of this quantity.
+        /// </summary>
+        public QuantityType Type => Pressure.QuantityType;
+
+        /// <summary>
+        ///     The <see cref="BaseDimensions" /> of this quantity.
+        /// </summary>
+        public BaseDimensions Dimensions => Pressure.BaseDimensions;
+
+        #endregion
+
+        #region Conversion Properties
 
         /// <summary>
         ///     Get Pressure in Atmospheres.
         /// </summary>
-        public double Atmospheres
-        {
-            get { return _pascals/(1.01325*1e5); }
-        }
+        public double Atmospheres => As(PressureUnit.Atmosphere);
 
         /// <summary>
         ///     Get Pressure in Bars.
         /// </summary>
-        public double Bars
-        {
-            get { return _pascals/1e5; }
-        }
+        public double Bars => As(PressureUnit.Bar);
 
         /// <summary>
         ///     Get Pressure in Centibars.
         /// </summary>
-        public double Centibars
-        {
-            get { return (_pascals/1e5) / 1e-2d; }
-        }
+        public double Centibars => As(PressureUnit.Centibar);
 
         /// <summary>
         ///     Get Pressure in Decapascals.
         /// </summary>
-        public double Decapascals
-        {
-            get { return (_pascals) / 1e1d; }
-        }
+        public double Decapascals => As(PressureUnit.Decapascal);
 
         /// <summary>
         ///     Get Pressure in Decibars.
         /// </summary>
-        public double Decibars
-        {
-            get { return (_pascals/1e5) / 1e-1d; }
-        }
+        public double Decibars => As(PressureUnit.Decibar);
+
+        /// <summary>
+        ///     Get Pressure in DynesPerSquareCentimeter.
+        /// </summary>
+        public double DynesPerSquareCentimeter => As(PressureUnit.DynePerSquareCentimeter);
 
         /// <summary>
         ///     Get Pressure in FeetOfHead.
         /// </summary>
-        public double FeetOfHead
-        {
-            get { return _pascals*0.000334552565551; }
-        }
+        public double FeetOfHead => As(PressureUnit.FootOfHead);
 
         /// <summary>
         ///     Get Pressure in Gigapascals.
         /// </summary>
-        public double Gigapascals
-        {
-            get { return (_pascals) / 1e9d; }
-        }
+        public double Gigapascals => As(PressureUnit.Gigapascal);
 
         /// <summary>
         ///     Get Pressure in Hectopascals.
         /// </summary>
-        public double Hectopascals
-        {
-            get { return (_pascals) / 1e2d; }
-        }
+        public double Hectopascals => As(PressureUnit.Hectopascal);
 
         /// <summary>
         ///     Get Pressure in InchesOfMercury.
         /// </summary>
-        public double InchesOfMercury
-        {
-            get { return _pascals*2.95299830714159e-4; }
-        }
+        public double InchesOfMercury => As(PressureUnit.InchOfMercury);
+
+        /// <summary>
+        ///     Get Pressure in InchesOfWaterColumn.
+        /// </summary>
+        public double InchesOfWaterColumn => As(PressureUnit.InchOfWaterColumn);
 
         /// <summary>
         ///     Get Pressure in Kilobars.
         /// </summary>
-        public double Kilobars
-        {
-            get { return (_pascals/1e5) / 1e3d; }
-        }
+        public double Kilobars => As(PressureUnit.Kilobar);
 
         /// <summary>
         ///     Get Pressure in KilogramsForcePerSquareCentimeter.
         /// </summary>
-        public double KilogramsForcePerSquareCentimeter
-        {
-            get { return _pascals/(9.80665*1e4); }
-        }
+        public double KilogramsForcePerSquareCentimeter => As(PressureUnit.KilogramForcePerSquareCentimeter);
 
         /// <summary>
         ///     Get Pressure in KilogramsForcePerSquareMeter.
         /// </summary>
-        public double KilogramsForcePerSquareMeter
-        {
-            get { return _pascals*0.101971619222242; }
-        }
+        public double KilogramsForcePerSquareMeter => As(PressureUnit.KilogramForcePerSquareMeter);
 
         /// <summary>
         ///     Get Pressure in KilogramsForcePerSquareMillimeter.
         /// </summary>
-        public double KilogramsForcePerSquareMillimeter
-        {
-            get { return _pascals*1.01971619222242E-07; }
-        }
+        public double KilogramsForcePerSquareMillimeter => As(PressureUnit.KilogramForcePerSquareMillimeter);
 
         /// <summary>
         ///     Get Pressure in KilonewtonsPerSquareCentimeter.
         /// </summary>
-        public double KilonewtonsPerSquareCentimeter
-        {
-            get { return (_pascals/1e4) / 1e3d; }
-        }
+        public double KilonewtonsPerSquareCentimeter => As(PressureUnit.KilonewtonPerSquareCentimeter);
 
         /// <summary>
         ///     Get Pressure in KilonewtonsPerSquareMeter.
         /// </summary>
-        public double KilonewtonsPerSquareMeter
-        {
-            get { return (_pascals) / 1e3d; }
-        }
+        public double KilonewtonsPerSquareMeter => As(PressureUnit.KilonewtonPerSquareMeter);
 
         /// <summary>
         ///     Get Pressure in KilonewtonsPerSquareMillimeter.
         /// </summary>
-        public double KilonewtonsPerSquareMillimeter
-        {
-            get { return (_pascals/1e6) / 1e3d; }
-        }
+        public double KilonewtonsPerSquareMillimeter => As(PressureUnit.KilonewtonPerSquareMillimeter);
 
         /// <summary>
         ///     Get Pressure in Kilopascals.
         /// </summary>
-        public double Kilopascals
-        {
-            get { return (_pascals) / 1e3d; }
-        }
+        public double Kilopascals => As(PressureUnit.Kilopascal);
 
         /// <summary>
         ///     Get Pressure in KilopoundsForcePerSquareFoot.
         /// </summary>
-        public double KilopoundsForcePerSquareFoot
-        {
-            get { return (_pascals*0.020885432426709) / 1e3d; }
-        }
+        public double KilopoundsForcePerSquareFoot => As(PressureUnit.KilopoundForcePerSquareFoot);
 
         /// <summary>
         ///     Get Pressure in KilopoundsForcePerSquareInch.
         /// </summary>
-        public double KilopoundsForcePerSquareInch
-        {
-            get { return (_pascals*0.000145037737730209) / 1e3d; }
-        }
+        public double KilopoundsForcePerSquareInch => As(PressureUnit.KilopoundForcePerSquareInch);
 
         /// <summary>
         ///     Get Pressure in Megabars.
         /// </summary>
-        public double Megabars
-        {
-            get { return (_pascals/1e5) / 1e6d; }
-        }
+        public double Megabars => As(PressureUnit.Megabar);
+
+        /// <summary>
+        ///     Get Pressure in MeganewtonsPerSquareMeter.
+        /// </summary>
+        public double MeganewtonsPerSquareMeter => As(PressureUnit.MeganewtonPerSquareMeter);
 
         /// <summary>
         ///     Get Pressure in Megapascals.
         /// </summary>
-        public double Megapascals
-        {
-            get { return (_pascals) / 1e6d; }
-        }
+        public double Megapascals => As(PressureUnit.Megapascal);
 
         /// <summary>
         ///     Get Pressure in MetersOfHead.
         /// </summary>
-        public double MetersOfHead
-        {
-            get { return _pascals*0.0001019977334; }
-        }
+        public double MetersOfHead => As(PressureUnit.MeterOfHead);
+
+        /// <summary>
+        ///     Get Pressure in Microbars.
+        /// </summary>
+        public double Microbars => As(PressureUnit.Microbar);
 
         /// <summary>
         ///     Get Pressure in Micropascals.
         /// </summary>
-        public double Micropascals
-        {
-            get { return (_pascals) / 1e-6d; }
-        }
+        public double Micropascals => As(PressureUnit.Micropascal);
 
         /// <summary>
         ///     Get Pressure in Millibars.
         /// </summary>
-        public double Millibars
-        {
-            get { return (_pascals/1e5) / 1e-3d; }
-        }
+        public double Millibars => As(PressureUnit.Millibar);
 
         /// <summary>
         ///     Get Pressure in MillimetersOfMercury.
         /// </summary>
-        public double MillimetersOfMercury
-        {
-            get { return _pascals*7.50061561302643e-3; }
-        }
+        public double MillimetersOfMercury => As(PressureUnit.MillimeterOfMercury);
+
+        /// <summary>
+        ///     Get Pressure in Millipascals.
+        /// </summary>
+        public double Millipascals => As(PressureUnit.Millipascal);
 
         /// <summary>
         ///     Get Pressure in NewtonsPerSquareCentimeter.
         /// </summary>
-        public double NewtonsPerSquareCentimeter
-        {
-            get { return _pascals/1e4; }
-        }
+        public double NewtonsPerSquareCentimeter => As(PressureUnit.NewtonPerSquareCentimeter);
 
         /// <summary>
         ///     Get Pressure in NewtonsPerSquareMeter.
         /// </summary>
-        public double NewtonsPerSquareMeter
-        {
-            get { return _pascals; }
-        }
+        public double NewtonsPerSquareMeter => As(PressureUnit.NewtonPerSquareMeter);
 
         /// <summary>
         ///     Get Pressure in NewtonsPerSquareMillimeter.
         /// </summary>
-        public double NewtonsPerSquareMillimeter
-        {
-            get { return _pascals/1e6; }
-        }
+        public double NewtonsPerSquareMillimeter => As(PressureUnit.NewtonPerSquareMillimeter);
 
         /// <summary>
         ///     Get Pressure in Pascals.
         /// </summary>
-        public double Pascals
-        {
-            get { return _pascals; }
-        }
+        public double Pascals => As(PressureUnit.Pascal);
 
         /// <summary>
         ///     Get Pressure in PoundsForcePerSquareFoot.
         /// </summary>
-        public double PoundsForcePerSquareFoot
-        {
-            get { return _pascals*0.020885432426709; }
-        }
+        public double PoundsForcePerSquareFoot => As(PressureUnit.PoundForcePerSquareFoot);
 
         /// <summary>
         ///     Get Pressure in PoundsForcePerSquareInch.
         /// </summary>
-        public double PoundsForcePerSquareInch
-        {
-            get { return _pascals*0.000145037737730209; }
-        }
+        public double PoundsForcePerSquareInch => As(PressureUnit.PoundForcePerSquareInch);
 
         /// <summary>
-        ///     Get Pressure in Psi.
+        ///     Get Pressure in PoundsPerInchSecondSquared.
         /// </summary>
-        [System.Obsolete("Deprecated due to github issue #215, please use PoundForcePerSquareInch instead")]
-        public double Psi
-        {
-            get { return _pascals/(6.89464975179*1e3); }
-        }
+        public double PoundsPerInchSecondSquared => As(PressureUnit.PoundPerInchSecondSquared);
 
         /// <summary>
         ///     Get Pressure in TechnicalAtmospheres.
         /// </summary>
-        public double TechnicalAtmospheres
-        {
-            get { return _pascals/(9.80680592331*1e4); }
-        }
+        public double TechnicalAtmospheres => As(PressureUnit.TechnicalAtmosphere);
 
         /// <summary>
         ///     Get Pressure in TonnesForcePerSquareCentimeter.
         /// </summary>
-        public double TonnesForcePerSquareCentimeter
-        {
-            get { return _pascals*1.01971619222242E-08; }
-        }
+        public double TonnesForcePerSquareCentimeter => As(PressureUnit.TonneForcePerSquareCentimeter);
 
         /// <summary>
         ///     Get Pressure in TonnesForcePerSquareMeter.
         /// </summary>
-        public double TonnesForcePerSquareMeter
-        {
-            get { return _pascals*0.000101971619222242; }
-        }
+        public double TonnesForcePerSquareMeter => As(PressureUnit.TonneForcePerSquareMeter);
 
         /// <summary>
         ///     Get Pressure in TonnesForcePerSquareMillimeter.
         /// </summary>
-        public double TonnesForcePerSquareMillimeter
-        {
-            get { return _pascals*1.01971619222242E-10; }
-        }
+        public double TonnesForcePerSquareMillimeter => As(PressureUnit.TonneForcePerSquareMillimeter);
 
         /// <summary>
         ///     Get Pressure in Torrs.
         /// </summary>
-        public double Torrs
-        {
-            get { return _pascals/(1.3332266752*1e2); }
-        }
+        public double Torrs => As(PressureUnit.Torr);
 
         #endregion
 
-        #region Static
-
-        public static Pressure Zero
-        {
-            get { return new Pressure(); }
-        }
-
-        /// <summary>
-        ///     Get Pressure from Atmospheres.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromAtmospheres(double atmospheres)
-        {
-            double value = (double) atmospheres;
-            return new Pressure(value*1.01325*1e5);
-        }
-#else
-        public static Pressure FromAtmospheres(QuantityValue atmospheres)
-        {
-            double value = (double) atmospheres;
-            return new Pressure((value*1.01325*1e5));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from Bars.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromBars(double bars)
-        {
-            double value = (double) bars;
-            return new Pressure(value*1e5);
-        }
-#else
-        public static Pressure FromBars(QuantityValue bars)
-        {
-            double value = (double) bars;
-            return new Pressure((value*1e5));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from Centibars.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromCentibars(double centibars)
-        {
-            double value = (double) centibars;
-            return new Pressure((value*1e5) * 1e-2d);
-        }
-#else
-        public static Pressure FromCentibars(QuantityValue centibars)
-        {
-            double value = (double) centibars;
-            return new Pressure(((value*1e5) * 1e-2d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from Decapascals.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromDecapascals(double decapascals)
-        {
-            double value = (double) decapascals;
-            return new Pressure((value) * 1e1d);
-        }
-#else
-        public static Pressure FromDecapascals(QuantityValue decapascals)
-        {
-            double value = (double) decapascals;
-            return new Pressure(((value) * 1e1d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from Decibars.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromDecibars(double decibars)
-        {
-            double value = (double) decibars;
-            return new Pressure((value*1e5) * 1e-1d);
-        }
-#else
-        public static Pressure FromDecibars(QuantityValue decibars)
-        {
-            double value = (double) decibars;
-            return new Pressure(((value*1e5) * 1e-1d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from FeetOfHead.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromFeetOfHead(double feetofhead)
-        {
-            double value = (double) feetofhead;
-            return new Pressure(value*2989.0669);
-        }
-#else
-        public static Pressure FromFeetOfHead(QuantityValue feetofhead)
-        {
-            double value = (double) feetofhead;
-            return new Pressure((value*2989.0669));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from Gigapascals.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromGigapascals(double gigapascals)
-        {
-            double value = (double) gigapascals;
-            return new Pressure((value) * 1e9d);
-        }
-#else
-        public static Pressure FromGigapascals(QuantityValue gigapascals)
-        {
-            double value = (double) gigapascals;
-            return new Pressure(((value) * 1e9d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from Hectopascals.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromHectopascals(double hectopascals)
-        {
-            double value = (double) hectopascals;
-            return new Pressure((value) * 1e2d);
-        }
-#else
-        public static Pressure FromHectopascals(QuantityValue hectopascals)
-        {
-            double value = (double) hectopascals;
-            return new Pressure(((value) * 1e2d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from InchesOfMercury.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromInchesOfMercury(double inchesofmercury)
-        {
-            double value = (double) inchesofmercury;
-            return new Pressure(value/2.95299830714159e-4);
-        }
-#else
-        public static Pressure FromInchesOfMercury(QuantityValue inchesofmercury)
-        {
-            double value = (double) inchesofmercury;
-            return new Pressure((value/2.95299830714159e-4));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from Kilobars.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromKilobars(double kilobars)
-        {
-            double value = (double) kilobars;
-            return new Pressure((value*1e5) * 1e3d);
-        }
-#else
-        public static Pressure FromKilobars(QuantityValue kilobars)
-        {
-            double value = (double) kilobars;
-            return new Pressure(((value*1e5) * 1e3d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from KilogramsForcePerSquareCentimeter.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromKilogramsForcePerSquareCentimeter(double kilogramsforcepersquarecentimeter)
-        {
-            double value = (double) kilogramsforcepersquarecentimeter;
-            return new Pressure(value*9.80665*1e4);
-        }
-#else
-        public static Pressure FromKilogramsForcePerSquareCentimeter(QuantityValue kilogramsforcepersquarecentimeter)
-        {
-            double value = (double) kilogramsforcepersquarecentimeter;
-            return new Pressure((value*9.80665*1e4));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from KilogramsForcePerSquareMeter.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromKilogramsForcePerSquareMeter(double kilogramsforcepersquaremeter)
-        {
-            double value = (double) kilogramsforcepersquaremeter;
-            return new Pressure(value*9.80665019960652);
-        }
-#else
-        public static Pressure FromKilogramsForcePerSquareMeter(QuantityValue kilogramsforcepersquaremeter)
-        {
-            double value = (double) kilogramsforcepersquaremeter;
-            return new Pressure((value*9.80665019960652));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from KilogramsForcePerSquareMillimeter.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromKilogramsForcePerSquareMillimeter(double kilogramsforcepersquaremillimeter)
-        {
-            double value = (double) kilogramsforcepersquaremillimeter;
-            return new Pressure(value*9806650.19960652);
-        }
-#else
-        public static Pressure FromKilogramsForcePerSquareMillimeter(QuantityValue kilogramsforcepersquaremillimeter)
-        {
-            double value = (double) kilogramsforcepersquaremillimeter;
-            return new Pressure((value*9806650.19960652));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from KilonewtonsPerSquareCentimeter.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromKilonewtonsPerSquareCentimeter(double kilonewtonspersquarecentimeter)
-        {
-            double value = (double) kilonewtonspersquarecentimeter;
-            return new Pressure((value*1e4) * 1e3d);
-        }
-#else
-        public static Pressure FromKilonewtonsPerSquareCentimeter(QuantityValue kilonewtonspersquarecentimeter)
-        {
-            double value = (double) kilonewtonspersquarecentimeter;
-            return new Pressure(((value*1e4) * 1e3d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from KilonewtonsPerSquareMeter.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromKilonewtonsPerSquareMeter(double kilonewtonspersquaremeter)
-        {
-            double value = (double) kilonewtonspersquaremeter;
-            return new Pressure((value) * 1e3d);
-        }
-#else
-        public static Pressure FromKilonewtonsPerSquareMeter(QuantityValue kilonewtonspersquaremeter)
-        {
-            double value = (double) kilonewtonspersquaremeter;
-            return new Pressure(((value) * 1e3d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from KilonewtonsPerSquareMillimeter.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromKilonewtonsPerSquareMillimeter(double kilonewtonspersquaremillimeter)
-        {
-            double value = (double) kilonewtonspersquaremillimeter;
-            return new Pressure((value*1e6) * 1e3d);
-        }
-#else
-        public static Pressure FromKilonewtonsPerSquareMillimeter(QuantityValue kilonewtonspersquaremillimeter)
-        {
-            double value = (double) kilonewtonspersquaremillimeter;
-            return new Pressure(((value*1e6) * 1e3d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from Kilopascals.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromKilopascals(double kilopascals)
-        {
-            double value = (double) kilopascals;
-            return new Pressure((value) * 1e3d);
-        }
-#else
-        public static Pressure FromKilopascals(QuantityValue kilopascals)
-        {
-            double value = (double) kilopascals;
-            return new Pressure(((value) * 1e3d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from KilopoundsForcePerSquareFoot.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromKilopoundsForcePerSquareFoot(double kilopoundsforcepersquarefoot)
-        {
-            double value = (double) kilopoundsforcepersquarefoot;
-            return new Pressure((value*47.8802631216372) * 1e3d);
-        }
-#else
-        public static Pressure FromKilopoundsForcePerSquareFoot(QuantityValue kilopoundsforcepersquarefoot)
-        {
-            double value = (double) kilopoundsforcepersquarefoot;
-            return new Pressure(((value*47.8802631216372) * 1e3d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from KilopoundsForcePerSquareInch.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromKilopoundsForcePerSquareInch(double kilopoundsforcepersquareinch)
-        {
-            double value = (double) kilopoundsforcepersquareinch;
-            return new Pressure((value*6894.75729316836) * 1e3d);
-        }
-#else
-        public static Pressure FromKilopoundsForcePerSquareInch(QuantityValue kilopoundsforcepersquareinch)
-        {
-            double value = (double) kilopoundsforcepersquareinch;
-            return new Pressure(((value*6894.75729316836) * 1e3d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from Megabars.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromMegabars(double megabars)
-        {
-            double value = (double) megabars;
-            return new Pressure((value*1e5) * 1e6d);
-        }
-#else
-        public static Pressure FromMegabars(QuantityValue megabars)
-        {
-            double value = (double) megabars;
-            return new Pressure(((value*1e5) * 1e6d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from Megapascals.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromMegapascals(double megapascals)
-        {
-            double value = (double) megapascals;
-            return new Pressure((value) * 1e6d);
-        }
-#else
-        public static Pressure FromMegapascals(QuantityValue megapascals)
-        {
-            double value = (double) megapascals;
-            return new Pressure(((value) * 1e6d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from MetersOfHead.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromMetersOfHead(double metersofhead)
-        {
-            double value = (double) metersofhead;
-            return new Pressure(value*9804.139432);
-        }
-#else
-        public static Pressure FromMetersOfHead(QuantityValue metersofhead)
-        {
-            double value = (double) metersofhead;
-            return new Pressure((value*9804.139432));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from Micropascals.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromMicropascals(double micropascals)
-        {
-            double value = (double) micropascals;
-            return new Pressure((value) * 1e-6d);
-        }
-#else
-        public static Pressure FromMicropascals(QuantityValue micropascals)
-        {
-            double value = (double) micropascals;
-            return new Pressure(((value) * 1e-6d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from Millibars.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromMillibars(double millibars)
-        {
-            double value = (double) millibars;
-            return new Pressure((value*1e5) * 1e-3d);
-        }
-#else
-        public static Pressure FromMillibars(QuantityValue millibars)
-        {
-            double value = (double) millibars;
-            return new Pressure(((value*1e5) * 1e-3d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from MillimetersOfMercury.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromMillimetersOfMercury(double millimetersofmercury)
-        {
-            double value = (double) millimetersofmercury;
-            return new Pressure(value/7.50061561302643e-3);
-        }
-#else
-        public static Pressure FromMillimetersOfMercury(QuantityValue millimetersofmercury)
-        {
-            double value = (double) millimetersofmercury;
-            return new Pressure((value/7.50061561302643e-3));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from NewtonsPerSquareCentimeter.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromNewtonsPerSquareCentimeter(double newtonspersquarecentimeter)
-        {
-            double value = (double) newtonspersquarecentimeter;
-            return new Pressure(value*1e4);
-        }
-#else
-        public static Pressure FromNewtonsPerSquareCentimeter(QuantityValue newtonspersquarecentimeter)
-        {
-            double value = (double) newtonspersquarecentimeter;
-            return new Pressure((value*1e4));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from NewtonsPerSquareMeter.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromNewtonsPerSquareMeter(double newtonspersquaremeter)
-        {
-            double value = (double) newtonspersquaremeter;
-            return new Pressure(value);
-        }
-#else
-        public static Pressure FromNewtonsPerSquareMeter(QuantityValue newtonspersquaremeter)
-        {
-            double value = (double) newtonspersquaremeter;
-            return new Pressure((value));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from NewtonsPerSquareMillimeter.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromNewtonsPerSquareMillimeter(double newtonspersquaremillimeter)
-        {
-            double value = (double) newtonspersquaremillimeter;
-            return new Pressure(value*1e6);
-        }
-#else
-        public static Pressure FromNewtonsPerSquareMillimeter(QuantityValue newtonspersquaremillimeter)
-        {
-            double value = (double) newtonspersquaremillimeter;
-            return new Pressure((value*1e6));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from Pascals.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromPascals(double pascals)
-        {
-            double value = (double) pascals;
-            return new Pressure(value);
-        }
-#else
-        public static Pressure FromPascals(QuantityValue pascals)
-        {
-            double value = (double) pascals;
-            return new Pressure((value));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from PoundsForcePerSquareFoot.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromPoundsForcePerSquareFoot(double poundsforcepersquarefoot)
-        {
-            double value = (double) poundsforcepersquarefoot;
-            return new Pressure(value*47.8802631216372);
-        }
-#else
-        public static Pressure FromPoundsForcePerSquareFoot(QuantityValue poundsforcepersquarefoot)
-        {
-            double value = (double) poundsforcepersquarefoot;
-            return new Pressure((value*47.8802631216372));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from PoundsForcePerSquareInch.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromPoundsForcePerSquareInch(double poundsforcepersquareinch)
-        {
-            double value = (double) poundsforcepersquareinch;
-            return new Pressure(value*6894.75729316836);
-        }
-#else
-        public static Pressure FromPoundsForcePerSquareInch(QuantityValue poundsforcepersquareinch)
-        {
-            double value = (double) poundsforcepersquareinch;
-            return new Pressure((value*6894.75729316836));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from Psi.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromPsi(double psi)
-        {
-            double value = (double) psi;
-            return new Pressure(value*6.89464975179*1e3);
-        }
-#else
-        public static Pressure FromPsi(QuantityValue psi)
-        {
-            double value = (double) psi;
-            return new Pressure((value*6.89464975179*1e3));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from TechnicalAtmospheres.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromTechnicalAtmospheres(double technicalatmospheres)
-        {
-            double value = (double) technicalatmospheres;
-            return new Pressure(value*9.80680592331*1e4);
-        }
-#else
-        public static Pressure FromTechnicalAtmospheres(QuantityValue technicalatmospheres)
-        {
-            double value = (double) technicalatmospheres;
-            return new Pressure((value*9.80680592331*1e4));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from TonnesForcePerSquareCentimeter.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromTonnesForcePerSquareCentimeter(double tonnesforcepersquarecentimeter)
-        {
-            double value = (double) tonnesforcepersquarecentimeter;
-            return new Pressure(value*98066501.9960652);
-        }
-#else
-        public static Pressure FromTonnesForcePerSquareCentimeter(QuantityValue tonnesforcepersquarecentimeter)
-        {
-            double value = (double) tonnesforcepersquarecentimeter;
-            return new Pressure((value*98066501.9960652));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from TonnesForcePerSquareMeter.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromTonnesForcePerSquareMeter(double tonnesforcepersquaremeter)
-        {
-            double value = (double) tonnesforcepersquaremeter;
-            return new Pressure(value*9806.65019960653);
-        }
-#else
-        public static Pressure FromTonnesForcePerSquareMeter(QuantityValue tonnesforcepersquaremeter)
-        {
-            double value = (double) tonnesforcepersquaremeter;
-            return new Pressure((value*9806.65019960653));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from TonnesForcePerSquareMillimeter.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromTonnesForcePerSquareMillimeter(double tonnesforcepersquaremillimeter)
-        {
-            double value = (double) tonnesforcepersquaremillimeter;
-            return new Pressure(value*9806650199.60653);
-        }
-#else
-        public static Pressure FromTonnesForcePerSquareMillimeter(QuantityValue tonnesforcepersquaremillimeter)
-        {
-            double value = (double) tonnesforcepersquaremillimeter;
-            return new Pressure((value*9806650199.60653));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Pressure from Torrs.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Pressure FromTorrs(double torrs)
-        {
-            double value = (double) torrs;
-            return new Pressure(value*1.3332266752*1e2);
-        }
-#else
-        public static Pressure FromTorrs(QuantityValue torrs)
-        {
-            double value = (double) torrs;
-            return new Pressure((value*1.3332266752*1e2));
-        }
-#endif
-
-        // Windows Runtime Component does not support nullable types (double?): https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if !WINDOWS_UWP
-        /// <summary>
-        ///     Get nullable Pressure from nullable Atmospheres.
-        /// </summary>
-        public static Pressure? FromAtmospheres(QuantityValue? atmospheres)
-        {
-            if (atmospheres.HasValue)
-            {
-                return FromAtmospheres(atmospheres.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable Bars.
-        /// </summary>
-        public static Pressure? FromBars(QuantityValue? bars)
-        {
-            if (bars.HasValue)
-            {
-                return FromBars(bars.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable Centibars.
-        /// </summary>
-        public static Pressure? FromCentibars(QuantityValue? centibars)
-        {
-            if (centibars.HasValue)
-            {
-                return FromCentibars(centibars.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable Decapascals.
-        /// </summary>
-        public static Pressure? FromDecapascals(QuantityValue? decapascals)
-        {
-            if (decapascals.HasValue)
-            {
-                return FromDecapascals(decapascals.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable Decibars.
-        /// </summary>
-        public static Pressure? FromDecibars(QuantityValue? decibars)
-        {
-            if (decibars.HasValue)
-            {
-                return FromDecibars(decibars.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable FeetOfHead.
-        /// </summary>
-        public static Pressure? FromFeetOfHead(QuantityValue? feetofhead)
-        {
-            if (feetofhead.HasValue)
-            {
-                return FromFeetOfHead(feetofhead.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable Gigapascals.
-        /// </summary>
-        public static Pressure? FromGigapascals(QuantityValue? gigapascals)
-        {
-            if (gigapascals.HasValue)
-            {
-                return FromGigapascals(gigapascals.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable Hectopascals.
-        /// </summary>
-        public static Pressure? FromHectopascals(QuantityValue? hectopascals)
-        {
-            if (hectopascals.HasValue)
-            {
-                return FromHectopascals(hectopascals.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable InchesOfMercury.
-        /// </summary>
-        public static Pressure? FromInchesOfMercury(QuantityValue? inchesofmercury)
-        {
-            if (inchesofmercury.HasValue)
-            {
-                return FromInchesOfMercury(inchesofmercury.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable Kilobars.
-        /// </summary>
-        public static Pressure? FromKilobars(QuantityValue? kilobars)
-        {
-            if (kilobars.HasValue)
-            {
-                return FromKilobars(kilobars.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable KilogramsForcePerSquareCentimeter.
-        /// </summary>
-        public static Pressure? FromKilogramsForcePerSquareCentimeter(QuantityValue? kilogramsforcepersquarecentimeter)
-        {
-            if (kilogramsforcepersquarecentimeter.HasValue)
-            {
-                return FromKilogramsForcePerSquareCentimeter(kilogramsforcepersquarecentimeter.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable KilogramsForcePerSquareMeter.
-        /// </summary>
-        public static Pressure? FromKilogramsForcePerSquareMeter(QuantityValue? kilogramsforcepersquaremeter)
-        {
-            if (kilogramsforcepersquaremeter.HasValue)
-            {
-                return FromKilogramsForcePerSquareMeter(kilogramsforcepersquaremeter.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable KilogramsForcePerSquareMillimeter.
-        /// </summary>
-        public static Pressure? FromKilogramsForcePerSquareMillimeter(QuantityValue? kilogramsforcepersquaremillimeter)
-        {
-            if (kilogramsforcepersquaremillimeter.HasValue)
-            {
-                return FromKilogramsForcePerSquareMillimeter(kilogramsforcepersquaremillimeter.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable KilonewtonsPerSquareCentimeter.
-        /// </summary>
-        public static Pressure? FromKilonewtonsPerSquareCentimeter(QuantityValue? kilonewtonspersquarecentimeter)
-        {
-            if (kilonewtonspersquarecentimeter.HasValue)
-            {
-                return FromKilonewtonsPerSquareCentimeter(kilonewtonspersquarecentimeter.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable KilonewtonsPerSquareMeter.
-        /// </summary>
-        public static Pressure? FromKilonewtonsPerSquareMeter(QuantityValue? kilonewtonspersquaremeter)
-        {
-            if (kilonewtonspersquaremeter.HasValue)
-            {
-                return FromKilonewtonsPerSquareMeter(kilonewtonspersquaremeter.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable KilonewtonsPerSquareMillimeter.
-        /// </summary>
-        public static Pressure? FromKilonewtonsPerSquareMillimeter(QuantityValue? kilonewtonspersquaremillimeter)
-        {
-            if (kilonewtonspersquaremillimeter.HasValue)
-            {
-                return FromKilonewtonsPerSquareMillimeter(kilonewtonspersquaremillimeter.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable Kilopascals.
-        /// </summary>
-        public static Pressure? FromKilopascals(QuantityValue? kilopascals)
-        {
-            if (kilopascals.HasValue)
-            {
-                return FromKilopascals(kilopascals.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable KilopoundsForcePerSquareFoot.
-        /// </summary>
-        public static Pressure? FromKilopoundsForcePerSquareFoot(QuantityValue? kilopoundsforcepersquarefoot)
-        {
-            if (kilopoundsforcepersquarefoot.HasValue)
-            {
-                return FromKilopoundsForcePerSquareFoot(kilopoundsforcepersquarefoot.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable KilopoundsForcePerSquareInch.
-        /// </summary>
-        public static Pressure? FromKilopoundsForcePerSquareInch(QuantityValue? kilopoundsforcepersquareinch)
-        {
-            if (kilopoundsforcepersquareinch.HasValue)
-            {
-                return FromKilopoundsForcePerSquareInch(kilopoundsforcepersquareinch.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable Megabars.
-        /// </summary>
-        public static Pressure? FromMegabars(QuantityValue? megabars)
-        {
-            if (megabars.HasValue)
-            {
-                return FromMegabars(megabars.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable Megapascals.
-        /// </summary>
-        public static Pressure? FromMegapascals(QuantityValue? megapascals)
-        {
-            if (megapascals.HasValue)
-            {
-                return FromMegapascals(megapascals.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable MetersOfHead.
-        /// </summary>
-        public static Pressure? FromMetersOfHead(QuantityValue? metersofhead)
-        {
-            if (metersofhead.HasValue)
-            {
-                return FromMetersOfHead(metersofhead.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable Micropascals.
-        /// </summary>
-        public static Pressure? FromMicropascals(QuantityValue? micropascals)
-        {
-            if (micropascals.HasValue)
-            {
-                return FromMicropascals(micropascals.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable Millibars.
-        /// </summary>
-        public static Pressure? FromMillibars(QuantityValue? millibars)
-        {
-            if (millibars.HasValue)
-            {
-                return FromMillibars(millibars.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable MillimetersOfMercury.
-        /// </summary>
-        public static Pressure? FromMillimetersOfMercury(QuantityValue? millimetersofmercury)
-        {
-            if (millimetersofmercury.HasValue)
-            {
-                return FromMillimetersOfMercury(millimetersofmercury.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable NewtonsPerSquareCentimeter.
-        /// </summary>
-        public static Pressure? FromNewtonsPerSquareCentimeter(QuantityValue? newtonspersquarecentimeter)
-        {
-            if (newtonspersquarecentimeter.HasValue)
-            {
-                return FromNewtonsPerSquareCentimeter(newtonspersquarecentimeter.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable NewtonsPerSquareMeter.
-        /// </summary>
-        public static Pressure? FromNewtonsPerSquareMeter(QuantityValue? newtonspersquaremeter)
-        {
-            if (newtonspersquaremeter.HasValue)
-            {
-                return FromNewtonsPerSquareMeter(newtonspersquaremeter.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable NewtonsPerSquareMillimeter.
-        /// </summary>
-        public static Pressure? FromNewtonsPerSquareMillimeter(QuantityValue? newtonspersquaremillimeter)
-        {
-            if (newtonspersquaremillimeter.HasValue)
-            {
-                return FromNewtonsPerSquareMillimeter(newtonspersquaremillimeter.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable Pascals.
-        /// </summary>
-        public static Pressure? FromPascals(QuantityValue? pascals)
-        {
-            if (pascals.HasValue)
-            {
-                return FromPascals(pascals.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable PoundsForcePerSquareFoot.
-        /// </summary>
-        public static Pressure? FromPoundsForcePerSquareFoot(QuantityValue? poundsforcepersquarefoot)
-        {
-            if (poundsforcepersquarefoot.HasValue)
-            {
-                return FromPoundsForcePerSquareFoot(poundsforcepersquarefoot.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable PoundsForcePerSquareInch.
-        /// </summary>
-        public static Pressure? FromPoundsForcePerSquareInch(QuantityValue? poundsforcepersquareinch)
-        {
-            if (poundsforcepersquareinch.HasValue)
-            {
-                return FromPoundsForcePerSquareInch(poundsforcepersquareinch.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable Psi.
-        /// </summary>
-        public static Pressure? FromPsi(QuantityValue? psi)
-        {
-            if (psi.HasValue)
-            {
-                return FromPsi(psi.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable TechnicalAtmospheres.
-        /// </summary>
-        public static Pressure? FromTechnicalAtmospheres(QuantityValue? technicalatmospheres)
-        {
-            if (technicalatmospheres.HasValue)
-            {
-                return FromTechnicalAtmospheres(technicalatmospheres.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable TonnesForcePerSquareCentimeter.
-        /// </summary>
-        public static Pressure? FromTonnesForcePerSquareCentimeter(QuantityValue? tonnesforcepersquarecentimeter)
-        {
-            if (tonnesforcepersquarecentimeter.HasValue)
-            {
-                return FromTonnesForcePerSquareCentimeter(tonnesforcepersquarecentimeter.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable TonnesForcePerSquareMeter.
-        /// </summary>
-        public static Pressure? FromTonnesForcePerSquareMeter(QuantityValue? tonnesforcepersquaremeter)
-        {
-            if (tonnesforcepersquaremeter.HasValue)
-            {
-                return FromTonnesForcePerSquareMeter(tonnesforcepersquaremeter.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable TonnesForcePerSquareMillimeter.
-        /// </summary>
-        public static Pressure? FromTonnesForcePerSquareMillimeter(QuantityValue? tonnesforcepersquaremillimeter)
-        {
-            if (tonnesforcepersquaremillimeter.HasValue)
-            {
-                return FromTonnesForcePerSquareMillimeter(tonnesforcepersquaremillimeter.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Pressure from nullable Torrs.
-        /// </summary>
-        public static Pressure? FromTorrs(QuantityValue? torrs)
-        {
-            if (torrs.HasValue)
-            {
-                return FromTorrs(torrs.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-#endif
-
-        /// <summary>
-        ///     Dynamically convert from value and unit enum <see cref="PressureUnit" /> to <see cref="Pressure" />.
-        /// </summary>
-        /// <param name="value">Value to convert from.</param>
-        /// <param name="fromUnit">Unit to convert from.</param>
-        /// <returns>Pressure unit value.</returns>
-#if WINDOWS_UWP
-        // Fix name conflict with parameter "value"
-        [return: System.Runtime.InteropServices.WindowsRuntime.ReturnValueName("returnValue")]
-        public static Pressure From(double value, PressureUnit fromUnit)
-#else
-        public static Pressure From(QuantityValue value, PressureUnit fromUnit)
-#endif
-        {
-            switch (fromUnit)
-            {
-                case PressureUnit.Atmosphere:
-                    return FromAtmospheres(value);
-                case PressureUnit.Bar:
-                    return FromBars(value);
-                case PressureUnit.Centibar:
-                    return FromCentibars(value);
-                case PressureUnit.Decapascal:
-                    return FromDecapascals(value);
-                case PressureUnit.Decibar:
-                    return FromDecibars(value);
-                case PressureUnit.FootOfHead:
-                    return FromFeetOfHead(value);
-                case PressureUnit.Gigapascal:
-                    return FromGigapascals(value);
-                case PressureUnit.Hectopascal:
-                    return FromHectopascals(value);
-                case PressureUnit.InchOfMercury:
-                    return FromInchesOfMercury(value);
-                case PressureUnit.Kilobar:
-                    return FromKilobars(value);
-                case PressureUnit.KilogramForcePerSquareCentimeter:
-                    return FromKilogramsForcePerSquareCentimeter(value);
-                case PressureUnit.KilogramForcePerSquareMeter:
-                    return FromKilogramsForcePerSquareMeter(value);
-                case PressureUnit.KilogramForcePerSquareMillimeter:
-                    return FromKilogramsForcePerSquareMillimeter(value);
-                case PressureUnit.KilonewtonPerSquareCentimeter:
-                    return FromKilonewtonsPerSquareCentimeter(value);
-                case PressureUnit.KilonewtonPerSquareMeter:
-                    return FromKilonewtonsPerSquareMeter(value);
-                case PressureUnit.KilonewtonPerSquareMillimeter:
-                    return FromKilonewtonsPerSquareMillimeter(value);
-                case PressureUnit.Kilopascal:
-                    return FromKilopascals(value);
-                case PressureUnit.KilopoundForcePerSquareFoot:
-                    return FromKilopoundsForcePerSquareFoot(value);
-                case PressureUnit.KilopoundForcePerSquareInch:
-                    return FromKilopoundsForcePerSquareInch(value);
-                case PressureUnit.Megabar:
-                    return FromMegabars(value);
-                case PressureUnit.Megapascal:
-                    return FromMegapascals(value);
-                case PressureUnit.MeterOfHead:
-                    return FromMetersOfHead(value);
-                case PressureUnit.Micropascal:
-                    return FromMicropascals(value);
-                case PressureUnit.Millibar:
-                    return FromMillibars(value);
-                case PressureUnit.MillimeterOfMercury:
-                    return FromMillimetersOfMercury(value);
-                case PressureUnit.NewtonPerSquareCentimeter:
-                    return FromNewtonsPerSquareCentimeter(value);
-                case PressureUnit.NewtonPerSquareMeter:
-                    return FromNewtonsPerSquareMeter(value);
-                case PressureUnit.NewtonPerSquareMillimeter:
-                    return FromNewtonsPerSquareMillimeter(value);
-                case PressureUnit.Pascal:
-                    return FromPascals(value);
-                case PressureUnit.PoundForcePerSquareFoot:
-                    return FromPoundsForcePerSquareFoot(value);
-                case PressureUnit.PoundForcePerSquareInch:
-                    return FromPoundsForcePerSquareInch(value);
-                case PressureUnit.Psi:
-                    return FromPsi(value);
-                case PressureUnit.TechnicalAtmosphere:
-                    return FromTechnicalAtmospheres(value);
-                case PressureUnit.TonneForcePerSquareCentimeter:
-                    return FromTonnesForcePerSquareCentimeter(value);
-                case PressureUnit.TonneForcePerSquareMeter:
-                    return FromTonnesForcePerSquareMeter(value);
-                case PressureUnit.TonneForcePerSquareMillimeter:
-                    return FromTonnesForcePerSquareMillimeter(value);
-                case PressureUnit.Torr:
-                    return FromTorrs(value);
-
-                default:
-                    throw new NotImplementedException("fromUnit: " + fromUnit);
-            }
-        }
-
-        // Windows Runtime Component does not support nullable types (double?): https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if !WINDOWS_UWP
-        /// <summary>
-        ///     Dynamically convert from value and unit enum <see cref="PressureUnit" /> to <see cref="Pressure" />.
-        /// </summary>
-        /// <param name="value">Value to convert from.</param>
-        /// <param name="fromUnit">Unit to convert from.</param>
-        /// <returns>Pressure unit value.</returns>
-        public static Pressure? From(QuantityValue? value, PressureUnit fromUnit)
-        {
-            if (!value.HasValue)
-            {
-                return null;
-            }
-            switch (fromUnit)
-            {
-                case PressureUnit.Atmosphere:
-                    return FromAtmospheres(value.Value);
-                case PressureUnit.Bar:
-                    return FromBars(value.Value);
-                case PressureUnit.Centibar:
-                    return FromCentibars(value.Value);
-                case PressureUnit.Decapascal:
-                    return FromDecapascals(value.Value);
-                case PressureUnit.Decibar:
-                    return FromDecibars(value.Value);
-                case PressureUnit.FootOfHead:
-                    return FromFeetOfHead(value.Value);
-                case PressureUnit.Gigapascal:
-                    return FromGigapascals(value.Value);
-                case PressureUnit.Hectopascal:
-                    return FromHectopascals(value.Value);
-                case PressureUnit.InchOfMercury:
-                    return FromInchesOfMercury(value.Value);
-                case PressureUnit.Kilobar:
-                    return FromKilobars(value.Value);
-                case PressureUnit.KilogramForcePerSquareCentimeter:
-                    return FromKilogramsForcePerSquareCentimeter(value.Value);
-                case PressureUnit.KilogramForcePerSquareMeter:
-                    return FromKilogramsForcePerSquareMeter(value.Value);
-                case PressureUnit.KilogramForcePerSquareMillimeter:
-                    return FromKilogramsForcePerSquareMillimeter(value.Value);
-                case PressureUnit.KilonewtonPerSquareCentimeter:
-                    return FromKilonewtonsPerSquareCentimeter(value.Value);
-                case PressureUnit.KilonewtonPerSquareMeter:
-                    return FromKilonewtonsPerSquareMeter(value.Value);
-                case PressureUnit.KilonewtonPerSquareMillimeter:
-                    return FromKilonewtonsPerSquareMillimeter(value.Value);
-                case PressureUnit.Kilopascal:
-                    return FromKilopascals(value.Value);
-                case PressureUnit.KilopoundForcePerSquareFoot:
-                    return FromKilopoundsForcePerSquareFoot(value.Value);
-                case PressureUnit.KilopoundForcePerSquareInch:
-                    return FromKilopoundsForcePerSquareInch(value.Value);
-                case PressureUnit.Megabar:
-                    return FromMegabars(value.Value);
-                case PressureUnit.Megapascal:
-                    return FromMegapascals(value.Value);
-                case PressureUnit.MeterOfHead:
-                    return FromMetersOfHead(value.Value);
-                case PressureUnit.Micropascal:
-                    return FromMicropascals(value.Value);
-                case PressureUnit.Millibar:
-                    return FromMillibars(value.Value);
-                case PressureUnit.MillimeterOfMercury:
-                    return FromMillimetersOfMercury(value.Value);
-                case PressureUnit.NewtonPerSquareCentimeter:
-                    return FromNewtonsPerSquareCentimeter(value.Value);
-                case PressureUnit.NewtonPerSquareMeter:
-                    return FromNewtonsPerSquareMeter(value.Value);
-                case PressureUnit.NewtonPerSquareMillimeter:
-                    return FromNewtonsPerSquareMillimeter(value.Value);
-                case PressureUnit.Pascal:
-                    return FromPascals(value.Value);
-                case PressureUnit.PoundForcePerSquareFoot:
-                    return FromPoundsForcePerSquareFoot(value.Value);
-                case PressureUnit.PoundForcePerSquareInch:
-                    return FromPoundsForcePerSquareInch(value.Value);
-                case PressureUnit.Psi:
-                    return FromPsi(value.Value);
-                case PressureUnit.TechnicalAtmosphere:
-                    return FromTechnicalAtmospheres(value.Value);
-                case PressureUnit.TonneForcePerSquareCentimeter:
-                    return FromTonnesForcePerSquareCentimeter(value.Value);
-                case PressureUnit.TonneForcePerSquareMeter:
-                    return FromTonnesForcePerSquareMeter(value.Value);
-                case PressureUnit.TonneForcePerSquareMillimeter:
-                    return FromTonnesForcePerSquareMillimeter(value.Value);
-                case PressureUnit.Torr:
-                    return FromTorrs(value.Value);
-
-                default:
-                    throw new NotImplementedException("fromUnit: " + fromUnit);
-            }
-        }
-#endif
+        #region Static Methods
 
         /// <summary>
         ///     Get unit abbreviation string.
         /// </summary>
         /// <param name="unit">Unit to get abbreviation for.</param>
         /// <returns>Unit abbreviation string.</returns>
-        [UsedImplicitly]
         public static string GetAbbreviation(PressureUnit unit)
         {
             return GetAbbreviation(unit, null);
@@ -1868,240 +434,410 @@ namespace UnitsNet
         ///     Get unit abbreviation string.
         /// </summary>
         /// <param name="unit">Unit to get abbreviation for.</param>
-        /// <param name="culture">Culture to use for localization. Defaults to Thread.CurrentUICulture.</param>
         /// <returns>Unit abbreviation string.</returns>
-        [UsedImplicitly]
-        public static string GetAbbreviation(PressureUnit unit, [CanBeNull] Culture culture)
+        /// <param name="provider">Format to use for localization. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public static string GetAbbreviation(PressureUnit unit, IFormatProvider? provider)
         {
-            return UnitSystem.GetCached(culture).GetDefaultAbbreviation(unit);
+            return UnitAbbreviationsCache.Default.GetDefaultAbbreviation(unit, provider);
         }
 
         #endregion
 
-        #region Arithmetic Operators
+        #region Static Factory Methods
 
-        // Windows Runtime Component does not allow operator overloads: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if !WINDOWS_UWP
-        public static Pressure operator -(Pressure right)
+        /// <summary>
+        ///     Get Pressure from Atmospheres.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromAtmospheres(QuantityValue atmospheres)
         {
-            return new Pressure(-right._pascals);
+            double value = (double) atmospheres;
+            return new Pressure(value, PressureUnit.Atmosphere);
         }
-
-        public static Pressure operator +(Pressure left, Pressure right)
+        /// <summary>
+        ///     Get Pressure from Bars.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromBars(QuantityValue bars)
         {
-            return new Pressure(left._pascals + right._pascals);
+            double value = (double) bars;
+            return new Pressure(value, PressureUnit.Bar);
         }
-
-        public static Pressure operator -(Pressure left, Pressure right)
+        /// <summary>
+        ///     Get Pressure from Centibars.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromCentibars(QuantityValue centibars)
         {
-            return new Pressure(left._pascals - right._pascals);
+            double value = (double) centibars;
+            return new Pressure(value, PressureUnit.Centibar);
         }
-
-        public static Pressure operator *(double left, Pressure right)
+        /// <summary>
+        ///     Get Pressure from Decapascals.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromDecapascals(QuantityValue decapascals)
         {
-            return new Pressure(left*right._pascals);
+            double value = (double) decapascals;
+            return new Pressure(value, PressureUnit.Decapascal);
         }
-
-        public static Pressure operator *(Pressure left, double right)
+        /// <summary>
+        ///     Get Pressure from Decibars.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromDecibars(QuantityValue decibars)
         {
-            return new Pressure(left._pascals*(double)right);
+            double value = (double) decibars;
+            return new Pressure(value, PressureUnit.Decibar);
         }
-
-        public static Pressure operator /(Pressure left, double right)
+        /// <summary>
+        ///     Get Pressure from DynesPerSquareCentimeter.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromDynesPerSquareCentimeter(QuantityValue dynespersquarecentimeter)
         {
-            return new Pressure(left._pascals/(double)right);
+            double value = (double) dynespersquarecentimeter;
+            return new Pressure(value, PressureUnit.DynePerSquareCentimeter);
         }
-
-        public static double operator /(Pressure left, Pressure right)
+        /// <summary>
+        ///     Get Pressure from FeetOfHead.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromFeetOfHead(QuantityValue feetofhead)
         {
-            return Convert.ToDouble(left._pascals/right._pascals);
+            double value = (double) feetofhead;
+            return new Pressure(value, PressureUnit.FootOfHead);
         }
-#endif
-
-        #endregion
-
-        #region Equality / IComparable
-
-        public int CompareTo(object obj)
+        /// <summary>
+        ///     Get Pressure from Gigapascals.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromGigapascals(QuantityValue gigapascals)
         {
-            if (obj == null) throw new ArgumentNullException("obj");
-            if (!(obj is Pressure)) throw new ArgumentException("Expected type Pressure.", "obj");
-            return CompareTo((Pressure) obj);
+            double value = (double) gigapascals;
+            return new Pressure(value, PressureUnit.Gigapascal);
         }
-
-        // Windows Runtime Component does not allow public methods/ctors with same number of parameters: https://msdn.microsoft.com/en-us/library/br230301.aspx#Overloaded methods
-#if WINDOWS_UWP
-        internal
-#else
-        public
-#endif
-        int CompareTo(Pressure other)
+        /// <summary>
+        ///     Get Pressure from Hectopascals.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromHectopascals(QuantityValue hectopascals)
         {
-            return _pascals.CompareTo(other._pascals);
+            double value = (double) hectopascals;
+            return new Pressure(value, PressureUnit.Hectopascal);
         }
-
-        // Windows Runtime Component does not allow operator overloads: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if !WINDOWS_UWP
-        public static bool operator <=(Pressure left, Pressure right)
+        /// <summary>
+        ///     Get Pressure from InchesOfMercury.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromInchesOfMercury(QuantityValue inchesofmercury)
         {
-            return left._pascals <= right._pascals;
+            double value = (double) inchesofmercury;
+            return new Pressure(value, PressureUnit.InchOfMercury);
         }
-
-        public static bool operator >=(Pressure left, Pressure right)
+        /// <summary>
+        ///     Get Pressure from InchesOfWaterColumn.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromInchesOfWaterColumn(QuantityValue inchesofwatercolumn)
         {
-            return left._pascals >= right._pascals;
+            double value = (double) inchesofwatercolumn;
+            return new Pressure(value, PressureUnit.InchOfWaterColumn);
         }
-
-        public static bool operator <(Pressure left, Pressure right)
+        /// <summary>
+        ///     Get Pressure from Kilobars.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromKilobars(QuantityValue kilobars)
         {
-            return left._pascals < right._pascals;
+            double value = (double) kilobars;
+            return new Pressure(value, PressureUnit.Kilobar);
         }
-
-        public static bool operator >(Pressure left, Pressure right)
+        /// <summary>
+        ///     Get Pressure from KilogramsForcePerSquareCentimeter.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromKilogramsForcePerSquareCentimeter(QuantityValue kilogramsforcepersquarecentimeter)
         {
-            return left._pascals > right._pascals;
+            double value = (double) kilogramsforcepersquarecentimeter;
+            return new Pressure(value, PressureUnit.KilogramForcePerSquareCentimeter);
         }
-
-        [Obsolete("It is not safe to compare equality due to using System.Double as the internal representation. It is very easy to get slightly different values due to floating point operations. Instead use Equals(other, maxError) to provide the max allowed error.")]
-        public static bool operator ==(Pressure left, Pressure right)
+        /// <summary>
+        ///     Get Pressure from KilogramsForcePerSquareMeter.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromKilogramsForcePerSquareMeter(QuantityValue kilogramsforcepersquaremeter)
         {
-            // ReSharper disable once CompareOfFloatsByEqualityOperator
-            return left._pascals == right._pascals;
+            double value = (double) kilogramsforcepersquaremeter;
+            return new Pressure(value, PressureUnit.KilogramForcePerSquareMeter);
         }
-
-        [Obsolete("It is not safe to compare equality due to using System.Double as the internal representation. It is very easy to get slightly different values due to floating point operations. Instead use Equals(other, maxError) to provide the max allowed error.")]
-        public static bool operator !=(Pressure left, Pressure right)
+        /// <summary>
+        ///     Get Pressure from KilogramsForcePerSquareMillimeter.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromKilogramsForcePerSquareMillimeter(QuantityValue kilogramsforcepersquaremillimeter)
         {
-            // ReSharper disable once CompareOfFloatsByEqualityOperator
-            return left._pascals != right._pascals;
+            double value = (double) kilogramsforcepersquaremillimeter;
+            return new Pressure(value, PressureUnit.KilogramForcePerSquareMillimeter);
         }
-#endif
-
-        [Obsolete("It is not safe to compare equality due to using System.Double as the internal representation. It is very easy to get slightly different values due to floating point operations. Instead use Equals(other, maxError) to provide the max allowed error.")]
-        public override bool Equals(object obj)
+        /// <summary>
+        ///     Get Pressure from KilonewtonsPerSquareCentimeter.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromKilonewtonsPerSquareCentimeter(QuantityValue kilonewtonspersquarecentimeter)
         {
-            if (obj == null || GetType() != obj.GetType())
-            {
-                return false;
-            }
-
-            return _pascals.Equals(((Pressure) obj)._pascals);
+            double value = (double) kilonewtonspersquarecentimeter;
+            return new Pressure(value, PressureUnit.KilonewtonPerSquareCentimeter);
+        }
+        /// <summary>
+        ///     Get Pressure from KilonewtonsPerSquareMeter.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromKilonewtonsPerSquareMeter(QuantityValue kilonewtonspersquaremeter)
+        {
+            double value = (double) kilonewtonspersquaremeter;
+            return new Pressure(value, PressureUnit.KilonewtonPerSquareMeter);
+        }
+        /// <summary>
+        ///     Get Pressure from KilonewtonsPerSquareMillimeter.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromKilonewtonsPerSquareMillimeter(QuantityValue kilonewtonspersquaremillimeter)
+        {
+            double value = (double) kilonewtonspersquaremillimeter;
+            return new Pressure(value, PressureUnit.KilonewtonPerSquareMillimeter);
+        }
+        /// <summary>
+        ///     Get Pressure from Kilopascals.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromKilopascals(QuantityValue kilopascals)
+        {
+            double value = (double) kilopascals;
+            return new Pressure(value, PressureUnit.Kilopascal);
+        }
+        /// <summary>
+        ///     Get Pressure from KilopoundsForcePerSquareFoot.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromKilopoundsForcePerSquareFoot(QuantityValue kilopoundsforcepersquarefoot)
+        {
+            double value = (double) kilopoundsforcepersquarefoot;
+            return new Pressure(value, PressureUnit.KilopoundForcePerSquareFoot);
+        }
+        /// <summary>
+        ///     Get Pressure from KilopoundsForcePerSquareInch.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromKilopoundsForcePerSquareInch(QuantityValue kilopoundsforcepersquareinch)
+        {
+            double value = (double) kilopoundsforcepersquareinch;
+            return new Pressure(value, PressureUnit.KilopoundForcePerSquareInch);
+        }
+        /// <summary>
+        ///     Get Pressure from Megabars.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromMegabars(QuantityValue megabars)
+        {
+            double value = (double) megabars;
+            return new Pressure(value, PressureUnit.Megabar);
+        }
+        /// <summary>
+        ///     Get Pressure from MeganewtonsPerSquareMeter.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromMeganewtonsPerSquareMeter(QuantityValue meganewtonspersquaremeter)
+        {
+            double value = (double) meganewtonspersquaremeter;
+            return new Pressure(value, PressureUnit.MeganewtonPerSquareMeter);
+        }
+        /// <summary>
+        ///     Get Pressure from Megapascals.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromMegapascals(QuantityValue megapascals)
+        {
+            double value = (double) megapascals;
+            return new Pressure(value, PressureUnit.Megapascal);
+        }
+        /// <summary>
+        ///     Get Pressure from MetersOfHead.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromMetersOfHead(QuantityValue metersofhead)
+        {
+            double value = (double) metersofhead;
+            return new Pressure(value, PressureUnit.MeterOfHead);
+        }
+        /// <summary>
+        ///     Get Pressure from Microbars.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromMicrobars(QuantityValue microbars)
+        {
+            double value = (double) microbars;
+            return new Pressure(value, PressureUnit.Microbar);
+        }
+        /// <summary>
+        ///     Get Pressure from Micropascals.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromMicropascals(QuantityValue micropascals)
+        {
+            double value = (double) micropascals;
+            return new Pressure(value, PressureUnit.Micropascal);
+        }
+        /// <summary>
+        ///     Get Pressure from Millibars.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromMillibars(QuantityValue millibars)
+        {
+            double value = (double) millibars;
+            return new Pressure(value, PressureUnit.Millibar);
+        }
+        /// <summary>
+        ///     Get Pressure from MillimetersOfMercury.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromMillimetersOfMercury(QuantityValue millimetersofmercury)
+        {
+            double value = (double) millimetersofmercury;
+            return new Pressure(value, PressureUnit.MillimeterOfMercury);
+        }
+        /// <summary>
+        ///     Get Pressure from Millipascals.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromMillipascals(QuantityValue millipascals)
+        {
+            double value = (double) millipascals;
+            return new Pressure(value, PressureUnit.Millipascal);
+        }
+        /// <summary>
+        ///     Get Pressure from NewtonsPerSquareCentimeter.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromNewtonsPerSquareCentimeter(QuantityValue newtonspersquarecentimeter)
+        {
+            double value = (double) newtonspersquarecentimeter;
+            return new Pressure(value, PressureUnit.NewtonPerSquareCentimeter);
+        }
+        /// <summary>
+        ///     Get Pressure from NewtonsPerSquareMeter.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromNewtonsPerSquareMeter(QuantityValue newtonspersquaremeter)
+        {
+            double value = (double) newtonspersquaremeter;
+            return new Pressure(value, PressureUnit.NewtonPerSquareMeter);
+        }
+        /// <summary>
+        ///     Get Pressure from NewtonsPerSquareMillimeter.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromNewtonsPerSquareMillimeter(QuantityValue newtonspersquaremillimeter)
+        {
+            double value = (double) newtonspersquaremillimeter;
+            return new Pressure(value, PressureUnit.NewtonPerSquareMillimeter);
+        }
+        /// <summary>
+        ///     Get Pressure from Pascals.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromPascals(QuantityValue pascals)
+        {
+            double value = (double) pascals;
+            return new Pressure(value, PressureUnit.Pascal);
+        }
+        /// <summary>
+        ///     Get Pressure from PoundsForcePerSquareFoot.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromPoundsForcePerSquareFoot(QuantityValue poundsforcepersquarefoot)
+        {
+            double value = (double) poundsforcepersquarefoot;
+            return new Pressure(value, PressureUnit.PoundForcePerSquareFoot);
+        }
+        /// <summary>
+        ///     Get Pressure from PoundsForcePerSquareInch.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromPoundsForcePerSquareInch(QuantityValue poundsforcepersquareinch)
+        {
+            double value = (double) poundsforcepersquareinch;
+            return new Pressure(value, PressureUnit.PoundForcePerSquareInch);
+        }
+        /// <summary>
+        ///     Get Pressure from PoundsPerInchSecondSquared.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromPoundsPerInchSecondSquared(QuantityValue poundsperinchsecondsquared)
+        {
+            double value = (double) poundsperinchsecondsquared;
+            return new Pressure(value, PressureUnit.PoundPerInchSecondSquared);
+        }
+        /// <summary>
+        ///     Get Pressure from TechnicalAtmospheres.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromTechnicalAtmospheres(QuantityValue technicalatmospheres)
+        {
+            double value = (double) technicalatmospheres;
+            return new Pressure(value, PressureUnit.TechnicalAtmosphere);
+        }
+        /// <summary>
+        ///     Get Pressure from TonnesForcePerSquareCentimeter.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromTonnesForcePerSquareCentimeter(QuantityValue tonnesforcepersquarecentimeter)
+        {
+            double value = (double) tonnesforcepersquarecentimeter;
+            return new Pressure(value, PressureUnit.TonneForcePerSquareCentimeter);
+        }
+        /// <summary>
+        ///     Get Pressure from TonnesForcePerSquareMeter.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromTonnesForcePerSquareMeter(QuantityValue tonnesforcepersquaremeter)
+        {
+            double value = (double) tonnesforcepersquaremeter;
+            return new Pressure(value, PressureUnit.TonneForcePerSquareMeter);
+        }
+        /// <summary>
+        ///     Get Pressure from TonnesForcePerSquareMillimeter.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromTonnesForcePerSquareMillimeter(QuantityValue tonnesforcepersquaremillimeter)
+        {
+            double value = (double) tonnesforcepersquaremillimeter;
+            return new Pressure(value, PressureUnit.TonneForcePerSquareMillimeter);
+        }
+        /// <summary>
+        ///     Get Pressure from Torrs.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Pressure FromTorrs(QuantityValue torrs)
+        {
+            double value = (double) torrs;
+            return new Pressure(value, PressureUnit.Torr);
         }
 
         /// <summary>
-        ///     Compare equality to another Pressure by specifying a max allowed difference.
-        ///     Note that it is advised against specifying zero difference, due to the nature
-        ///     of floating point operations and using System.Double internally.
+        ///     Dynamically convert from value and unit enum <see cref="PressureUnit" /> to <see cref="Pressure" />.
         /// </summary>
-        /// <param name="other">Other quantity to compare to.</param>
-        /// <param name="maxError">Max error allowed.</param>
-        /// <returns>True if the difference between the two values is not greater than the specified max.</returns>
-        public bool Equals(Pressure other, Pressure maxError)
+        /// <param name="value">Value to convert from.</param>
+        /// <param name="fromUnit">Unit to convert from.</param>
+        /// <returns>Pressure unit value.</returns>
+        public static Pressure From(QuantityValue value, PressureUnit fromUnit)
         {
-            return Math.Abs(_pascals - other._pascals) <= maxError._pascals;
-        }
-
-        public override int GetHashCode()
-        {
-            return _pascals.GetHashCode();
+            return new Pressure((double)value, fromUnit);
         }
 
         #endregion
 
-        #region Conversion
-
-        /// <summary>
-        ///     Convert to the unit representation <paramref name="unit" />.
-        /// </summary>
-        /// <returns>Value in new unit if successful, exception otherwise.</returns>
-        /// <exception cref="NotImplementedException">If conversion was not successful.</exception>
-        public double As(PressureUnit unit)
-        {
-            switch (unit)
-            {
-                case PressureUnit.Atmosphere:
-                    return Atmospheres;
-                case PressureUnit.Bar:
-                    return Bars;
-                case PressureUnit.Centibar:
-                    return Centibars;
-                case PressureUnit.Decapascal:
-                    return Decapascals;
-                case PressureUnit.Decibar:
-                    return Decibars;
-                case PressureUnit.FootOfHead:
-                    return FeetOfHead;
-                case PressureUnit.Gigapascal:
-                    return Gigapascals;
-                case PressureUnit.Hectopascal:
-                    return Hectopascals;
-                case PressureUnit.InchOfMercury:
-                    return InchesOfMercury;
-                case PressureUnit.Kilobar:
-                    return Kilobars;
-                case PressureUnit.KilogramForcePerSquareCentimeter:
-                    return KilogramsForcePerSquareCentimeter;
-                case PressureUnit.KilogramForcePerSquareMeter:
-                    return KilogramsForcePerSquareMeter;
-                case PressureUnit.KilogramForcePerSquareMillimeter:
-                    return KilogramsForcePerSquareMillimeter;
-                case PressureUnit.KilonewtonPerSquareCentimeter:
-                    return KilonewtonsPerSquareCentimeter;
-                case PressureUnit.KilonewtonPerSquareMeter:
-                    return KilonewtonsPerSquareMeter;
-                case PressureUnit.KilonewtonPerSquareMillimeter:
-                    return KilonewtonsPerSquareMillimeter;
-                case PressureUnit.Kilopascal:
-                    return Kilopascals;
-                case PressureUnit.KilopoundForcePerSquareFoot:
-                    return KilopoundsForcePerSquareFoot;
-                case PressureUnit.KilopoundForcePerSquareInch:
-                    return KilopoundsForcePerSquareInch;
-                case PressureUnit.Megabar:
-                    return Megabars;
-                case PressureUnit.Megapascal:
-                    return Megapascals;
-                case PressureUnit.MeterOfHead:
-                    return MetersOfHead;
-                case PressureUnit.Micropascal:
-                    return Micropascals;
-                case PressureUnit.Millibar:
-                    return Millibars;
-                case PressureUnit.MillimeterOfMercury:
-                    return MillimetersOfMercury;
-                case PressureUnit.NewtonPerSquareCentimeter:
-                    return NewtonsPerSquareCentimeter;
-                case PressureUnit.NewtonPerSquareMeter:
-                    return NewtonsPerSquareMeter;
-                case PressureUnit.NewtonPerSquareMillimeter:
-                    return NewtonsPerSquareMillimeter;
-                case PressureUnit.Pascal:
-                    return Pascals;
-                case PressureUnit.PoundForcePerSquareFoot:
-                    return PoundsForcePerSquareFoot;
-                case PressureUnit.PoundForcePerSquareInch:
-                    return PoundsForcePerSquareInch;
-                case PressureUnit.Psi:
-                    return Psi;
-                case PressureUnit.TechnicalAtmosphere:
-                    return TechnicalAtmospheres;
-                case PressureUnit.TonneForcePerSquareCentimeter:
-                    return TonnesForcePerSquareCentimeter;
-                case PressureUnit.TonneForcePerSquareMeter:
-                    return TonnesForcePerSquareMeter;
-                case PressureUnit.TonneForcePerSquareMillimeter:
-                    return TonnesForcePerSquareMillimeter;
-                case PressureUnit.Torr:
-                    return Torrs;
-
-                default:
-                    throw new NotImplementedException("unit: " + unit);
-            }
-        }
-
-        #endregion
-
-        #region Parsing
+        #region Static Parse Methods
 
         /// <summary>
         ///     Parse a string with one or two quantities of the format "&lt;quantity&gt; &lt;unit&gt;".
@@ -2134,7 +870,6 @@ namespace UnitsNet
         ///     Parse a string with one or two quantities of the format "&lt;quantity&gt; &lt;unit&gt;".
         /// </summary>
         /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
-        /// <param name="culture">Format to use when parsing number and unit. If it is null, it defaults to <see cref="NumberFormatInfo.CurrentInfo"/> for parsing the number and <see cref="CultureInfo.CurrentUICulture"/> for parsing the unit abbreviation by culture/language.</param>
         /// <example>
         ///     Length.Parse("5.5 m", new CultureInfo("en-US"));
         /// </example>
@@ -2153,23 +888,13 @@ namespace UnitsNet
         ///     We wrap exceptions in <see cref="UnitsNetException" /> to allow you to distinguish
         ///     Units.NET exceptions from other exceptions.
         /// </exception>
-        public static Pressure Parse(string str, [CanBeNull] Culture culture)
+        /// <param name="provider">Format to use when parsing number and unit. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public static Pressure Parse(string str, IFormatProvider? provider)
         {
-            if (str == null) throw new ArgumentNullException("str");
-
-        // Windows Runtime Component does not support CultureInfo type, so use culture name string for public methods instead: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if WINDOWS_UWP
-            IFormatProvider formatProvider = culture == null ? null : new CultureInfo(culture);
-#else
-            IFormatProvider formatProvider = culture;
-#endif
-            return QuantityParser.Parse<Pressure, PressureUnit>(str, formatProvider,
-                delegate(string value, string unit, IFormatProvider formatProvider2)
-                {
-                    double parsedValue = double.Parse(value, formatProvider2);
-                    PressureUnit parsedUnit = ParseUnit(unit, formatProvider2);
-                    return From(parsedValue, parsedUnit);
-                }, (x, y) => FromPascals(x.Pascals + y.Pascals));
+            return QuantityParser.Default.Parse<Pressure, PressureUnit>(
+                str,
+                provider,
+                From);
         }
 
         /// <summary>
@@ -2180,7 +905,7 @@ namespace UnitsNet
         /// <example>
         ///     Length.Parse("5.5 m", new CultureInfo("en-US"));
         /// </example>
-        public static bool TryParse([CanBeNull] string str, out Pressure result)
+        public static bool TryParse(string? str, out Pressure result)
         {
             return TryParse(str, null, out result);
         }
@@ -2189,28 +914,25 @@ namespace UnitsNet
         ///     Try to parse a string with one or two quantities of the format "&lt;quantity&gt; &lt;unit&gt;".
         /// </summary>
         /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
-        /// <param name="culture">Format to use when parsing number and unit. If it is null, it defaults to <see cref="NumberFormatInfo.CurrentInfo"/> for parsing the number and <see cref="CultureInfo.CurrentUICulture"/> for parsing the unit abbreviation by culture/language.</param>
         /// <param name="result">Resulting unit quantity if successful.</param>
+        /// <returns>True if successful, otherwise false.</returns>
         /// <example>
         ///     Length.Parse("5.5 m", new CultureInfo("en-US"));
         /// </example>
-        public static bool TryParse([CanBeNull] string str, [CanBeNull] Culture culture, out Pressure result)
+        /// <param name="provider">Format to use when parsing number and unit. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public static bool TryParse(string? str, IFormatProvider? provider, out Pressure result)
         {
-            try
-            {
-                result = Parse(str, culture);
-                return true;
-            }
-            catch
-            {
-                result = default(Pressure);
-                return false;
-            }
+            return QuantityParser.Default.TryParse<Pressure, PressureUnit>(
+                str,
+                provider,
+                From,
+                out result);
         }
 
         /// <summary>
         ///     Parse a unit string.
         /// </summary>
+        /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
         /// <example>
         ///     Length.ParseUnit("m", new CultureInfo("en-US"));
         /// </example>
@@ -2218,153 +940,610 @@ namespace UnitsNet
         /// <exception cref="UnitsNetException">Error parsing string.</exception>
         public static PressureUnit ParseUnit(string str)
         {
-            return ParseUnit(str, (IFormatProvider)null);
+            return ParseUnit(str, null);
         }
 
         /// <summary>
         ///     Parse a unit string.
         /// </summary>
+        /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
+        /// <param name="provider">Format to use when parsing number and unit. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
         /// <example>
         ///     Length.ParseUnit("m", new CultureInfo("en-US"));
         /// </example>
         /// <exception cref="ArgumentNullException">The value of 'str' cannot be null. </exception>
         /// <exception cref="UnitsNetException">Error parsing string.</exception>
-        public static PressureUnit ParseUnit(string str, [CanBeNull] string cultureName)
+        public static PressureUnit ParseUnit(string str, IFormatProvider? provider)
         {
-            return ParseUnit(str, cultureName == null ? null : new CultureInfo(cultureName));
+            return UnitParser.Default.Parse<PressureUnit>(str, provider);
+        }
+
+        /// <inheritdoc cref="TryParseUnit(string,IFormatProvider,out UnitsNet.Units.PressureUnit)"/>
+        public static bool TryParseUnit(string str, out PressureUnit unit)
+        {
+            return TryParseUnit(str, null, out unit);
         }
 
         /// <summary>
         ///     Parse a unit string.
         /// </summary>
+        /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
+        /// <param name="unit">The parsed unit if successful.</param>
+        /// <returns>True if successful, otherwise false.</returns>
         /// <example>
-        ///     Length.ParseUnit("m", new CultureInfo("en-US"));
+        ///     Length.TryParseUnit("m", new CultureInfo("en-US"));
         /// </example>
-        /// <exception cref="ArgumentNullException">The value of 'str' cannot be null. </exception>
-        /// <exception cref="UnitsNetException">Error parsing string.</exception>
-
-        // Windows Runtime Component does not allow public methods/ctors with same number of parameters: https://msdn.microsoft.com/en-us/library/br230301.aspx#Overloaded methods
-#if WINDOWS_UWP
-        internal
-#else
-        public
-#endif
-        static PressureUnit ParseUnit(string str, IFormatProvider formatProvider = null)
+        /// <param name="provider">Format to use when parsing number and unit. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public static bool TryParseUnit(string str, IFormatProvider? provider, out PressureUnit unit)
         {
-            if (str == null) throw new ArgumentNullException("str");
-
-            var unitSystem = UnitSystem.GetCached(formatProvider);
-            var unit = unitSystem.Parse<PressureUnit>(str.Trim());
-
-            if (unit == PressureUnit.Undefined)
-            {
-                var newEx = new UnitsNetException("Error parsing string. The unit is not a recognized PressureUnit.");
-                newEx.Data["input"] = str;
-                newEx.Data["formatprovider"] = formatProvider?.ToString() ?? "(null)";
-                throw newEx;
-            }
-
-            return unit;
+            return UnitParser.Default.TryParse<PressureUnit>(str, provider, out unit);
         }
 
         #endregion
 
-        /// <summary>
-        ///     Set the default unit used by ToString(). Default is Pascal
-        /// </summary>
-        public static PressureUnit ToStringDefaultUnit { get; set; } = PressureUnit.Pascal;
+        #region Arithmetic Operators
+
+        /// <summary>Negate the value.</summary>
+        public static Pressure operator -(Pressure right)
+        {
+            return new Pressure(-right.Value, right.Unit);
+        }
+
+        /// <summary>Get <see cref="Pressure"/> from adding two <see cref="Pressure"/>.</summary>
+        public static Pressure operator +(Pressure left, Pressure right)
+        {
+            return new Pressure(left.Value + right.GetValueAs(left.Unit), left.Unit);
+        }
+
+        /// <summary>Get <see cref="Pressure"/> from subtracting two <see cref="Pressure"/>.</summary>
+        public static Pressure operator -(Pressure left, Pressure right)
+        {
+            return new Pressure(left.Value - right.GetValueAs(left.Unit), left.Unit);
+        }
+
+        /// <summary>Get <see cref="Pressure"/> from multiplying value and <see cref="Pressure"/>.</summary>
+        public static Pressure operator *(double left, Pressure right)
+        {
+            return new Pressure(left * right.Value, right.Unit);
+        }
+
+        /// <summary>Get <see cref="Pressure"/> from multiplying value and <see cref="Pressure"/>.</summary>
+        public static Pressure operator *(Pressure left, double right)
+        {
+            return new Pressure(left.Value * right, left.Unit);
+        }
+
+        /// <summary>Get <see cref="Pressure"/> from dividing <see cref="Pressure"/> by value.</summary>
+        public static Pressure operator /(Pressure left, double right)
+        {
+            return new Pressure(left.Value / right, left.Unit);
+        }
+
+        /// <summary>Get ratio value from dividing <see cref="Pressure"/> by <see cref="Pressure"/>.</summary>
+        public static double operator /(Pressure left, Pressure right)
+        {
+            return left.Pascals / right.Pascals;
+        }
+
+        #endregion
+
+        #region Equality / IComparable
+
+        /// <summary>Returns true if less or equal to.</summary>
+        public static bool operator <=(Pressure left, Pressure right)
+        {
+            return left.Value <= right.GetValueAs(left.Unit);
+        }
+
+        /// <summary>Returns true if greater than or equal to.</summary>
+        public static bool operator >=(Pressure left, Pressure right)
+        {
+            return left.Value >= right.GetValueAs(left.Unit);
+        }
+
+        /// <summary>Returns true if less than.</summary>
+        public static bool operator <(Pressure left, Pressure right)
+        {
+            return left.Value < right.GetValueAs(left.Unit);
+        }
+
+        /// <summary>Returns true if greater than.</summary>
+        public static bool operator >(Pressure left, Pressure right)
+        {
+            return left.Value > right.GetValueAs(left.Unit);
+        }
+
+        /// <summary>Returns true if exactly equal.</summary>
+        /// <remarks>Consider using <see cref="Equals(Pressure, double, ComparisonType)"/> for safely comparing floating point values.</remarks>
+        public static bool operator ==(Pressure left, Pressure right)
+        {
+            return left.Equals(right);
+        }
+
+        /// <summary>Returns true if not exactly equal.</summary>
+        /// <remarks>Consider using <see cref="Equals(Pressure, double, ComparisonType)"/> for safely comparing floating point values.</remarks>
+        public static bool operator !=(Pressure left, Pressure right)
+        {
+            return !(left == right);
+        }
+
+        /// <inheritdoc />
+        public int CompareTo(object obj)
+        {
+            if(obj is null) throw new ArgumentNullException(nameof(obj));
+            if(!(obj is Pressure objPressure)) throw new ArgumentException("Expected type Pressure.", nameof(obj));
+
+            return CompareTo(objPressure);
+        }
+
+        /// <inheritdoc />
+        public int CompareTo(Pressure other)
+        {
+            return _value.CompareTo(other.GetValueAs(this.Unit));
+        }
+
+        /// <inheritdoc />
+        /// <remarks>Consider using <see cref="Equals(Pressure, double, ComparisonType)"/> for safely comparing floating point values.</remarks>
+        public override bool Equals(object obj)
+        {
+            if(obj is null || !(obj is Pressure objPressure))
+                return false;
+
+            return Equals(objPressure);
+        }
+
+        /// <inheritdoc />
+        /// <remarks>Consider using <see cref="Equals(Pressure, double, ComparisonType)"/> for safely comparing floating point values.</remarks>
+        public bool Equals(Pressure other)
+        {
+            return _value.Equals(other.GetValueAs(this.Unit));
+        }
 
         /// <summary>
-        ///     Get default string representation of value and unit.
+        ///     <para>
+        ///     Compare equality to another Pressure within the given absolute or relative tolerance.
+        ///     </para>
+        ///     <para>
+        ///     Relative tolerance is defined as the maximum allowable absolute difference between this quantity's value and
+        ///     <paramref name="other"/> as a percentage of this quantity's value. <paramref name="other"/> will be converted into
+        ///     this quantity's unit for comparison. A relative tolerance of 0.01 means the absolute difference must be within +/- 1% of
+        ///     this quantity's value to be considered equal.
+        ///     <example>
+        ///     In this example, the two quantities will be equal if the value of b is within +/- 1% of a (0.02m or 2cm).
+        ///     <code>
+        ///     var a = Length.FromMeters(2.0);
+        ///     var b = Length.FromInches(50.0);
+        ///     a.Equals(b, 0.01, ComparisonType.Relative);
+        ///     </code>
+        ///     </example>
+        ///     </para>
+        ///     <para>
+        ///     Absolute tolerance is defined as the maximum allowable absolute difference between this quantity's value and
+        ///     <paramref name="other"/> as a fixed number in this quantity's unit. <paramref name="other"/> will be converted into
+        ///     this quantity's unit for comparison.
+        ///     <example>
+        ///     In this example, the two quantities will be equal if the value of b is within 0.01 of a (0.01m or 1cm).
+        ///     <code>
+        ///     var a = Length.FromMeters(2.0);
+        ///     var b = Length.FromInches(50.0);
+        ///     a.Equals(b, 0.01, ComparisonType.Absolute);
+        ///     </code>
+        ///     </example>
+        ///     </para>
+        ///     <para>
+        ///     Note that it is advised against specifying zero difference, due to the nature
+        ///     of floating point operations and using System.Double internally.
+        ///     </para>
+        /// </summary>
+        /// <param name="other">The other quantity to compare to.</param>
+        /// <param name="tolerance">The absolute or relative tolerance value. Must be greater than or equal to 0.</param>
+        /// <param name="comparisonType">The comparison type: either relative or absolute.</param>
+        /// <returns>True if the absolute difference between the two values is not greater than the specified relative or absolute tolerance.</returns>
+        public bool Equals(Pressure other, double tolerance, ComparisonType comparisonType)
+        {
+            if(tolerance < 0)
+                throw new ArgumentOutOfRangeException("tolerance", "Tolerance must be greater than or equal to 0.");
+
+            double thisValue = (double)this.Value;
+            double otherValueInThisUnits = other.As(this.Unit);
+
+            return UnitsNet.Comparison.Equals(thisValue, otherValueInThisUnits, tolerance, comparisonType);
+        }
+
+        /// <summary>
+        ///     Returns the hash code for this instance.
+        /// </summary>
+        /// <returns>A hash code for the current Pressure.</returns>
+        public override int GetHashCode()
+        {
+            return new { QuantityType, Value, Unit }.GetHashCode();
+        }
+
+        #endregion
+
+        #region Conversion Methods
+
+        /// <summary>
+        ///     Convert to the unit representation <paramref name="unit" />.
+        /// </summary>
+        /// <returns>Value converted to the specified unit.</returns>
+        public double As(PressureUnit unit)
+        {
+            if(Unit == unit)
+                return Convert.ToDouble(Value);
+
+            var converted = GetValueAs(unit);
+            return Convert.ToDouble(converted);
+        }
+
+        /// <inheritdoc cref="IQuantity.As(UnitSystem)"/>
+        public double As(UnitSystem unitSystem)
+        {
+            if(unitSystem is null)
+                throw new ArgumentNullException(nameof(unitSystem));
+
+            var unitInfos = Info.GetUnitInfosFor(unitSystem.BaseUnits);
+
+            var firstUnitInfo = unitInfos.FirstOrDefault();
+            if(firstUnitInfo == null)
+                throw new ArgumentException("No units were found for the given UnitSystem.", nameof(unitSystem));
+
+            return As(firstUnitInfo.Value);
+        }
+
+        /// <inheritdoc />
+        double IQuantity.As(Enum unit)
+        {
+            if(!(unit is PressureUnit unitAsPressureUnit))
+                throw new ArgumentException($"The given unit is of type {unit.GetType()}. Only {typeof(PressureUnit)} is supported.", nameof(unit));
+
+            return As(unitAsPressureUnit);
+        }
+
+        /// <summary>
+        ///     Converts this Pressure to another Pressure with the unit representation <paramref name="unit" />.
+        /// </summary>
+        /// <returns>A Pressure with the specified unit.</returns>
+        public Pressure ToUnit(PressureUnit unit)
+        {
+            var convertedValue = GetValueAs(unit);
+            return new Pressure(convertedValue, unit);
+        }
+
+        /// <inheritdoc />
+        IQuantity IQuantity.ToUnit(Enum unit)
+        {
+            if(!(unit is PressureUnit unitAsPressureUnit))
+                throw new ArgumentException($"The given unit is of type {unit.GetType()}. Only {typeof(PressureUnit)} is supported.", nameof(unit));
+
+            return ToUnit(unitAsPressureUnit);
+        }
+
+        /// <inheritdoc cref="IQuantity.ToUnit(UnitSystem)"/>
+        public Pressure ToUnit(UnitSystem unitSystem)
+        {
+            if(unitSystem is null)
+                throw new ArgumentNullException(nameof(unitSystem));
+
+            var unitInfos = Info.GetUnitInfosFor(unitSystem.BaseUnits);
+
+            var firstUnitInfo = unitInfos.FirstOrDefault();
+            if(firstUnitInfo == null)
+                throw new ArgumentException("No units were found for the given UnitSystem.", nameof(unitSystem));
+
+            return ToUnit(firstUnitInfo.Value);
+        }
+
+        /// <inheritdoc />
+        IQuantity IQuantity.ToUnit(UnitSystem unitSystem) => ToUnit(unitSystem);
+
+        /// <inheritdoc />
+        IQuantity<PressureUnit> IQuantity<PressureUnit>.ToUnit(PressureUnit unit) => ToUnit(unit);
+
+        /// <inheritdoc />
+        IQuantity<PressureUnit> IQuantity<PressureUnit>.ToUnit(UnitSystem unitSystem) => ToUnit(unitSystem);
+
+        /// <summary>
+        ///     Converts the current value + unit to the base unit.
+        ///     This is typically the first step in converting from one unit to another.
+        /// </summary>
+        /// <returns>The value in the base unit representation.</returns>
+        private double GetValueInBaseUnit()
+        {
+            switch(Unit)
+            {
+                case PressureUnit.Atmosphere: return _value*1.01325*1e5;
+                case PressureUnit.Bar: return _value*1e5;
+                case PressureUnit.Centibar: return (_value*1e5) * 1e-2d;
+                case PressureUnit.Decapascal: return (_value) * 1e1d;
+                case PressureUnit.Decibar: return (_value*1e5) * 1e-1d;
+                case PressureUnit.DynePerSquareCentimeter: return _value*1.0e-1;
+                case PressureUnit.FootOfHead: return _value*2989.0669;
+                case PressureUnit.Gigapascal: return (_value) * 1e9d;
+                case PressureUnit.Hectopascal: return (_value) * 1e2d;
+                case PressureUnit.InchOfMercury: return _value/2.95299830714159e-4;
+                case PressureUnit.InchOfWaterColumn: return _value*249.08890833333;
+                case PressureUnit.Kilobar: return (_value*1e5) * 1e3d;
+                case PressureUnit.KilogramForcePerSquareCentimeter: return _value*9.80665e4;
+                case PressureUnit.KilogramForcePerSquareMeter: return _value*9.80665019960652;
+                case PressureUnit.KilogramForcePerSquareMillimeter: return _value*9.80665e6;
+                case PressureUnit.KilonewtonPerSquareCentimeter: return (_value*1e4) * 1e3d;
+                case PressureUnit.KilonewtonPerSquareMeter: return (_value) * 1e3d;
+                case PressureUnit.KilonewtonPerSquareMillimeter: return (_value*1e6) * 1e3d;
+                case PressureUnit.Kilopascal: return (_value) * 1e3d;
+                case PressureUnit.KilopoundForcePerSquareFoot: return (_value*4.788025898033584e1) * 1e3d;
+                case PressureUnit.KilopoundForcePerSquareInch: return (_value*6.894757293168361e3) * 1e3d;
+                case PressureUnit.Megabar: return (_value*1e5) * 1e6d;
+                case PressureUnit.MeganewtonPerSquareMeter: return (_value) * 1e6d;
+                case PressureUnit.Megapascal: return (_value) * 1e6d;
+                case PressureUnit.MeterOfHead: return _value*9804.139432;
+                case PressureUnit.Microbar: return (_value*1e5) * 1e-6d;
+                case PressureUnit.Micropascal: return (_value) * 1e-6d;
+                case PressureUnit.Millibar: return (_value*1e5) * 1e-3d;
+                case PressureUnit.MillimeterOfMercury: return _value/7.50061561302643e-3;
+                case PressureUnit.Millipascal: return (_value) * 1e-3d;
+                case PressureUnit.NewtonPerSquareCentimeter: return _value*1e4;
+                case PressureUnit.NewtonPerSquareMeter: return _value;
+                case PressureUnit.NewtonPerSquareMillimeter: return _value*1e6;
+                case PressureUnit.Pascal: return _value;
+                case PressureUnit.PoundForcePerSquareFoot: return _value*4.788025898033584e1;
+                case PressureUnit.PoundForcePerSquareInch: return _value*6.894757293168361e3;
+                case PressureUnit.PoundPerInchSecondSquared: return _value*1.785796732283465e1;
+                case PressureUnit.TechnicalAtmosphere: return _value*9.80680592331*1e4;
+                case PressureUnit.TonneForcePerSquareCentimeter: return _value*9.80665e7;
+                case PressureUnit.TonneForcePerSquareMeter: return _value*9.80665e3;
+                case PressureUnit.TonneForcePerSquareMillimeter: return _value*9.80665e9;
+                case PressureUnit.Torr: return _value*1.3332266752*1e2;
+                default:
+                    throw new NotImplementedException($"Can not convert {Unit} to base units.");
+            }
+        }
+
+        /// <summary>
+        ///     Converts the current value + unit to the base unit.
+        ///     This is typically the first step in converting from one unit to another.
+        /// </summary>
+        /// <returns>The value in the base unit representation.</returns>
+        internal Pressure ToBaseUnit()
+        {
+            var baseUnitValue = GetValueInBaseUnit();
+            return new Pressure(baseUnitValue, BaseUnit);
+        }
+
+        private double GetValueAs(PressureUnit unit)
+        {
+            if(Unit == unit)
+                return _value;
+
+            var baseUnitValue = GetValueInBaseUnit();
+
+            switch(unit)
+            {
+                case PressureUnit.Atmosphere: return baseUnitValue/(1.01325*1e5);
+                case PressureUnit.Bar: return baseUnitValue/1e5;
+                case PressureUnit.Centibar: return (baseUnitValue/1e5) / 1e-2d;
+                case PressureUnit.Decapascal: return (baseUnitValue) / 1e1d;
+                case PressureUnit.Decibar: return (baseUnitValue/1e5) / 1e-1d;
+                case PressureUnit.DynePerSquareCentimeter: return baseUnitValue/1.0e-1;
+                case PressureUnit.FootOfHead: return baseUnitValue*0.000334552565551;
+                case PressureUnit.Gigapascal: return (baseUnitValue) / 1e9d;
+                case PressureUnit.Hectopascal: return (baseUnitValue) / 1e2d;
+                case PressureUnit.InchOfMercury: return baseUnitValue*2.95299830714159e-4;
+                case PressureUnit.InchOfWaterColumn: return baseUnitValue/249.08890833333;
+                case PressureUnit.Kilobar: return (baseUnitValue/1e5) / 1e3d;
+                case PressureUnit.KilogramForcePerSquareCentimeter: return baseUnitValue/9.80665e4;
+                case PressureUnit.KilogramForcePerSquareMeter: return baseUnitValue*0.101971619222242;
+                case PressureUnit.KilogramForcePerSquareMillimeter: return baseUnitValue/9.80665e6;
+                case PressureUnit.KilonewtonPerSquareCentimeter: return (baseUnitValue/1e4) / 1e3d;
+                case PressureUnit.KilonewtonPerSquareMeter: return (baseUnitValue) / 1e3d;
+                case PressureUnit.KilonewtonPerSquareMillimeter: return (baseUnitValue/1e6) / 1e3d;
+                case PressureUnit.Kilopascal: return (baseUnitValue) / 1e3d;
+                case PressureUnit.KilopoundForcePerSquareFoot: return (baseUnitValue/4.788025898033584e1) / 1e3d;
+                case PressureUnit.KilopoundForcePerSquareInch: return (baseUnitValue/6.894757293168361e3) / 1e3d;
+                case PressureUnit.Megabar: return (baseUnitValue/1e5) / 1e6d;
+                case PressureUnit.MeganewtonPerSquareMeter: return (baseUnitValue) / 1e6d;
+                case PressureUnit.Megapascal: return (baseUnitValue) / 1e6d;
+                case PressureUnit.MeterOfHead: return baseUnitValue*0.0001019977334;
+                case PressureUnit.Microbar: return (baseUnitValue/1e5) / 1e-6d;
+                case PressureUnit.Micropascal: return (baseUnitValue) / 1e-6d;
+                case PressureUnit.Millibar: return (baseUnitValue/1e5) / 1e-3d;
+                case PressureUnit.MillimeterOfMercury: return baseUnitValue*7.50061561302643e-3;
+                case PressureUnit.Millipascal: return (baseUnitValue) / 1e-3d;
+                case PressureUnit.NewtonPerSquareCentimeter: return baseUnitValue/1e4;
+                case PressureUnit.NewtonPerSquareMeter: return baseUnitValue;
+                case PressureUnit.NewtonPerSquareMillimeter: return baseUnitValue/1e6;
+                case PressureUnit.Pascal: return baseUnitValue;
+                case PressureUnit.PoundForcePerSquareFoot: return baseUnitValue/4.788025898033584e1;
+                case PressureUnit.PoundForcePerSquareInch: return baseUnitValue/6.894757293168361e3;
+                case PressureUnit.PoundPerInchSecondSquared: return baseUnitValue/1.785796732283465e1;
+                case PressureUnit.TechnicalAtmosphere: return baseUnitValue/(9.80680592331*1e4);
+                case PressureUnit.TonneForcePerSquareCentimeter: return baseUnitValue/9.80665e7;
+                case PressureUnit.TonneForcePerSquareMeter: return baseUnitValue/9.80665e3;
+                case PressureUnit.TonneForcePerSquareMillimeter: return baseUnitValue/9.80665e9;
+                case PressureUnit.Torr: return baseUnitValue/(1.3332266752*1e2);
+                default:
+                    throw new NotImplementedException($"Can not convert {Unit} to {unit}.");
+            }
+        }
+
+        #endregion
+
+        #region ToString Methods
+
+        /// <summary>
+        ///     Gets the default string representation of value and unit.
         /// </summary>
         /// <returns>String representation.</returns>
         public override string ToString()
         {
-            return ToString(ToStringDefaultUnit);
+            return ToString("g");
         }
 
         /// <summary>
-        ///     Get string representation of value and unit. Using current UI culture and two significant digits after radix.
+        ///     Gets the default string representation of value and unit using the given format provider.
         /// </summary>
-        /// <param name="unit">Unit representation to use.</param>
         /// <returns>String representation.</returns>
-        public string ToString(PressureUnit unit)
+        /// <param name="provider">Format to use for localization and number formatting. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public string ToString(IFormatProvider? provider)
         {
-            return ToString(unit, null, 2);
-        }
-
-        /// <summary>
-        ///     Get string representation of value and unit. Using two significant digits after radix.
-        /// </summary>
-        /// <param name="unit">Unit representation to use.</param>
-        /// <param name="culture">Culture to use for localization and number formatting.</param>
-        /// <returns>String representation.</returns>
-        public string ToString(PressureUnit unit, [CanBeNull] Culture culture)
-        {
-            return ToString(unit, culture, 2);
+            return ToString("g", provider);
         }
 
         /// <summary>
         ///     Get string representation of value and unit.
         /// </summary>
-        /// <param name="unit">Unit representation to use.</param>
-        /// <param name="culture">Culture to use for localization and number formatting.</param>
         /// <param name="significantDigitsAfterRadix">The number of significant digits after the radix point.</param>
         /// <returns>String representation.</returns>
-        [UsedImplicitly]
-        public string ToString(PressureUnit unit, [CanBeNull] Culture culture, int significantDigitsAfterRadix)
+        /// <param name="provider">Format to use for localization and number formatting. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        [Obsolete(@"This method is deprecated and will be removed at a future release. Please use ToString(""s2"") or ToString(""s2"", provider) where 2 is an example of the number passed to significantDigitsAfterRadix.")]
+        public string ToString(IFormatProvider? provider, int significantDigitsAfterRadix)
         {
-            double value = As(unit);
-            string format = UnitFormatter.GetFormat(value, significantDigitsAfterRadix);
-            return ToString(unit, culture, format);
+            var value = Convert.ToDouble(Value);
+            var format = UnitFormatter.GetFormat(value, significantDigitsAfterRadix);
+            return ToString(provider, format);
         }
 
         /// <summary>
         ///     Get string representation of value and unit.
         /// </summary>
-        /// <param name="culture">Culture to use for localization and number formatting.</param>
-        /// <param name="unit">Unit representation to use.</param>
         /// <param name="format">String format to use. Default:  "{0:0.##} {1} for value and unit abbreviation respectively."</param>
-        /// <param name="args">Arguments for string format. Value and unit are implictly included as arguments 0 and 1.</param>
+        /// <param name="args">Arguments for string format. Value and unit are implicitly included as arguments 0 and 1.</param>
         /// <returns>String representation.</returns>
-        [UsedImplicitly]
-        public string ToString(PressureUnit unit, [CanBeNull] Culture culture, [NotNull] string format,
-            [NotNull] params object[] args)
+        /// <param name="provider">Format to use for localization and number formatting. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        [Obsolete("This method is deprecated and will be removed at a future release. Please use string.Format().")]
+        public string ToString(IFormatProvider? provider, [NotNull] string format, [NotNull] params object[] args)
         {
             if (format == null) throw new ArgumentNullException(nameof(format));
             if (args == null) throw new ArgumentNullException(nameof(args));
 
-        // Windows Runtime Component does not support CultureInfo type, so use culture name string for public methods instead: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if WINDOWS_UWP
-            IFormatProvider formatProvider = culture == null ? null : new CultureInfo(culture);
-#else
-            IFormatProvider formatProvider = culture;
-#endif
-            double value = As(unit);
-            object[] formatArgs = UnitFormatter.GetFormatArgs(unit, value, formatProvider, args);
-            return string.Format(formatProvider, format, formatArgs);
+            provider = provider ?? CultureInfo.CurrentUICulture;
+
+            var value = Convert.ToDouble(Value);
+            var formatArgs = UnitFormatter.GetFormatArgs(Unit, value, provider, args);
+            return string.Format(provider, format, formatArgs);
         }
 
+        /// <inheritdoc cref="QuantityFormatter.Format{TUnitType}(IQuantity{TUnitType}, string, IFormatProvider)"/>
         /// <summary>
-        /// Represents the largest possible value of Pressure
+        /// Gets the string representation of this instance in the specified format string using <see cref="CultureInfo.CurrentUICulture" />.
         /// </summary>
-        public static Pressure MaxValue
+        /// <param name="format">The format string.</param>
+        /// <returns>The string representation.</returns>
+        public string ToString(string format)
         {
-            get
-            {
-                return new Pressure(double.MaxValue);
-            }
+            return ToString(format, CultureInfo.CurrentUICulture);
         }
 
+        /// <inheritdoc cref="QuantityFormatter.Format{TUnitType}(IQuantity{TUnitType}, string, IFormatProvider)"/>
         /// <summary>
-        /// Represents the smallest possible value of Pressure
+        /// Gets the string representation of this instance in the specified format string using the specified format provider, or <see cref="CultureInfo.CurrentUICulture" /> if null.
         /// </summary>
-        public static Pressure MinValue
+        /// <param name="format">The format string.</param>
+        /// <param name="provider">Format to use for localization and number formatting. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        /// <returns>The string representation.</returns>
+        public string ToString(string format, IFormatProvider? provider)
         {
-            get
-            {
-                return new Pressure(double.MinValue);
-            }
+            return QuantityFormatter.Format<PressureUnit>(this, format, provider);
         }
+
+        #endregion
+
+        #region IConvertible Methods
+
+        TypeCode IConvertible.GetTypeCode()
+        {
+            return TypeCode.Object;
+        }
+
+        bool IConvertible.ToBoolean(IFormatProvider provider)
+        {
+            throw new InvalidCastException($"Converting {typeof(Pressure)} to bool is not supported.");
+        }
+
+        byte IConvertible.ToByte(IFormatProvider provider)
+        {
+            return Convert.ToByte(_value);
+        }
+
+        char IConvertible.ToChar(IFormatProvider provider)
+        {
+            throw new InvalidCastException($"Converting {typeof(Pressure)} to char is not supported.");
+        }
+
+        DateTime IConvertible.ToDateTime(IFormatProvider provider)
+        {
+            throw new InvalidCastException($"Converting {typeof(Pressure)} to DateTime is not supported.");
+        }
+
+        decimal IConvertible.ToDecimal(IFormatProvider provider)
+        {
+            return Convert.ToDecimal(_value);
+        }
+
+        double IConvertible.ToDouble(IFormatProvider provider)
+        {
+            return Convert.ToDouble(_value);
+        }
+
+        short IConvertible.ToInt16(IFormatProvider provider)
+        {
+            return Convert.ToInt16(_value);
+        }
+
+        int IConvertible.ToInt32(IFormatProvider provider)
+        {
+            return Convert.ToInt32(_value);
+        }
+
+        long IConvertible.ToInt64(IFormatProvider provider)
+        {
+            return Convert.ToInt64(_value);
+        }
+
+        sbyte IConvertible.ToSByte(IFormatProvider provider)
+        {
+            return Convert.ToSByte(_value);
+        }
+
+        float IConvertible.ToSingle(IFormatProvider provider)
+        {
+            return Convert.ToSingle(_value);
+        }
+
+        string IConvertible.ToString(IFormatProvider provider)
+        {
+            return ToString("g", provider);
+        }
+
+        object IConvertible.ToType(Type conversionType, IFormatProvider provider)
+        {
+            if(conversionType == typeof(Pressure))
+                return this;
+            else if(conversionType == typeof(PressureUnit))
+                return Unit;
+            else if(conversionType == typeof(QuantityType))
+                return Pressure.QuantityType;
+            else if(conversionType == typeof(BaseDimensions))
+                return Pressure.BaseDimensions;
+            else
+                throw new InvalidCastException($"Converting {typeof(Pressure)} to {conversionType} is not supported.");
+        }
+
+        ushort IConvertible.ToUInt16(IFormatProvider provider)
+        {
+            return Convert.ToUInt16(_value);
+        }
+
+        uint IConvertible.ToUInt32(IFormatProvider provider)
+        {
+            return Convert.ToUInt32(_value);
+        }
+
+        ulong IConvertible.ToUInt64(IFormatProvider provider)
+        {
+            return Convert.ToUInt64(_value);
+        }
+
+        #endregion
     }
 }

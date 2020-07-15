@@ -8,33 +8,14 @@
 //
 //     See https://github.com/angularsen/UnitsNet/wiki/Adding-a-New-Unit for how to add or edit units.
 //
-//     Add CustomCode\UnitClasses\MyUnit.extra.cs files to add code to generated unit classes.
-//     Add Extensions\MyUnitExtensions.cs to decorate unit classes with new behavior.
-//     Add UnitDefinitions\MyUnit.json and run GeneratUnits.bat to generate new units or unit classes.
+//     Add CustomCode\UnitClasses\MyQuantity.extra.cs files to add code to generated unit classes.
+//     Add UnitDefinitions\MyQuantity.json and run GeneratUnits.bat to generate new units or unit classes.
 //
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-// Copyright (c) 2013 Andreas Gullberg Larsen (andreas.larsen84@gmail.com).
-// https://github.com/angularsen/UnitsNet
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
+// Licensed under MIT No Attribution, see LICENSE file at the root.
+// Copyright 2013 Andreas Gullberg Larsen (andreas.larsen84@gmail.com). Maintained at https://github.com/angularsen/UnitsNet.
 
 using Xunit;
 
@@ -42,14 +23,44 @@ namespace UnitsNet.Tests.CustomCode
 {
     public class ForcePerLengthTests : ForcePerLengthTestsBase
     {
+        protected override double KilopoundsForcePerInchInOneNewtonPerMeter => 5.710147162769201E-6;
+        protected override double KilogramsForcePerMillimeterInOneNewtonPerMeter => 1.019716212977928e-4;
+        protected override double KilogramsForcePerCentimeterInOneNewtonPerMeter => 1.019716212977928e-3;
+        protected override double TonnesForcePerMeterInOneNewtonPerMeter => 1.019716212977928e-4;
+        protected override double TonnesForcePerMillimeterInOneNewtonPerMeter => 1.019716212977928e-7;
+        protected override double TonnesForcePerCentimeterInOneNewtonPerMeter => 1.019716212977928e-6;
+        protected override double NewtonsPerCentimeterInOneNewtonPerMeter => 1E-2;
+        protected override double MicronewtonsPerCentimeterInOneNewtonPerMeter => 1E4;
+        protected override double CentinewtonsPerCentimeterInOneNewtonPerMeter => 1;
+        protected override double DecinewtonsPerCentimeterInOneNewtonPerMeter => 1E-1;
+        protected override double NanonewtonsPerCentimeterInOneNewtonPerMeter => 1E7;
+        protected override double DecanewtonsPerCentimeterInOneNewtonPerMeter => 1E-3;
+        protected override double MeganewtonsPerCentimeterInOneNewtonPerMeter => 1E-8;
+        protected override double KilonewtonsPerCentimeterInOneNewtonPerMeter => 1E-5;
+        protected override double MillinewtonsPerCentimeterInOneNewtonPerMeter => 1E1;
         protected override double CentinewtonsPerMeterInOneNewtonPerMeter => 1E2;
         protected override double DecinewtonsPerMeterInOneNewtonPerMeter => 1E1;
         protected override double KilogramsForcePerMeterInOneNewtonPerMeter => 0.101972;
         protected override double KilonewtonsPerMeterInOneNewtonPerMeter => 1E-3;
+        protected override double KilopoundsForcePerFootInOneNewtonPerMeter => 6.8521766E-5;
         protected override double MicronewtonsPerMeterInOneNewtonPerMeter => 1E6;
         protected override double MillinewtonsPerMeterInOneNewtonPerMeter => 1E3;
         protected override double NanonewtonsPerMeterInOneNewtonPerMeter => 1E9;
         protected override double NewtonsPerMeterInOneNewtonPerMeter => 1;
+        protected override double NewtonsPerMillimeterInOneNewtonPerMeter => 1E-3;
+        protected override double PoundsForcePerFootInOneNewtonPerMeter => 6.8521766E-2;
+        protected override double PoundsForcePerInchInOneNewtonPerMeter => 5.710147162769201E-3;
+        protected override double PoundsForcePerYardInOneNewtonPerMeter => 0.205565298;
+        protected override double MeganewtonsPerMeterInOneNewtonPerMeter => 1E-6;
+        protected override double CentinewtonsPerMillimeterInOneNewtonPerMeter => 0.1;
+        protected override double DecanewtonsPerMeterInOneNewtonPerMeter => 0.1;
+        protected override double DecanewtonsPerMillimeterInOneNewtonPerMeter => 1E-4;
+        protected override double DecinewtonsPerMillimeterInOneNewtonPerMeter => 1E-2;
+        protected override double KilonewtonsPerMillimeterInOneNewtonPerMeter => 1E-6;
+        protected override double MeganewtonsPerMillimeterInOneNewtonPerMeter => 1E-9;
+        protected override double MicronewtonsPerMillimeterInOneNewtonPerMeter => 1E3;
+        protected override double MillinewtonsPerMillimeterInOneNewtonPerMeter => 1;
+        protected override double NanonewtonsPerMillimeterInOneNewtonPerMeter => 1E6;
 
         [Fact]
         public void ForcePerLengthDividedByLengthEqualsPressure()
@@ -66,10 +77,17 @@ namespace UnitsNet.Tests.CustomCode
         }
 
         [Fact]
-        public void ForcePerLenghTimesLengthEqualForce()
+        public void ForcePerLengthTimesLengthEqualForce()
         {
             Force force = ForcePerLength.FromNewtonsPerMeter(10) * Length.FromMeters(9);
             Assert.Equal(force, Force.FromNewtons(90));
+        }
+
+        [Fact]
+        public void ForcePerLengthTimesAreaEqualTorque()
+        {
+            Torque torque = ForcePerLength.FromNewtonsPerMeter(10) * Area.FromSquareMeters(9);
+            Assert.Equal(torque, Torque.FromNewtonMeters(90));
         }
     }
 }

@@ -8,1181 +8,369 @@
 //
 //     See https://github.com/angularsen/UnitsNet/wiki/Adding-a-New-Unit for how to add or edit units.
 //
-//     Add CustomCode\Quantities\MyUnit.extra.cs files to add code to generated quantities.
-//     Add Extensions\MyUnitExtensions.cs to decorate quantities with new behavior.
-//     Add UnitDefinitions\MyUnit.json and run GeneratUnits.bat to generate new units or quantities.
+//     Add CustomCode\Quantities\MyQuantity.extra.cs files to add code to generated quantities.
+//     Add UnitDefinitions\MyQuantity.json and run generate-code.bat to generate new units or quantities.
 //
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-// Copyright (c) 2013 Andreas Gullberg Larsen (andreas.larsen84@gmail.com).
-// https://github.com/angularsen/UnitsNet
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
+// Licensed under MIT No Attribution, see LICENSE file at the root.
+// Copyright 2013 Andreas Gullberg Larsen (andreas.larsen84@gmail.com). Maintained at https://github.com/angularsen/UnitsNet.
 
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Text.RegularExpressions;
 using System.Linq;
 using JetBrains.Annotations;
+using UnitsNet.InternalHelpers;
 using UnitsNet.Units;
 
-// Windows Runtime Component does not support CultureInfo type, so use culture name string instead for public methods: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if WINDOWS_UWP
-using Culture = System.String;
-#else
-using Culture = System.IFormatProvider;
-#endif
+#nullable enable
 
 // ReSharper disable once CheckNamespace
 
 namespace UnitsNet
 {
+    /// <inheritdoc />
     /// <summary>
     ///     Many different units of length have been used around the world. The main units in modern use are U.S. customary units in the United States and the Metric system elsewhere. British Imperial units are still used for some purposes in the United Kingdom and some other countries. The metric system is sub-divided into SI and non-SI units.
     /// </summary>
-    // ReSharper disable once PartialTypeWithSinglePart
-
-    // Windows Runtime Component has constraints on public types: https://msdn.microsoft.com/en-us/library/br230301.aspx#Declaring types in Windows Runtime Components
-    // Public structures can't have any members other than public fields, and those fields must be value types or strings.
-    // Public classes must be sealed (NotInheritable in Visual Basic). If your programming model requires polymorphism, you can create a public interface and implement that interface on the classes that must be polymorphic.
-#if WINDOWS_UWP
-    public sealed partial class Length
-#else
-    public partial struct Length : IComparable, IComparable<Length>
-#endif
+    public partial struct Length : IQuantity<LengthUnit>, IEquatable<Length>, IComparable, IComparable<Length>, IConvertible, IFormattable
     {
         /// <summary>
-        ///     Base unit of Length.
+        ///     The numeric value this quantity was constructed with.
         /// </summary>
-        private readonly double _meters;
+        private readonly double _value;
 
-        // Windows Runtime Component requires a default constructor
-#if WINDOWS_UWP
-        public Length() : this(0)
+        /// <summary>
+        ///     The unit this quantity was constructed with.
+        /// </summary>
+        private readonly LengthUnit? _unit;
+
+        static Length()
         {
-        }
-#endif
+            BaseDimensions = new BaseDimensions(1, 0, 0, 0, 0, 0, 0);
 
-        public Length(double meters)
+            Info = new QuantityInfo<LengthUnit>(QuantityType.Length,
+                new UnitInfo<LengthUnit>[] {
+                    new UnitInfo<LengthUnit>(LengthUnit.AstronomicalUnit, BaseUnits.Undefined),
+                    new UnitInfo<LengthUnit>(LengthUnit.Centimeter, BaseUnits.Undefined),
+                    new UnitInfo<LengthUnit>(LengthUnit.Chain, new BaseUnits(length: LengthUnit.Chain)),
+                    new UnitInfo<LengthUnit>(LengthUnit.Decimeter, BaseUnits.Undefined),
+                    new UnitInfo<LengthUnit>(LengthUnit.DtpPica, new BaseUnits(length: LengthUnit.DtpPica)),
+                    new UnitInfo<LengthUnit>(LengthUnit.DtpPoint, new BaseUnits(length: LengthUnit.DtpPoint)),
+                    new UnitInfo<LengthUnit>(LengthUnit.Fathom, new BaseUnits(length: LengthUnit.Fathom)),
+                    new UnitInfo<LengthUnit>(LengthUnit.Foot, new BaseUnits(length: LengthUnit.Foot)),
+                    new UnitInfo<LengthUnit>(LengthUnit.Hand, new BaseUnits(length: LengthUnit.Hand)),
+                    new UnitInfo<LengthUnit>(LengthUnit.Hectometer, BaseUnits.Undefined),
+                    new UnitInfo<LengthUnit>(LengthUnit.Inch, new BaseUnits(length: LengthUnit.Inch)),
+                    new UnitInfo<LengthUnit>(LengthUnit.KilolightYear, BaseUnits.Undefined),
+                    new UnitInfo<LengthUnit>(LengthUnit.Kilometer, BaseUnits.Undefined),
+                    new UnitInfo<LengthUnit>(LengthUnit.Kiloparsec, BaseUnits.Undefined),
+                    new UnitInfo<LengthUnit>(LengthUnit.LightYear, BaseUnits.Undefined),
+                    new UnitInfo<LengthUnit>(LengthUnit.MegalightYear, BaseUnits.Undefined),
+                    new UnitInfo<LengthUnit>(LengthUnit.Megaparsec, BaseUnits.Undefined),
+                    new UnitInfo<LengthUnit>(LengthUnit.Meter, new BaseUnits(length: LengthUnit.Meter)),
+                    new UnitInfo<LengthUnit>(LengthUnit.Microinch, new BaseUnits(length: LengthUnit.Microinch)),
+                    new UnitInfo<LengthUnit>(LengthUnit.Micrometer, BaseUnits.Undefined),
+                    new UnitInfo<LengthUnit>(LengthUnit.Mil, new BaseUnits(length: LengthUnit.Mil)),
+                    new UnitInfo<LengthUnit>(LengthUnit.Mile, new BaseUnits(length: LengthUnit.Mile)),
+                    new UnitInfo<LengthUnit>(LengthUnit.Millimeter, BaseUnits.Undefined),
+                    new UnitInfo<LengthUnit>(LengthUnit.Nanometer, BaseUnits.Undefined),
+                    new UnitInfo<LengthUnit>(LengthUnit.NauticalMile, new BaseUnits(length: LengthUnit.NauticalMile)),
+                    new UnitInfo<LengthUnit>(LengthUnit.Parsec, BaseUnits.Undefined),
+                    new UnitInfo<LengthUnit>(LengthUnit.PrinterPica, new BaseUnits(length: LengthUnit.PrinterPica)),
+                    new UnitInfo<LengthUnit>(LengthUnit.PrinterPoint, new BaseUnits(length: LengthUnit.PrinterPoint)),
+                    new UnitInfo<LengthUnit>(LengthUnit.Shackle, new BaseUnits(length: LengthUnit.Shackle)),
+                    new UnitInfo<LengthUnit>(LengthUnit.SolarRadius, BaseUnits.Undefined),
+                    new UnitInfo<LengthUnit>(LengthUnit.Twip, new BaseUnits(length: LengthUnit.Twip)),
+                    new UnitInfo<LengthUnit>(LengthUnit.UsSurveyFoot, new BaseUnits(length: LengthUnit.UsSurveyFoot)),
+                    new UnitInfo<LengthUnit>(LengthUnit.Yard, new BaseUnits(length: LengthUnit.Yard)),
+                },
+                BaseUnit, Zero, BaseDimensions);
+        }
+
+        /// <summary>
+        ///     Creates the quantity with the given numeric value and unit.
+        /// </summary>
+        /// <param name="value">The numeric value to construct this quantity with.</param>
+        /// <param name="unit">The unit representation to construct this quantity with.</param>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public Length(double value, LengthUnit unit)
         {
-            _meters = Convert.ToDouble(meters);
+            if(unit == LengthUnit.Undefined)
+              throw new ArgumentException("The quantity can not be created with an undefined unit.", nameof(unit));
+
+            _value = Guard.EnsureValidNumber(value, nameof(value));
+            _unit = unit;
         }
 
-        // Windows Runtime Component does not allow public methods/ctors with same number of parameters: https://msdn.microsoft.com/en-us/library/br230301.aspx#Overloaded methods
-#if WINDOWS_UWP
-        private
-#else
-        public
-#endif
-        Length(long meters)
+        /// <summary>
+        /// Creates an instance of the quantity with the given numeric value in units compatible with the given <see cref="UnitSystem"/>.
+        /// If multiple compatible units were found, the first match is used.
+        /// </summary>
+        /// <param name="value">The numeric value to construct this quantity with.</param>
+        /// <param name="unitSystem">The unit system to create the quantity with.</param>
+        /// <exception cref="ArgumentNullException">The given <see cref="UnitSystem"/> is null.</exception>
+        /// <exception cref="ArgumentException">No unit was found for the given <see cref="UnitSystem"/>.</exception>
+        public Length(double value, UnitSystem unitSystem)
         {
-            _meters = Convert.ToDouble(meters);
+            if(unitSystem is null) throw new ArgumentNullException(nameof(unitSystem));
+
+            var unitInfos = Info.GetUnitInfosFor(unitSystem.BaseUnits);
+            var firstUnitInfo = unitInfos.FirstOrDefault();
+
+            _value = Guard.EnsureValidNumber(value, nameof(value));
+            _unit = firstUnitInfo?.Value ?? throw new ArgumentException("No units were found for the given UnitSystem.", nameof(unitSystem));
         }
 
-        // Windows Runtime Component does not allow public methods/ctors with same number of parameters: https://msdn.microsoft.com/en-us/library/br230301.aspx#Overloaded methods
-        // Windows Runtime Component does not support decimal type
-#if WINDOWS_UWP
-        private
-#else
-        public
-#endif
-        Length(decimal meters)
-        {
-            _meters = Convert.ToDouble(meters);
-        }
+        #region Static Properties
 
-        #region Properties
+        /// <inheritdoc cref="IQuantity.QuantityInfo"/>
+        public static QuantityInfo<LengthUnit> Info { get; }
+
+        /// <summary>
+        ///     The <see cref="BaseDimensions" /> of this quantity.
+        /// </summary>
+        public static BaseDimensions BaseDimensions { get; }
+
+        /// <summary>
+        ///     The base unit of Length, which is Meter. All conversions go via this value.
+        /// </summary>
+        public static LengthUnit BaseUnit { get; } = LengthUnit.Meter;
+
+        /// <summary>
+        /// Represents the largest possible value of Length
+        /// </summary>
+        public static Length MaxValue { get; } = new Length(double.MaxValue, BaseUnit);
+
+        /// <summary>
+        /// Represents the smallest possible value of Length
+        /// </summary>
+        public static Length MinValue { get; } = new Length(double.MinValue, BaseUnit);
 
         /// <summary>
         ///     The <see cref="QuantityType" /> of this quantity.
         /// </summary>
-        public static QuantityType QuantityType => QuantityType.Length;
-
-        /// <summary>
-        ///     The base unit representation of this quantity for the numeric value stored internally. All conversions go via this value.
-        /// </summary>
-        public static LengthUnit BaseUnit
-        {
-            get { return LengthUnit.Meter; }
-        }
+        public static QuantityType QuantityType { get; } = QuantityType.Length;
 
         /// <summary>
         ///     All units of measurement for the Length quantity.
         /// </summary>
-        public static LengthUnit[] Units { get; } = Enum.GetValues(typeof(LengthUnit)).Cast<LengthUnit>().ToArray();
+        public static LengthUnit[] Units { get; } = Enum.GetValues(typeof(LengthUnit)).Cast<LengthUnit>().Except(new LengthUnit[]{ LengthUnit.Undefined }).ToArray();
+
+        /// <summary>
+        ///     Gets an instance of this quantity with a value of 0 in the base unit Meter.
+        /// </summary>
+        public static Length Zero { get; } = new Length(0, BaseUnit);
+
+        #endregion
+
+        #region Properties
+
+        /// <summary>
+        ///     The numeric value this quantity was constructed with.
+        /// </summary>
+        public double Value => _value;
+
+        Enum IQuantity.Unit => Unit;
+
+        /// <inheritdoc />
+        public LengthUnit Unit => _unit.GetValueOrDefault(BaseUnit);
+
+        /// <inheritdoc />
+        public QuantityInfo<LengthUnit> QuantityInfo => Info;
+
+        /// <inheritdoc cref="IQuantity.QuantityInfo"/>
+        QuantityInfo IQuantity.QuantityInfo => Info;
+
+        /// <summary>
+        ///     The <see cref="QuantityType" /> of this quantity.
+        /// </summary>
+        public QuantityType Type => Length.QuantityType;
+
+        /// <summary>
+        ///     The <see cref="BaseDimensions" /> of this quantity.
+        /// </summary>
+        public BaseDimensions Dimensions => Length.BaseDimensions;
+
+        #endregion
+
+        #region Conversion Properties
+
+        /// <summary>
+        ///     Get Length in AstronomicalUnits.
+        /// </summary>
+        public double AstronomicalUnits => As(LengthUnit.AstronomicalUnit);
 
         /// <summary>
         ///     Get Length in Centimeters.
         /// </summary>
-        public double Centimeters
-        {
-            get { return (_meters) / 1e-2d; }
-        }
+        public double Centimeters => As(LengthUnit.Centimeter);
+
+        /// <summary>
+        ///     Get Length in Chains.
+        /// </summary>
+        public double Chains => As(LengthUnit.Chain);
 
         /// <summary>
         ///     Get Length in Decimeters.
         /// </summary>
-        public double Decimeters
-        {
-            get { return (_meters) / 1e-1d; }
-        }
+        public double Decimeters => As(LengthUnit.Decimeter);
 
         /// <summary>
         ///     Get Length in DtpPicas.
         /// </summary>
-        public double DtpPicas
-        {
-            get { return _meters*236.220472441; }
-        }
+        public double DtpPicas => As(LengthUnit.DtpPica);
 
         /// <summary>
         ///     Get Length in DtpPoints.
         /// </summary>
-        public double DtpPoints
-        {
-            get { return (_meters/2.54e-2)*72; }
-        }
+        public double DtpPoints => As(LengthUnit.DtpPoint);
 
         /// <summary>
         ///     Get Length in Fathoms.
         /// </summary>
-        public double Fathoms
-        {
-            get { return _meters/1.8288; }
-        }
+        public double Fathoms => As(LengthUnit.Fathom);
 
         /// <summary>
         ///     Get Length in Feet.
         /// </summary>
-        public double Feet
-        {
-            get { return _meters/0.3048; }
-        }
+        public double Feet => As(LengthUnit.Foot);
+
+        /// <summary>
+        ///     Get Length in Hands.
+        /// </summary>
+        public double Hands => As(LengthUnit.Hand);
+
+        /// <summary>
+        ///     Get Length in Hectometers.
+        /// </summary>
+        public double Hectometers => As(LengthUnit.Hectometer);
 
         /// <summary>
         ///     Get Length in Inches.
         /// </summary>
-        public double Inches
-        {
-            get { return _meters/2.54e-2; }
-        }
+        public double Inches => As(LengthUnit.Inch);
+
+        /// <summary>
+        ///     Get Length in KilolightYears.
+        /// </summary>
+        public double KilolightYears => As(LengthUnit.KilolightYear);
 
         /// <summary>
         ///     Get Length in Kilometers.
         /// </summary>
-        public double Kilometers
-        {
-            get { return (_meters) / 1e3d; }
-        }
+        public double Kilometers => As(LengthUnit.Kilometer);
+
+        /// <summary>
+        ///     Get Length in Kiloparsecs.
+        /// </summary>
+        public double Kiloparsecs => As(LengthUnit.Kiloparsec);
+
+        /// <summary>
+        ///     Get Length in LightYears.
+        /// </summary>
+        public double LightYears => As(LengthUnit.LightYear);
+
+        /// <summary>
+        ///     Get Length in MegalightYears.
+        /// </summary>
+        public double MegalightYears => As(LengthUnit.MegalightYear);
+
+        /// <summary>
+        ///     Get Length in Megaparsecs.
+        /// </summary>
+        public double Megaparsecs => As(LengthUnit.Megaparsec);
 
         /// <summary>
         ///     Get Length in Meters.
         /// </summary>
-        public double Meters
-        {
-            get { return _meters; }
-        }
+        public double Meters => As(LengthUnit.Meter);
 
         /// <summary>
         ///     Get Length in Microinches.
         /// </summary>
-        public double Microinches
-        {
-            get { return _meters/2.54e-8; }
-        }
+        public double Microinches => As(LengthUnit.Microinch);
 
         /// <summary>
         ///     Get Length in Micrometers.
         /// </summary>
-        public double Micrometers
-        {
-            get { return (_meters) / 1e-6d; }
-        }
+        public double Micrometers => As(LengthUnit.Micrometer);
 
         /// <summary>
         ///     Get Length in Mils.
         /// </summary>
-        public double Mils
-        {
-            get { return _meters/2.54e-5; }
-        }
+        public double Mils => As(LengthUnit.Mil);
 
         /// <summary>
         ///     Get Length in Miles.
         /// </summary>
-        public double Miles
-        {
-            get { return _meters/1609.34; }
-        }
+        public double Miles => As(LengthUnit.Mile);
 
         /// <summary>
         ///     Get Length in Millimeters.
         /// </summary>
-        public double Millimeters
-        {
-            get { return (_meters) / 1e-3d; }
-        }
+        public double Millimeters => As(LengthUnit.Millimeter);
 
         /// <summary>
         ///     Get Length in Nanometers.
         /// </summary>
-        public double Nanometers
-        {
-            get { return (_meters) / 1e-9d; }
-        }
+        public double Nanometers => As(LengthUnit.Nanometer);
 
         /// <summary>
         ///     Get Length in NauticalMiles.
         /// </summary>
-        public double NauticalMiles
-        {
-            get { return _meters/1852; }
-        }
+        public double NauticalMiles => As(LengthUnit.NauticalMile);
+
+        /// <summary>
+        ///     Get Length in Parsecs.
+        /// </summary>
+        public double Parsecs => As(LengthUnit.Parsec);
 
         /// <summary>
         ///     Get Length in PrinterPicas.
         /// </summary>
-        public double PrinterPicas
-        {
-            get { return _meters*237.106301584; }
-        }
+        public double PrinterPicas => As(LengthUnit.PrinterPica);
 
         /// <summary>
         ///     Get Length in PrinterPoints.
         /// </summary>
-        public double PrinterPoints
-        {
-            get { return (_meters/2.54e-2)*72.27; }
-        }
+        public double PrinterPoints => As(LengthUnit.PrinterPoint);
 
         /// <summary>
         ///     Get Length in Shackles.
         /// </summary>
-        public double Shackles
-        {
-            get { return _meters/27.432; }
-        }
+        public double Shackles => As(LengthUnit.Shackle);
+
+        /// <summary>
+        ///     Get Length in SolarRadiuses.
+        /// </summary>
+        public double SolarRadiuses => As(LengthUnit.SolarRadius);
 
         /// <summary>
         ///     Get Length in Twips.
         /// </summary>
-        public double Twips
-        {
-            get { return _meters*56692.913385826; }
-        }
+        public double Twips => As(LengthUnit.Twip);
 
         /// <summary>
         ///     Get Length in UsSurveyFeet.
         /// </summary>
-        public double UsSurveyFeet
-        {
-            get { return _meters*3937/1200; }
-        }
+        public double UsSurveyFeet => As(LengthUnit.UsSurveyFoot);
 
         /// <summary>
         ///     Get Length in Yards.
         /// </summary>
-        public double Yards
-        {
-            get { return _meters/0.9144; }
-        }
+        public double Yards => As(LengthUnit.Yard);
 
         #endregion
 
-        #region Static
-
-        public static Length Zero
-        {
-            get { return new Length(); }
-        }
-
-        /// <summary>
-        ///     Get Length from Centimeters.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Length FromCentimeters(double centimeters)
-        {
-            double value = (double) centimeters;
-            return new Length((value) * 1e-2d);
-        }
-#else
-        public static Length FromCentimeters(QuantityValue centimeters)
-        {
-            double value = (double) centimeters;
-            return new Length(((value) * 1e-2d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Length from Decimeters.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Length FromDecimeters(double decimeters)
-        {
-            double value = (double) decimeters;
-            return new Length((value) * 1e-1d);
-        }
-#else
-        public static Length FromDecimeters(QuantityValue decimeters)
-        {
-            double value = (double) decimeters;
-            return new Length(((value) * 1e-1d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Length from DtpPicas.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Length FromDtpPicas(double dtppicas)
-        {
-            double value = (double) dtppicas;
-            return new Length(value/236.220472441);
-        }
-#else
-        public static Length FromDtpPicas(QuantityValue dtppicas)
-        {
-            double value = (double) dtppicas;
-            return new Length((value/236.220472441));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Length from DtpPoints.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Length FromDtpPoints(double dtppoints)
-        {
-            double value = (double) dtppoints;
-            return new Length((value/72)*2.54e-2);
-        }
-#else
-        public static Length FromDtpPoints(QuantityValue dtppoints)
-        {
-            double value = (double) dtppoints;
-            return new Length(((value/72)*2.54e-2));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Length from Fathoms.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Length FromFathoms(double fathoms)
-        {
-            double value = (double) fathoms;
-            return new Length(value*1.8288);
-        }
-#else
-        public static Length FromFathoms(QuantityValue fathoms)
-        {
-            double value = (double) fathoms;
-            return new Length((value*1.8288));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Length from Feet.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Length FromFeet(double feet)
-        {
-            double value = (double) feet;
-            return new Length(value*0.3048);
-        }
-#else
-        public static Length FromFeet(QuantityValue feet)
-        {
-            double value = (double) feet;
-            return new Length((value*0.3048));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Length from Inches.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Length FromInches(double inches)
-        {
-            double value = (double) inches;
-            return new Length(value*2.54e-2);
-        }
-#else
-        public static Length FromInches(QuantityValue inches)
-        {
-            double value = (double) inches;
-            return new Length((value*2.54e-2));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Length from Kilometers.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Length FromKilometers(double kilometers)
-        {
-            double value = (double) kilometers;
-            return new Length((value) * 1e3d);
-        }
-#else
-        public static Length FromKilometers(QuantityValue kilometers)
-        {
-            double value = (double) kilometers;
-            return new Length(((value) * 1e3d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Length from Meters.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Length FromMeters(double meters)
-        {
-            double value = (double) meters;
-            return new Length(value);
-        }
-#else
-        public static Length FromMeters(QuantityValue meters)
-        {
-            double value = (double) meters;
-            return new Length((value));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Length from Microinches.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Length FromMicroinches(double microinches)
-        {
-            double value = (double) microinches;
-            return new Length(value*2.54e-8);
-        }
-#else
-        public static Length FromMicroinches(QuantityValue microinches)
-        {
-            double value = (double) microinches;
-            return new Length((value*2.54e-8));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Length from Micrometers.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Length FromMicrometers(double micrometers)
-        {
-            double value = (double) micrometers;
-            return new Length((value) * 1e-6d);
-        }
-#else
-        public static Length FromMicrometers(QuantityValue micrometers)
-        {
-            double value = (double) micrometers;
-            return new Length(((value) * 1e-6d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Length from Mils.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Length FromMils(double mils)
-        {
-            double value = (double) mils;
-            return new Length(value*2.54e-5);
-        }
-#else
-        public static Length FromMils(QuantityValue mils)
-        {
-            double value = (double) mils;
-            return new Length((value*2.54e-5));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Length from Miles.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Length FromMiles(double miles)
-        {
-            double value = (double) miles;
-            return new Length(value*1609.34);
-        }
-#else
-        public static Length FromMiles(QuantityValue miles)
-        {
-            double value = (double) miles;
-            return new Length((value*1609.34));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Length from Millimeters.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Length FromMillimeters(double millimeters)
-        {
-            double value = (double) millimeters;
-            return new Length((value) * 1e-3d);
-        }
-#else
-        public static Length FromMillimeters(QuantityValue millimeters)
-        {
-            double value = (double) millimeters;
-            return new Length(((value) * 1e-3d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Length from Nanometers.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Length FromNanometers(double nanometers)
-        {
-            double value = (double) nanometers;
-            return new Length((value) * 1e-9d);
-        }
-#else
-        public static Length FromNanometers(QuantityValue nanometers)
-        {
-            double value = (double) nanometers;
-            return new Length(((value) * 1e-9d));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Length from NauticalMiles.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Length FromNauticalMiles(double nauticalmiles)
-        {
-            double value = (double) nauticalmiles;
-            return new Length(value*1852);
-        }
-#else
-        public static Length FromNauticalMiles(QuantityValue nauticalmiles)
-        {
-            double value = (double) nauticalmiles;
-            return new Length((value*1852));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Length from PrinterPicas.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Length FromPrinterPicas(double printerpicas)
-        {
-            double value = (double) printerpicas;
-            return new Length(value/237.106301584);
-        }
-#else
-        public static Length FromPrinterPicas(QuantityValue printerpicas)
-        {
-            double value = (double) printerpicas;
-            return new Length((value/237.106301584));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Length from PrinterPoints.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Length FromPrinterPoints(double printerpoints)
-        {
-            double value = (double) printerpoints;
-            return new Length((value/72.27)*2.54e-2);
-        }
-#else
-        public static Length FromPrinterPoints(QuantityValue printerpoints)
-        {
-            double value = (double) printerpoints;
-            return new Length(((value/72.27)*2.54e-2));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Length from Shackles.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Length FromShackles(double shackles)
-        {
-            double value = (double) shackles;
-            return new Length(value*27.432);
-        }
-#else
-        public static Length FromShackles(QuantityValue shackles)
-        {
-            double value = (double) shackles;
-            return new Length((value*27.432));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Length from Twips.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Length FromTwips(double twips)
-        {
-            double value = (double) twips;
-            return new Length(value/56692.913385826);
-        }
-#else
-        public static Length FromTwips(QuantityValue twips)
-        {
-            double value = (double) twips;
-            return new Length((value/56692.913385826));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Length from UsSurveyFeet.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Length FromUsSurveyFeet(double ussurveyfeet)
-        {
-            double value = (double) ussurveyfeet;
-            return new Length(value*1200/3937);
-        }
-#else
-        public static Length FromUsSurveyFeet(QuantityValue ussurveyfeet)
-        {
-            double value = (double) ussurveyfeet;
-            return new Length((value*1200/3937));
-        }
-#endif
-
-        /// <summary>
-        ///     Get Length from Yards.
-        /// </summary>
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        public static Length FromYards(double yards)
-        {
-            double value = (double) yards;
-            return new Length(value*0.9144);
-        }
-#else
-        public static Length FromYards(QuantityValue yards)
-        {
-            double value = (double) yards;
-            return new Length((value*0.9144));
-        }
-#endif
-
-        // Windows Runtime Component does not support nullable types (double?): https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if !WINDOWS_UWP
-        /// <summary>
-        ///     Get nullable Length from nullable Centimeters.
-        /// </summary>
-        public static Length? FromCentimeters(QuantityValue? centimeters)
-        {
-            if (centimeters.HasValue)
-            {
-                return FromCentimeters(centimeters.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Length from nullable Decimeters.
-        /// </summary>
-        public static Length? FromDecimeters(QuantityValue? decimeters)
-        {
-            if (decimeters.HasValue)
-            {
-                return FromDecimeters(decimeters.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Length from nullable DtpPicas.
-        /// </summary>
-        public static Length? FromDtpPicas(QuantityValue? dtppicas)
-        {
-            if (dtppicas.HasValue)
-            {
-                return FromDtpPicas(dtppicas.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Length from nullable DtpPoints.
-        /// </summary>
-        public static Length? FromDtpPoints(QuantityValue? dtppoints)
-        {
-            if (dtppoints.HasValue)
-            {
-                return FromDtpPoints(dtppoints.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Length from nullable Fathoms.
-        /// </summary>
-        public static Length? FromFathoms(QuantityValue? fathoms)
-        {
-            if (fathoms.HasValue)
-            {
-                return FromFathoms(fathoms.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Length from nullable Feet.
-        /// </summary>
-        public static Length? FromFeet(QuantityValue? feet)
-        {
-            if (feet.HasValue)
-            {
-                return FromFeet(feet.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Length from nullable Inches.
-        /// </summary>
-        public static Length? FromInches(QuantityValue? inches)
-        {
-            if (inches.HasValue)
-            {
-                return FromInches(inches.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Length from nullable Kilometers.
-        /// </summary>
-        public static Length? FromKilometers(QuantityValue? kilometers)
-        {
-            if (kilometers.HasValue)
-            {
-                return FromKilometers(kilometers.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Length from nullable Meters.
-        /// </summary>
-        public static Length? FromMeters(QuantityValue? meters)
-        {
-            if (meters.HasValue)
-            {
-                return FromMeters(meters.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Length from nullable Microinches.
-        /// </summary>
-        public static Length? FromMicroinches(QuantityValue? microinches)
-        {
-            if (microinches.HasValue)
-            {
-                return FromMicroinches(microinches.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Length from nullable Micrometers.
-        /// </summary>
-        public static Length? FromMicrometers(QuantityValue? micrometers)
-        {
-            if (micrometers.HasValue)
-            {
-                return FromMicrometers(micrometers.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Length from nullable Mils.
-        /// </summary>
-        public static Length? FromMils(QuantityValue? mils)
-        {
-            if (mils.HasValue)
-            {
-                return FromMils(mils.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Length from nullable Miles.
-        /// </summary>
-        public static Length? FromMiles(QuantityValue? miles)
-        {
-            if (miles.HasValue)
-            {
-                return FromMiles(miles.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Length from nullable Millimeters.
-        /// </summary>
-        public static Length? FromMillimeters(QuantityValue? millimeters)
-        {
-            if (millimeters.HasValue)
-            {
-                return FromMillimeters(millimeters.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Length from nullable Nanometers.
-        /// </summary>
-        public static Length? FromNanometers(QuantityValue? nanometers)
-        {
-            if (nanometers.HasValue)
-            {
-                return FromNanometers(nanometers.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Length from nullable NauticalMiles.
-        /// </summary>
-        public static Length? FromNauticalMiles(QuantityValue? nauticalmiles)
-        {
-            if (nauticalmiles.HasValue)
-            {
-                return FromNauticalMiles(nauticalmiles.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Length from nullable PrinterPicas.
-        /// </summary>
-        public static Length? FromPrinterPicas(QuantityValue? printerpicas)
-        {
-            if (printerpicas.HasValue)
-            {
-                return FromPrinterPicas(printerpicas.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Length from nullable PrinterPoints.
-        /// </summary>
-        public static Length? FromPrinterPoints(QuantityValue? printerpoints)
-        {
-            if (printerpoints.HasValue)
-            {
-                return FromPrinterPoints(printerpoints.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Length from nullable Shackles.
-        /// </summary>
-        public static Length? FromShackles(QuantityValue? shackles)
-        {
-            if (shackles.HasValue)
-            {
-                return FromShackles(shackles.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Length from nullable Twips.
-        /// </summary>
-        public static Length? FromTwips(QuantityValue? twips)
-        {
-            if (twips.HasValue)
-            {
-                return FromTwips(twips.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Length from nullable UsSurveyFeet.
-        /// </summary>
-        public static Length? FromUsSurveyFeet(QuantityValue? ussurveyfeet)
-        {
-            if (ussurveyfeet.HasValue)
-            {
-                return FromUsSurveyFeet(ussurveyfeet.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        ///     Get nullable Length from nullable Yards.
-        /// </summary>
-        public static Length? FromYards(QuantityValue? yards)
-        {
-            if (yards.HasValue)
-            {
-                return FromYards(yards.Value);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-#endif
-
-        /// <summary>
-        ///     Dynamically convert from value and unit enum <see cref="LengthUnit" /> to <see cref="Length" />.
-        /// </summary>
-        /// <param name="value">Value to convert from.</param>
-        /// <param name="fromUnit">Unit to convert from.</param>
-        /// <returns>Length unit value.</returns>
-#if WINDOWS_UWP
-        // Fix name conflict with parameter "value"
-        [return: System.Runtime.InteropServices.WindowsRuntime.ReturnValueName("returnValue")]
-        public static Length From(double value, LengthUnit fromUnit)
-#else
-        public static Length From(QuantityValue value, LengthUnit fromUnit)
-#endif
-        {
-            switch (fromUnit)
-            {
-                case LengthUnit.Centimeter:
-                    return FromCentimeters(value);
-                case LengthUnit.Decimeter:
-                    return FromDecimeters(value);
-                case LengthUnit.DtpPica:
-                    return FromDtpPicas(value);
-                case LengthUnit.DtpPoint:
-                    return FromDtpPoints(value);
-                case LengthUnit.Fathom:
-                    return FromFathoms(value);
-                case LengthUnit.Foot:
-                    return FromFeet(value);
-                case LengthUnit.Inch:
-                    return FromInches(value);
-                case LengthUnit.Kilometer:
-                    return FromKilometers(value);
-                case LengthUnit.Meter:
-                    return FromMeters(value);
-                case LengthUnit.Microinch:
-                    return FromMicroinches(value);
-                case LengthUnit.Micrometer:
-                    return FromMicrometers(value);
-                case LengthUnit.Mil:
-                    return FromMils(value);
-                case LengthUnit.Mile:
-                    return FromMiles(value);
-                case LengthUnit.Millimeter:
-                    return FromMillimeters(value);
-                case LengthUnit.Nanometer:
-                    return FromNanometers(value);
-                case LengthUnit.NauticalMile:
-                    return FromNauticalMiles(value);
-                case LengthUnit.PrinterPica:
-                    return FromPrinterPicas(value);
-                case LengthUnit.PrinterPoint:
-                    return FromPrinterPoints(value);
-                case LengthUnit.Shackle:
-                    return FromShackles(value);
-                case LengthUnit.Twip:
-                    return FromTwips(value);
-                case LengthUnit.UsSurveyFoot:
-                    return FromUsSurveyFeet(value);
-                case LengthUnit.Yard:
-                    return FromYards(value);
-
-                default:
-                    throw new NotImplementedException("fromUnit: " + fromUnit);
-            }
-        }
-
-        // Windows Runtime Component does not support nullable types (double?): https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if !WINDOWS_UWP
-        /// <summary>
-        ///     Dynamically convert from value and unit enum <see cref="LengthUnit" /> to <see cref="Length" />.
-        /// </summary>
-        /// <param name="value">Value to convert from.</param>
-        /// <param name="fromUnit">Unit to convert from.</param>
-        /// <returns>Length unit value.</returns>
-        public static Length? From(QuantityValue? value, LengthUnit fromUnit)
-        {
-            if (!value.HasValue)
-            {
-                return null;
-            }
-            switch (fromUnit)
-            {
-                case LengthUnit.Centimeter:
-                    return FromCentimeters(value.Value);
-                case LengthUnit.Decimeter:
-                    return FromDecimeters(value.Value);
-                case LengthUnit.DtpPica:
-                    return FromDtpPicas(value.Value);
-                case LengthUnit.DtpPoint:
-                    return FromDtpPoints(value.Value);
-                case LengthUnit.Fathom:
-                    return FromFathoms(value.Value);
-                case LengthUnit.Foot:
-                    return FromFeet(value.Value);
-                case LengthUnit.Inch:
-                    return FromInches(value.Value);
-                case LengthUnit.Kilometer:
-                    return FromKilometers(value.Value);
-                case LengthUnit.Meter:
-                    return FromMeters(value.Value);
-                case LengthUnit.Microinch:
-                    return FromMicroinches(value.Value);
-                case LengthUnit.Micrometer:
-                    return FromMicrometers(value.Value);
-                case LengthUnit.Mil:
-                    return FromMils(value.Value);
-                case LengthUnit.Mile:
-                    return FromMiles(value.Value);
-                case LengthUnit.Millimeter:
-                    return FromMillimeters(value.Value);
-                case LengthUnit.Nanometer:
-                    return FromNanometers(value.Value);
-                case LengthUnit.NauticalMile:
-                    return FromNauticalMiles(value.Value);
-                case LengthUnit.PrinterPica:
-                    return FromPrinterPicas(value.Value);
-                case LengthUnit.PrinterPoint:
-                    return FromPrinterPoints(value.Value);
-                case LengthUnit.Shackle:
-                    return FromShackles(value.Value);
-                case LengthUnit.Twip:
-                    return FromTwips(value.Value);
-                case LengthUnit.UsSurveyFoot:
-                    return FromUsSurveyFeet(value.Value);
-                case LengthUnit.Yard:
-                    return FromYards(value.Value);
-
-                default:
-                    throw new NotImplementedException("fromUnit: " + fromUnit);
-            }
-        }
-#endif
+        #region Static Methods
 
         /// <summary>
         ///     Get unit abbreviation string.
         /// </summary>
         /// <param name="unit">Unit to get abbreviation for.</param>
         /// <returns>Unit abbreviation string.</returns>
-        [UsedImplicitly]
         public static string GetAbbreviation(LengthUnit unit)
         {
             return GetAbbreviation(unit, null);
@@ -1192,210 +380,329 @@ namespace UnitsNet
         ///     Get unit abbreviation string.
         /// </summary>
         /// <param name="unit">Unit to get abbreviation for.</param>
-        /// <param name="culture">Culture to use for localization. Defaults to Thread.CurrentUICulture.</param>
         /// <returns>Unit abbreviation string.</returns>
-        [UsedImplicitly]
-        public static string GetAbbreviation(LengthUnit unit, [CanBeNull] Culture culture)
+        /// <param name="provider">Format to use for localization. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public static string GetAbbreviation(LengthUnit unit, IFormatProvider? provider)
         {
-            return UnitSystem.GetCached(culture).GetDefaultAbbreviation(unit);
+            return UnitAbbreviationsCache.Default.GetDefaultAbbreviation(unit, provider);
         }
 
         #endregion
 
-        #region Arithmetic Operators
+        #region Static Factory Methods
 
-        // Windows Runtime Component does not allow operator overloads: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if !WINDOWS_UWP
-        public static Length operator -(Length right)
+        /// <summary>
+        ///     Get Length from AstronomicalUnits.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromAstronomicalUnits(QuantityValue astronomicalunits)
         {
-            return new Length(-right._meters);
+            double value = (double) astronomicalunits;
+            return new Length(value, LengthUnit.AstronomicalUnit);
         }
-
-        public static Length operator +(Length left, Length right)
+        /// <summary>
+        ///     Get Length from Centimeters.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromCentimeters(QuantityValue centimeters)
         {
-            return new Length(left._meters + right._meters);
+            double value = (double) centimeters;
+            return new Length(value, LengthUnit.Centimeter);
         }
-
-        public static Length operator -(Length left, Length right)
+        /// <summary>
+        ///     Get Length from Chains.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromChains(QuantityValue chains)
         {
-            return new Length(left._meters - right._meters);
+            double value = (double) chains;
+            return new Length(value, LengthUnit.Chain);
         }
-
-        public static Length operator *(double left, Length right)
+        /// <summary>
+        ///     Get Length from Decimeters.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromDecimeters(QuantityValue decimeters)
         {
-            return new Length(left*right._meters);
+            double value = (double) decimeters;
+            return new Length(value, LengthUnit.Decimeter);
         }
-
-        public static Length operator *(Length left, double right)
+        /// <summary>
+        ///     Get Length from DtpPicas.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromDtpPicas(QuantityValue dtppicas)
         {
-            return new Length(left._meters*(double)right);
+            double value = (double) dtppicas;
+            return new Length(value, LengthUnit.DtpPica);
         }
-
-        public static Length operator /(Length left, double right)
+        /// <summary>
+        ///     Get Length from DtpPoints.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromDtpPoints(QuantityValue dtppoints)
         {
-            return new Length(left._meters/(double)right);
+            double value = (double) dtppoints;
+            return new Length(value, LengthUnit.DtpPoint);
         }
-
-        public static double operator /(Length left, Length right)
+        /// <summary>
+        ///     Get Length from Fathoms.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromFathoms(QuantityValue fathoms)
         {
-            return Convert.ToDouble(left._meters/right._meters);
+            double value = (double) fathoms;
+            return new Length(value, LengthUnit.Fathom);
         }
-#endif
-
-        #endregion
-
-        #region Equality / IComparable
-
-        public int CompareTo(object obj)
+        /// <summary>
+        ///     Get Length from Feet.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromFeet(QuantityValue feet)
         {
-            if (obj == null) throw new ArgumentNullException("obj");
-            if (!(obj is Length)) throw new ArgumentException("Expected type Length.", "obj");
-            return CompareTo((Length) obj);
+            double value = (double) feet;
+            return new Length(value, LengthUnit.Foot);
         }
-
-        // Windows Runtime Component does not allow public methods/ctors with same number of parameters: https://msdn.microsoft.com/en-us/library/br230301.aspx#Overloaded methods
-#if WINDOWS_UWP
-        internal
-#else
-        public
-#endif
-        int CompareTo(Length other)
+        /// <summary>
+        ///     Get Length from Hands.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromHands(QuantityValue hands)
         {
-            return _meters.CompareTo(other._meters);
+            double value = (double) hands;
+            return new Length(value, LengthUnit.Hand);
         }
-
-        // Windows Runtime Component does not allow operator overloads: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if !WINDOWS_UWP
-        public static bool operator <=(Length left, Length right)
+        /// <summary>
+        ///     Get Length from Hectometers.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromHectometers(QuantityValue hectometers)
         {
-            return left._meters <= right._meters;
+            double value = (double) hectometers;
+            return new Length(value, LengthUnit.Hectometer);
         }
-
-        public static bool operator >=(Length left, Length right)
+        /// <summary>
+        ///     Get Length from Inches.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromInches(QuantityValue inches)
         {
-            return left._meters >= right._meters;
+            double value = (double) inches;
+            return new Length(value, LengthUnit.Inch);
         }
-
-        public static bool operator <(Length left, Length right)
+        /// <summary>
+        ///     Get Length from KilolightYears.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromKilolightYears(QuantityValue kilolightyears)
         {
-            return left._meters < right._meters;
+            double value = (double) kilolightyears;
+            return new Length(value, LengthUnit.KilolightYear);
         }
-
-        public static bool operator >(Length left, Length right)
+        /// <summary>
+        ///     Get Length from Kilometers.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromKilometers(QuantityValue kilometers)
         {
-            return left._meters > right._meters;
+            double value = (double) kilometers;
+            return new Length(value, LengthUnit.Kilometer);
         }
-
-        [Obsolete("It is not safe to compare equality due to using System.Double as the internal representation. It is very easy to get slightly different values due to floating point operations. Instead use Equals(other, maxError) to provide the max allowed error.")]
-        public static bool operator ==(Length left, Length right)
+        /// <summary>
+        ///     Get Length from Kiloparsecs.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromKiloparsecs(QuantityValue kiloparsecs)
         {
-            // ReSharper disable once CompareOfFloatsByEqualityOperator
-            return left._meters == right._meters;
+            double value = (double) kiloparsecs;
+            return new Length(value, LengthUnit.Kiloparsec);
         }
-
-        [Obsolete("It is not safe to compare equality due to using System.Double as the internal representation. It is very easy to get slightly different values due to floating point operations. Instead use Equals(other, maxError) to provide the max allowed error.")]
-        public static bool operator !=(Length left, Length right)
+        /// <summary>
+        ///     Get Length from LightYears.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromLightYears(QuantityValue lightyears)
         {
-            // ReSharper disable once CompareOfFloatsByEqualityOperator
-            return left._meters != right._meters;
+            double value = (double) lightyears;
+            return new Length(value, LengthUnit.LightYear);
         }
-#endif
-
-        [Obsolete("It is not safe to compare equality due to using System.Double as the internal representation. It is very easy to get slightly different values due to floating point operations. Instead use Equals(other, maxError) to provide the max allowed error.")]
-        public override bool Equals(object obj)
+        /// <summary>
+        ///     Get Length from MegalightYears.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromMegalightYears(QuantityValue megalightyears)
         {
-            if (obj == null || GetType() != obj.GetType())
-            {
-                return false;
-            }
-
-            return _meters.Equals(((Length) obj)._meters);
+            double value = (double) megalightyears;
+            return new Length(value, LengthUnit.MegalightYear);
+        }
+        /// <summary>
+        ///     Get Length from Megaparsecs.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromMegaparsecs(QuantityValue megaparsecs)
+        {
+            double value = (double) megaparsecs;
+            return new Length(value, LengthUnit.Megaparsec);
+        }
+        /// <summary>
+        ///     Get Length from Meters.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromMeters(QuantityValue meters)
+        {
+            double value = (double) meters;
+            return new Length(value, LengthUnit.Meter);
+        }
+        /// <summary>
+        ///     Get Length from Microinches.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromMicroinches(QuantityValue microinches)
+        {
+            double value = (double) microinches;
+            return new Length(value, LengthUnit.Microinch);
+        }
+        /// <summary>
+        ///     Get Length from Micrometers.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromMicrometers(QuantityValue micrometers)
+        {
+            double value = (double) micrometers;
+            return new Length(value, LengthUnit.Micrometer);
+        }
+        /// <summary>
+        ///     Get Length from Mils.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromMils(QuantityValue mils)
+        {
+            double value = (double) mils;
+            return new Length(value, LengthUnit.Mil);
+        }
+        /// <summary>
+        ///     Get Length from Miles.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromMiles(QuantityValue miles)
+        {
+            double value = (double) miles;
+            return new Length(value, LengthUnit.Mile);
+        }
+        /// <summary>
+        ///     Get Length from Millimeters.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromMillimeters(QuantityValue millimeters)
+        {
+            double value = (double) millimeters;
+            return new Length(value, LengthUnit.Millimeter);
+        }
+        /// <summary>
+        ///     Get Length from Nanometers.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromNanometers(QuantityValue nanometers)
+        {
+            double value = (double) nanometers;
+            return new Length(value, LengthUnit.Nanometer);
+        }
+        /// <summary>
+        ///     Get Length from NauticalMiles.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromNauticalMiles(QuantityValue nauticalmiles)
+        {
+            double value = (double) nauticalmiles;
+            return new Length(value, LengthUnit.NauticalMile);
+        }
+        /// <summary>
+        ///     Get Length from Parsecs.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromParsecs(QuantityValue parsecs)
+        {
+            double value = (double) parsecs;
+            return new Length(value, LengthUnit.Parsec);
+        }
+        /// <summary>
+        ///     Get Length from PrinterPicas.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromPrinterPicas(QuantityValue printerpicas)
+        {
+            double value = (double) printerpicas;
+            return new Length(value, LengthUnit.PrinterPica);
+        }
+        /// <summary>
+        ///     Get Length from PrinterPoints.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromPrinterPoints(QuantityValue printerpoints)
+        {
+            double value = (double) printerpoints;
+            return new Length(value, LengthUnit.PrinterPoint);
+        }
+        /// <summary>
+        ///     Get Length from Shackles.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromShackles(QuantityValue shackles)
+        {
+            double value = (double) shackles;
+            return new Length(value, LengthUnit.Shackle);
+        }
+        /// <summary>
+        ///     Get Length from SolarRadiuses.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromSolarRadiuses(QuantityValue solarradiuses)
+        {
+            double value = (double) solarradiuses;
+            return new Length(value, LengthUnit.SolarRadius);
+        }
+        /// <summary>
+        ///     Get Length from Twips.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromTwips(QuantityValue twips)
+        {
+            double value = (double) twips;
+            return new Length(value, LengthUnit.Twip);
+        }
+        /// <summary>
+        ///     Get Length from UsSurveyFeet.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromUsSurveyFeet(QuantityValue ussurveyfeet)
+        {
+            double value = (double) ussurveyfeet;
+            return new Length(value, LengthUnit.UsSurveyFoot);
+        }
+        /// <summary>
+        ///     Get Length from Yards.
+        /// </summary>
+        /// <exception cref="ArgumentException">If value is NaN or Infinity.</exception>
+        public static Length FromYards(QuantityValue yards)
+        {
+            double value = (double) yards;
+            return new Length(value, LengthUnit.Yard);
         }
 
         /// <summary>
-        ///     Compare equality to another Length by specifying a max allowed difference.
-        ///     Note that it is advised against specifying zero difference, due to the nature
-        ///     of floating point operations and using System.Double internally.
+        ///     Dynamically convert from value and unit enum <see cref="LengthUnit" /> to <see cref="Length" />.
         /// </summary>
-        /// <param name="other">Other quantity to compare to.</param>
-        /// <param name="maxError">Max error allowed.</param>
-        /// <returns>True if the difference between the two values is not greater than the specified max.</returns>
-        public bool Equals(Length other, Length maxError)
+        /// <param name="value">Value to convert from.</param>
+        /// <param name="fromUnit">Unit to convert from.</param>
+        /// <returns>Length unit value.</returns>
+        public static Length From(QuantityValue value, LengthUnit fromUnit)
         {
-            return Math.Abs(_meters - other._meters) <= maxError._meters;
-        }
-
-        public override int GetHashCode()
-        {
-            return _meters.GetHashCode();
+            return new Length((double)value, fromUnit);
         }
 
         #endregion
 
-        #region Conversion
-
-        /// <summary>
-        ///     Convert to the unit representation <paramref name="unit" />.
-        /// </summary>
-        /// <returns>Value in new unit if successful, exception otherwise.</returns>
-        /// <exception cref="NotImplementedException">If conversion was not successful.</exception>
-        public double As(LengthUnit unit)
-        {
-            switch (unit)
-            {
-                case LengthUnit.Centimeter:
-                    return Centimeters;
-                case LengthUnit.Decimeter:
-                    return Decimeters;
-                case LengthUnit.DtpPica:
-                    return DtpPicas;
-                case LengthUnit.DtpPoint:
-                    return DtpPoints;
-                case LengthUnit.Fathom:
-                    return Fathoms;
-                case LengthUnit.Foot:
-                    return Feet;
-                case LengthUnit.Inch:
-                    return Inches;
-                case LengthUnit.Kilometer:
-                    return Kilometers;
-                case LengthUnit.Meter:
-                    return Meters;
-                case LengthUnit.Microinch:
-                    return Microinches;
-                case LengthUnit.Micrometer:
-                    return Micrometers;
-                case LengthUnit.Mil:
-                    return Mils;
-                case LengthUnit.Mile:
-                    return Miles;
-                case LengthUnit.Millimeter:
-                    return Millimeters;
-                case LengthUnit.Nanometer:
-                    return Nanometers;
-                case LengthUnit.NauticalMile:
-                    return NauticalMiles;
-                case LengthUnit.PrinterPica:
-                    return PrinterPicas;
-                case LengthUnit.PrinterPoint:
-                    return PrinterPoints;
-                case LengthUnit.Shackle:
-                    return Shackles;
-                case LengthUnit.Twip:
-                    return Twips;
-                case LengthUnit.UsSurveyFoot:
-                    return UsSurveyFeet;
-                case LengthUnit.Yard:
-                    return Yards;
-
-                default:
-                    throw new NotImplementedException("unit: " + unit);
-            }
-        }
-
-        #endregion
-
-        #region Parsing
+        #region Static Parse Methods
 
         /// <summary>
         ///     Parse a string with one or two quantities of the format "&lt;quantity&gt; &lt;unit&gt;".
@@ -1428,7 +735,6 @@ namespace UnitsNet
         ///     Parse a string with one or two quantities of the format "&lt;quantity&gt; &lt;unit&gt;".
         /// </summary>
         /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
-        /// <param name="culture">Format to use when parsing number and unit. If it is null, it defaults to <see cref="NumberFormatInfo.CurrentInfo"/> for parsing the number and <see cref="CultureInfo.CurrentUICulture"/> for parsing the unit abbreviation by culture/language.</param>
         /// <example>
         ///     Length.Parse("5.5 m", new CultureInfo("en-US"));
         /// </example>
@@ -1447,23 +753,13 @@ namespace UnitsNet
         ///     We wrap exceptions in <see cref="UnitsNetException" /> to allow you to distinguish
         ///     Units.NET exceptions from other exceptions.
         /// </exception>
-        public static Length Parse(string str, [CanBeNull] Culture culture)
+        /// <param name="provider">Format to use when parsing number and unit. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public static Length Parse(string str, IFormatProvider? provider)
         {
-            if (str == null) throw new ArgumentNullException("str");
-
-        // Windows Runtime Component does not support CultureInfo type, so use culture name string for public methods instead: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if WINDOWS_UWP
-            IFormatProvider formatProvider = culture == null ? null : new CultureInfo(culture);
-#else
-            IFormatProvider formatProvider = culture;
-#endif
-            return QuantityParser.Parse<Length, LengthUnit>(str, formatProvider,
-                delegate(string value, string unit, IFormatProvider formatProvider2)
-                {
-                    double parsedValue = double.Parse(value, formatProvider2);
-                    LengthUnit parsedUnit = ParseUnit(unit, formatProvider2);
-                    return From(parsedValue, parsedUnit);
-                }, (x, y) => FromMeters(x.Meters + y.Meters));
+            return QuantityParser.Default.Parse<Length, LengthUnit>(
+                str,
+                provider,
+                From);
         }
 
         /// <summary>
@@ -1474,7 +770,7 @@ namespace UnitsNet
         /// <example>
         ///     Length.Parse("5.5 m", new CultureInfo("en-US"));
         /// </example>
-        public static bool TryParse([CanBeNull] string str, out Length result)
+        public static bool TryParse(string? str, out Length result)
         {
             return TryParse(str, null, out result);
         }
@@ -1483,28 +779,25 @@ namespace UnitsNet
         ///     Try to parse a string with one or two quantities of the format "&lt;quantity&gt; &lt;unit&gt;".
         /// </summary>
         /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
-        /// <param name="culture">Format to use when parsing number and unit. If it is null, it defaults to <see cref="NumberFormatInfo.CurrentInfo"/> for parsing the number and <see cref="CultureInfo.CurrentUICulture"/> for parsing the unit abbreviation by culture/language.</param>
         /// <param name="result">Resulting unit quantity if successful.</param>
+        /// <returns>True if successful, otherwise false.</returns>
         /// <example>
         ///     Length.Parse("5.5 m", new CultureInfo("en-US"));
         /// </example>
-        public static bool TryParse([CanBeNull] string str, [CanBeNull] Culture culture, out Length result)
+        /// <param name="provider">Format to use when parsing number and unit. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public static bool TryParse(string? str, IFormatProvider? provider, out Length result)
         {
-            try
-            {
-                result = Parse(str, culture);
-                return true;
-            }
-            catch
-            {
-                result = default(Length);
-                return false;
-            }
+            return QuantityParser.Default.TryParse<Length, LengthUnit>(
+                str,
+                provider,
+                From,
+                out result);
         }
 
         /// <summary>
         ///     Parse a unit string.
         /// </summary>
+        /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
         /// <example>
         ///     Length.ParseUnit("m", new CultureInfo("en-US"));
         /// </example>
@@ -1512,153 +805,592 @@ namespace UnitsNet
         /// <exception cref="UnitsNetException">Error parsing string.</exception>
         public static LengthUnit ParseUnit(string str)
         {
-            return ParseUnit(str, (IFormatProvider)null);
+            return ParseUnit(str, null);
         }
 
         /// <summary>
         ///     Parse a unit string.
         /// </summary>
+        /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
+        /// <param name="provider">Format to use when parsing number and unit. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
         /// <example>
         ///     Length.ParseUnit("m", new CultureInfo("en-US"));
         /// </example>
         /// <exception cref="ArgumentNullException">The value of 'str' cannot be null. </exception>
         /// <exception cref="UnitsNetException">Error parsing string.</exception>
-        public static LengthUnit ParseUnit(string str, [CanBeNull] string cultureName)
+        public static LengthUnit ParseUnit(string str, IFormatProvider? provider)
         {
-            return ParseUnit(str, cultureName == null ? null : new CultureInfo(cultureName));
+            return UnitParser.Default.Parse<LengthUnit>(str, provider);
+        }
+
+        /// <inheritdoc cref="TryParseUnit(string,IFormatProvider,out UnitsNet.Units.LengthUnit)"/>
+        public static bool TryParseUnit(string str, out LengthUnit unit)
+        {
+            return TryParseUnit(str, null, out unit);
         }
 
         /// <summary>
         ///     Parse a unit string.
         /// </summary>
+        /// <param name="str">String to parse. Typically in the form: {number} {unit}</param>
+        /// <param name="unit">The parsed unit if successful.</param>
+        /// <returns>True if successful, otherwise false.</returns>
         /// <example>
-        ///     Length.ParseUnit("m", new CultureInfo("en-US"));
+        ///     Length.TryParseUnit("m", new CultureInfo("en-US"));
         /// </example>
-        /// <exception cref="ArgumentNullException">The value of 'str' cannot be null. </exception>
-        /// <exception cref="UnitsNetException">Error parsing string.</exception>
-
-        // Windows Runtime Component does not allow public methods/ctors with same number of parameters: https://msdn.microsoft.com/en-us/library/br230301.aspx#Overloaded methods
-#if WINDOWS_UWP
-        internal
-#else
-        public
-#endif
-        static LengthUnit ParseUnit(string str, IFormatProvider formatProvider = null)
+        /// <param name="provider">Format to use when parsing number and unit. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public static bool TryParseUnit(string str, IFormatProvider? provider, out LengthUnit unit)
         {
-            if (str == null) throw new ArgumentNullException("str");
-
-            var unitSystem = UnitSystem.GetCached(formatProvider);
-            var unit = unitSystem.Parse<LengthUnit>(str.Trim());
-
-            if (unit == LengthUnit.Undefined)
-            {
-                var newEx = new UnitsNetException("Error parsing string. The unit is not a recognized LengthUnit.");
-                newEx.Data["input"] = str;
-                newEx.Data["formatprovider"] = formatProvider?.ToString() ?? "(null)";
-                throw newEx;
-            }
-
-            return unit;
+            return UnitParser.Default.TryParse<LengthUnit>(str, provider, out unit);
         }
 
         #endregion
 
-        /// <summary>
-        ///     Set the default unit used by ToString(). Default is Meter
-        /// </summary>
-        public static LengthUnit ToStringDefaultUnit { get; set; } = LengthUnit.Meter;
+        #region Arithmetic Operators
+
+        /// <summary>Negate the value.</summary>
+        public static Length operator -(Length right)
+        {
+            return new Length(-right.Value, right.Unit);
+        }
+
+        /// <summary>Get <see cref="Length"/> from adding two <see cref="Length"/>.</summary>
+        public static Length operator +(Length left, Length right)
+        {
+            return new Length(left.Value + right.GetValueAs(left.Unit), left.Unit);
+        }
+
+        /// <summary>Get <see cref="Length"/> from subtracting two <see cref="Length"/>.</summary>
+        public static Length operator -(Length left, Length right)
+        {
+            return new Length(left.Value - right.GetValueAs(left.Unit), left.Unit);
+        }
+
+        /// <summary>Get <see cref="Length"/> from multiplying value and <see cref="Length"/>.</summary>
+        public static Length operator *(double left, Length right)
+        {
+            return new Length(left * right.Value, right.Unit);
+        }
+
+        /// <summary>Get <see cref="Length"/> from multiplying value and <see cref="Length"/>.</summary>
+        public static Length operator *(Length left, double right)
+        {
+            return new Length(left.Value * right, left.Unit);
+        }
+
+        /// <summary>Get <see cref="Length"/> from dividing <see cref="Length"/> by value.</summary>
+        public static Length operator /(Length left, double right)
+        {
+            return new Length(left.Value / right, left.Unit);
+        }
+
+        /// <summary>Get ratio value from dividing <see cref="Length"/> by <see cref="Length"/>.</summary>
+        public static double operator /(Length left, Length right)
+        {
+            return left.Meters / right.Meters;
+        }
+
+        #endregion
+
+        #region Equality / IComparable
+
+        /// <summary>Returns true if less or equal to.</summary>
+        public static bool operator <=(Length left, Length right)
+        {
+            return left.Value <= right.GetValueAs(left.Unit);
+        }
+
+        /// <summary>Returns true if greater than or equal to.</summary>
+        public static bool operator >=(Length left, Length right)
+        {
+            return left.Value >= right.GetValueAs(left.Unit);
+        }
+
+        /// <summary>Returns true if less than.</summary>
+        public static bool operator <(Length left, Length right)
+        {
+            return left.Value < right.GetValueAs(left.Unit);
+        }
+
+        /// <summary>Returns true if greater than.</summary>
+        public static bool operator >(Length left, Length right)
+        {
+            return left.Value > right.GetValueAs(left.Unit);
+        }
+
+        /// <summary>Returns true if exactly equal.</summary>
+        /// <remarks>Consider using <see cref="Equals(Length, double, ComparisonType)"/> for safely comparing floating point values.</remarks>
+        public static bool operator ==(Length left, Length right)
+        {
+            return left.Equals(right);
+        }
+
+        /// <summary>Returns true if not exactly equal.</summary>
+        /// <remarks>Consider using <see cref="Equals(Length, double, ComparisonType)"/> for safely comparing floating point values.</remarks>
+        public static bool operator !=(Length left, Length right)
+        {
+            return !(left == right);
+        }
+
+        /// <inheritdoc />
+        public int CompareTo(object obj)
+        {
+            if(obj is null) throw new ArgumentNullException(nameof(obj));
+            if(!(obj is Length objLength)) throw new ArgumentException("Expected type Length.", nameof(obj));
+
+            return CompareTo(objLength);
+        }
+
+        /// <inheritdoc />
+        public int CompareTo(Length other)
+        {
+            return _value.CompareTo(other.GetValueAs(this.Unit));
+        }
+
+        /// <inheritdoc />
+        /// <remarks>Consider using <see cref="Equals(Length, double, ComparisonType)"/> for safely comparing floating point values.</remarks>
+        public override bool Equals(object obj)
+        {
+            if(obj is null || !(obj is Length objLength))
+                return false;
+
+            return Equals(objLength);
+        }
+
+        /// <inheritdoc />
+        /// <remarks>Consider using <see cref="Equals(Length, double, ComparisonType)"/> for safely comparing floating point values.</remarks>
+        public bool Equals(Length other)
+        {
+            return _value.Equals(other.GetValueAs(this.Unit));
+        }
 
         /// <summary>
-        ///     Get default string representation of value and unit.
+        ///     <para>
+        ///     Compare equality to another Length within the given absolute or relative tolerance.
+        ///     </para>
+        ///     <para>
+        ///     Relative tolerance is defined as the maximum allowable absolute difference between this quantity's value and
+        ///     <paramref name="other"/> as a percentage of this quantity's value. <paramref name="other"/> will be converted into
+        ///     this quantity's unit for comparison. A relative tolerance of 0.01 means the absolute difference must be within +/- 1% of
+        ///     this quantity's value to be considered equal.
+        ///     <example>
+        ///     In this example, the two quantities will be equal if the value of b is within +/- 1% of a (0.02m or 2cm).
+        ///     <code>
+        ///     var a = Length.FromMeters(2.0);
+        ///     var b = Length.FromInches(50.0);
+        ///     a.Equals(b, 0.01, ComparisonType.Relative);
+        ///     </code>
+        ///     </example>
+        ///     </para>
+        ///     <para>
+        ///     Absolute tolerance is defined as the maximum allowable absolute difference between this quantity's value and
+        ///     <paramref name="other"/> as a fixed number in this quantity's unit. <paramref name="other"/> will be converted into
+        ///     this quantity's unit for comparison.
+        ///     <example>
+        ///     In this example, the two quantities will be equal if the value of b is within 0.01 of a (0.01m or 1cm).
+        ///     <code>
+        ///     var a = Length.FromMeters(2.0);
+        ///     var b = Length.FromInches(50.0);
+        ///     a.Equals(b, 0.01, ComparisonType.Absolute);
+        ///     </code>
+        ///     </example>
+        ///     </para>
+        ///     <para>
+        ///     Note that it is advised against specifying zero difference, due to the nature
+        ///     of floating point operations and using System.Double internally.
+        ///     </para>
+        /// </summary>
+        /// <param name="other">The other quantity to compare to.</param>
+        /// <param name="tolerance">The absolute or relative tolerance value. Must be greater than or equal to 0.</param>
+        /// <param name="comparisonType">The comparison type: either relative or absolute.</param>
+        /// <returns>True if the absolute difference between the two values is not greater than the specified relative or absolute tolerance.</returns>
+        public bool Equals(Length other, double tolerance, ComparisonType comparisonType)
+        {
+            if(tolerance < 0)
+                throw new ArgumentOutOfRangeException("tolerance", "Tolerance must be greater than or equal to 0.");
+
+            double thisValue = (double)this.Value;
+            double otherValueInThisUnits = other.As(this.Unit);
+
+            return UnitsNet.Comparison.Equals(thisValue, otherValueInThisUnits, tolerance, comparisonType);
+        }
+
+        /// <summary>
+        ///     Returns the hash code for this instance.
+        /// </summary>
+        /// <returns>A hash code for the current Length.</returns>
+        public override int GetHashCode()
+        {
+            return new { QuantityType, Value, Unit }.GetHashCode();
+        }
+
+        #endregion
+
+        #region Conversion Methods
+
+        /// <summary>
+        ///     Convert to the unit representation <paramref name="unit" />.
+        /// </summary>
+        /// <returns>Value converted to the specified unit.</returns>
+        public double As(LengthUnit unit)
+        {
+            if(Unit == unit)
+                return Convert.ToDouble(Value);
+
+            var converted = GetValueAs(unit);
+            return Convert.ToDouble(converted);
+        }
+
+        /// <inheritdoc cref="IQuantity.As(UnitSystem)"/>
+        public double As(UnitSystem unitSystem)
+        {
+            if(unitSystem is null)
+                throw new ArgumentNullException(nameof(unitSystem));
+
+            var unitInfos = Info.GetUnitInfosFor(unitSystem.BaseUnits);
+
+            var firstUnitInfo = unitInfos.FirstOrDefault();
+            if(firstUnitInfo == null)
+                throw new ArgumentException("No units were found for the given UnitSystem.", nameof(unitSystem));
+
+            return As(firstUnitInfo.Value);
+        }
+
+        /// <inheritdoc />
+        double IQuantity.As(Enum unit)
+        {
+            if(!(unit is LengthUnit unitAsLengthUnit))
+                throw new ArgumentException($"The given unit is of type {unit.GetType()}. Only {typeof(LengthUnit)} is supported.", nameof(unit));
+
+            return As(unitAsLengthUnit);
+        }
+
+        /// <summary>
+        ///     Converts this Length to another Length with the unit representation <paramref name="unit" />.
+        /// </summary>
+        /// <returns>A Length with the specified unit.</returns>
+        public Length ToUnit(LengthUnit unit)
+        {
+            var convertedValue = GetValueAs(unit);
+            return new Length(convertedValue, unit);
+        }
+
+        /// <inheritdoc />
+        IQuantity IQuantity.ToUnit(Enum unit)
+        {
+            if(!(unit is LengthUnit unitAsLengthUnit))
+                throw new ArgumentException($"The given unit is of type {unit.GetType()}. Only {typeof(LengthUnit)} is supported.", nameof(unit));
+
+            return ToUnit(unitAsLengthUnit);
+        }
+
+        /// <inheritdoc cref="IQuantity.ToUnit(UnitSystem)"/>
+        public Length ToUnit(UnitSystem unitSystem)
+        {
+            if(unitSystem is null)
+                throw new ArgumentNullException(nameof(unitSystem));
+
+            var unitInfos = Info.GetUnitInfosFor(unitSystem.BaseUnits);
+
+            var firstUnitInfo = unitInfos.FirstOrDefault();
+            if(firstUnitInfo == null)
+                throw new ArgumentException("No units were found for the given UnitSystem.", nameof(unitSystem));
+
+            return ToUnit(firstUnitInfo.Value);
+        }
+
+        /// <inheritdoc />
+        IQuantity IQuantity.ToUnit(UnitSystem unitSystem) => ToUnit(unitSystem);
+
+        /// <inheritdoc />
+        IQuantity<LengthUnit> IQuantity<LengthUnit>.ToUnit(LengthUnit unit) => ToUnit(unit);
+
+        /// <inheritdoc />
+        IQuantity<LengthUnit> IQuantity<LengthUnit>.ToUnit(UnitSystem unitSystem) => ToUnit(unitSystem);
+
+        /// <summary>
+        ///     Converts the current value + unit to the base unit.
+        ///     This is typically the first step in converting from one unit to another.
+        /// </summary>
+        /// <returns>The value in the base unit representation.</returns>
+        private double GetValueInBaseUnit()
+        {
+            switch(Unit)
+            {
+                case LengthUnit.AstronomicalUnit: return _value * 1.4959787070e11;
+                case LengthUnit.Centimeter: return (_value) * 1e-2d;
+                case LengthUnit.Chain: return _value*20.1168;
+                case LengthUnit.Decimeter: return (_value) * 1e-1d;
+                case LengthUnit.DtpPica: return _value/236.220472441;
+                case LengthUnit.DtpPoint: return (_value/72)*2.54e-2;
+                case LengthUnit.Fathom: return _value*1.8288;
+                case LengthUnit.Foot: return _value*0.3048;
+                case LengthUnit.Hand: return _value * 1.016e-1;
+                case LengthUnit.Hectometer: return (_value) * 1e2d;
+                case LengthUnit.Inch: return _value*2.54e-2;
+                case LengthUnit.KilolightYear: return (_value * 9.46073047258e15) * 1e3d;
+                case LengthUnit.Kilometer: return (_value) * 1e3d;
+                case LengthUnit.Kiloparsec: return (_value * 3.08567758128e16) * 1e3d;
+                case LengthUnit.LightYear: return _value * 9.46073047258e15;
+                case LengthUnit.MegalightYear: return (_value * 9.46073047258e15) * 1e6d;
+                case LengthUnit.Megaparsec: return (_value * 3.08567758128e16) * 1e6d;
+                case LengthUnit.Meter: return _value;
+                case LengthUnit.Microinch: return _value*2.54e-8;
+                case LengthUnit.Micrometer: return (_value) * 1e-6d;
+                case LengthUnit.Mil: return _value*2.54e-5;
+                case LengthUnit.Mile: return _value*1609.34;
+                case LengthUnit.Millimeter: return (_value) * 1e-3d;
+                case LengthUnit.Nanometer: return (_value) * 1e-9d;
+                case LengthUnit.NauticalMile: return _value*1852;
+                case LengthUnit.Parsec: return _value * 3.08567758128e16;
+                case LengthUnit.PrinterPica: return _value/237.106301584;
+                case LengthUnit.PrinterPoint: return (_value/72.27)*2.54e-2;
+                case LengthUnit.Shackle: return _value*27.432;
+                case LengthUnit.SolarRadius: return _value * 6.95510000E+08;
+                case LengthUnit.Twip: return _value/56692.913385826;
+                case LengthUnit.UsSurveyFoot: return _value*1200/3937;
+                case LengthUnit.Yard: return _value*0.9144;
+                default:
+                    throw new NotImplementedException($"Can not convert {Unit} to base units.");
+            }
+        }
+
+        /// <summary>
+        ///     Converts the current value + unit to the base unit.
+        ///     This is typically the first step in converting from one unit to another.
+        /// </summary>
+        /// <returns>The value in the base unit representation.</returns>
+        internal Length ToBaseUnit()
+        {
+            var baseUnitValue = GetValueInBaseUnit();
+            return new Length(baseUnitValue, BaseUnit);
+        }
+
+        private double GetValueAs(LengthUnit unit)
+        {
+            if(Unit == unit)
+                return _value;
+
+            var baseUnitValue = GetValueInBaseUnit();
+
+            switch(unit)
+            {
+                case LengthUnit.AstronomicalUnit: return baseUnitValue / 1.4959787070e11;
+                case LengthUnit.Centimeter: return (baseUnitValue) / 1e-2d;
+                case LengthUnit.Chain: return baseUnitValue/20.1168;
+                case LengthUnit.Decimeter: return (baseUnitValue) / 1e-1d;
+                case LengthUnit.DtpPica: return baseUnitValue*236.220472441;
+                case LengthUnit.DtpPoint: return (baseUnitValue/2.54e-2)*72;
+                case LengthUnit.Fathom: return baseUnitValue/1.8288;
+                case LengthUnit.Foot: return baseUnitValue/0.3048;
+                case LengthUnit.Hand: return baseUnitValue / 1.016e-1;
+                case LengthUnit.Hectometer: return (baseUnitValue) / 1e2d;
+                case LengthUnit.Inch: return baseUnitValue/2.54e-2;
+                case LengthUnit.KilolightYear: return (baseUnitValue / 9.46073047258e15) / 1e3d;
+                case LengthUnit.Kilometer: return (baseUnitValue) / 1e3d;
+                case LengthUnit.Kiloparsec: return (baseUnitValue / 3.08567758128e16) / 1e3d;
+                case LengthUnit.LightYear: return baseUnitValue / 9.46073047258e15;
+                case LengthUnit.MegalightYear: return (baseUnitValue / 9.46073047258e15) / 1e6d;
+                case LengthUnit.Megaparsec: return (baseUnitValue / 3.08567758128e16) / 1e6d;
+                case LengthUnit.Meter: return baseUnitValue;
+                case LengthUnit.Microinch: return baseUnitValue/2.54e-8;
+                case LengthUnit.Micrometer: return (baseUnitValue) / 1e-6d;
+                case LengthUnit.Mil: return baseUnitValue/2.54e-5;
+                case LengthUnit.Mile: return baseUnitValue/1609.34;
+                case LengthUnit.Millimeter: return (baseUnitValue) / 1e-3d;
+                case LengthUnit.Nanometer: return (baseUnitValue) / 1e-9d;
+                case LengthUnit.NauticalMile: return baseUnitValue/1852;
+                case LengthUnit.Parsec: return baseUnitValue / 3.08567758128e16;
+                case LengthUnit.PrinterPica: return baseUnitValue*237.106301584;
+                case LengthUnit.PrinterPoint: return (baseUnitValue/2.54e-2)*72.27;
+                case LengthUnit.Shackle: return baseUnitValue/27.432;
+                case LengthUnit.SolarRadius: return baseUnitValue / 6.95510000E+08;
+                case LengthUnit.Twip: return baseUnitValue*56692.913385826;
+                case LengthUnit.UsSurveyFoot: return baseUnitValue*3937/1200;
+                case LengthUnit.Yard: return baseUnitValue/0.9144;
+                default:
+                    throw new NotImplementedException($"Can not convert {Unit} to {unit}.");
+            }
+        }
+
+        #endregion
+
+        #region ToString Methods
+
+        /// <summary>
+        ///     Gets the default string representation of value and unit.
         /// </summary>
         /// <returns>String representation.</returns>
         public override string ToString()
         {
-            return ToString(ToStringDefaultUnit);
+            return ToString("g");
         }
 
         /// <summary>
-        ///     Get string representation of value and unit. Using current UI culture and two significant digits after radix.
+        ///     Gets the default string representation of value and unit using the given format provider.
         /// </summary>
-        /// <param name="unit">Unit representation to use.</param>
         /// <returns>String representation.</returns>
-        public string ToString(LengthUnit unit)
+        /// <param name="provider">Format to use for localization and number formatting. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        public string ToString(IFormatProvider? provider)
         {
-            return ToString(unit, null, 2);
-        }
-
-        /// <summary>
-        ///     Get string representation of value and unit. Using two significant digits after radix.
-        /// </summary>
-        /// <param name="unit">Unit representation to use.</param>
-        /// <param name="culture">Culture to use for localization and number formatting.</param>
-        /// <returns>String representation.</returns>
-        public string ToString(LengthUnit unit, [CanBeNull] Culture culture)
-        {
-            return ToString(unit, culture, 2);
+            return ToString("g", provider);
         }
 
         /// <summary>
         ///     Get string representation of value and unit.
         /// </summary>
-        /// <param name="unit">Unit representation to use.</param>
-        /// <param name="culture">Culture to use for localization and number formatting.</param>
         /// <param name="significantDigitsAfterRadix">The number of significant digits after the radix point.</param>
         /// <returns>String representation.</returns>
-        [UsedImplicitly]
-        public string ToString(LengthUnit unit, [CanBeNull] Culture culture, int significantDigitsAfterRadix)
+        /// <param name="provider">Format to use for localization and number formatting. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        [Obsolete(@"This method is deprecated and will be removed at a future release. Please use ToString(""s2"") or ToString(""s2"", provider) where 2 is an example of the number passed to significantDigitsAfterRadix.")]
+        public string ToString(IFormatProvider? provider, int significantDigitsAfterRadix)
         {
-            double value = As(unit);
-            string format = UnitFormatter.GetFormat(value, significantDigitsAfterRadix);
-            return ToString(unit, culture, format);
+            var value = Convert.ToDouble(Value);
+            var format = UnitFormatter.GetFormat(value, significantDigitsAfterRadix);
+            return ToString(provider, format);
         }
 
         /// <summary>
         ///     Get string representation of value and unit.
         /// </summary>
-        /// <param name="culture">Culture to use for localization and number formatting.</param>
-        /// <param name="unit">Unit representation to use.</param>
         /// <param name="format">String format to use. Default:  "{0:0.##} {1} for value and unit abbreviation respectively."</param>
-        /// <param name="args">Arguments for string format. Value and unit are implictly included as arguments 0 and 1.</param>
+        /// <param name="args">Arguments for string format. Value and unit are implicitly included as arguments 0 and 1.</param>
         /// <returns>String representation.</returns>
-        [UsedImplicitly]
-        public string ToString(LengthUnit unit, [CanBeNull] Culture culture, [NotNull] string format,
-            [NotNull] params object[] args)
+        /// <param name="provider">Format to use for localization and number formatting. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        [Obsolete("This method is deprecated and will be removed at a future release. Please use string.Format().")]
+        public string ToString(IFormatProvider? provider, [NotNull] string format, [NotNull] params object[] args)
         {
             if (format == null) throw new ArgumentNullException(nameof(format));
             if (args == null) throw new ArgumentNullException(nameof(args));
 
-        // Windows Runtime Component does not support CultureInfo type, so use culture name string for public methods instead: https://msdn.microsoft.com/en-us/library/br230301.aspx
-#if WINDOWS_UWP
-            IFormatProvider formatProvider = culture == null ? null : new CultureInfo(culture);
-#else
-            IFormatProvider formatProvider = culture;
-#endif
-            double value = As(unit);
-            object[] formatArgs = UnitFormatter.GetFormatArgs(unit, value, formatProvider, args);
-            return string.Format(formatProvider, format, formatArgs);
+            provider = provider ?? CultureInfo.CurrentUICulture;
+
+            var value = Convert.ToDouble(Value);
+            var formatArgs = UnitFormatter.GetFormatArgs(Unit, value, provider, args);
+            return string.Format(provider, format, formatArgs);
         }
 
+        /// <inheritdoc cref="QuantityFormatter.Format{TUnitType}(IQuantity{TUnitType}, string, IFormatProvider)"/>
         /// <summary>
-        /// Represents the largest possible value of Length
+        /// Gets the string representation of this instance in the specified format string using <see cref="CultureInfo.CurrentUICulture" />.
         /// </summary>
-        public static Length MaxValue
+        /// <param name="format">The format string.</param>
+        /// <returns>The string representation.</returns>
+        public string ToString(string format)
         {
-            get
-            {
-                return new Length(double.MaxValue);
-            }
+            return ToString(format, CultureInfo.CurrentUICulture);
         }
 
+        /// <inheritdoc cref="QuantityFormatter.Format{TUnitType}(IQuantity{TUnitType}, string, IFormatProvider)"/>
         /// <summary>
-        /// Represents the smallest possible value of Length
+        /// Gets the string representation of this instance in the specified format string using the specified format provider, or <see cref="CultureInfo.CurrentUICulture" /> if null.
         /// </summary>
-        public static Length MinValue
+        /// <param name="format">The format string.</param>
+        /// <param name="provider">Format to use for localization and number formatting. Defaults to <see cref="CultureInfo.CurrentUICulture" /> if null.</param>
+        /// <returns>The string representation.</returns>
+        public string ToString(string format, IFormatProvider? provider)
         {
-            get
-            {
-                return new Length(double.MinValue);
-            }
+            return QuantityFormatter.Format<LengthUnit>(this, format, provider);
         }
+
+        #endregion
+
+        #region IConvertible Methods
+
+        TypeCode IConvertible.GetTypeCode()
+        {
+            return TypeCode.Object;
+        }
+
+        bool IConvertible.ToBoolean(IFormatProvider provider)
+        {
+            throw new InvalidCastException($"Converting {typeof(Length)} to bool is not supported.");
+        }
+
+        byte IConvertible.ToByte(IFormatProvider provider)
+        {
+            return Convert.ToByte(_value);
+        }
+
+        char IConvertible.ToChar(IFormatProvider provider)
+        {
+            throw new InvalidCastException($"Converting {typeof(Length)} to char is not supported.");
+        }
+
+        DateTime IConvertible.ToDateTime(IFormatProvider provider)
+        {
+            throw new InvalidCastException($"Converting {typeof(Length)} to DateTime is not supported.");
+        }
+
+        decimal IConvertible.ToDecimal(IFormatProvider provider)
+        {
+            return Convert.ToDecimal(_value);
+        }
+
+        double IConvertible.ToDouble(IFormatProvider provider)
+        {
+            return Convert.ToDouble(_value);
+        }
+
+        short IConvertible.ToInt16(IFormatProvider provider)
+        {
+            return Convert.ToInt16(_value);
+        }
+
+        int IConvertible.ToInt32(IFormatProvider provider)
+        {
+            return Convert.ToInt32(_value);
+        }
+
+        long IConvertible.ToInt64(IFormatProvider provider)
+        {
+            return Convert.ToInt64(_value);
+        }
+
+        sbyte IConvertible.ToSByte(IFormatProvider provider)
+        {
+            return Convert.ToSByte(_value);
+        }
+
+        float IConvertible.ToSingle(IFormatProvider provider)
+        {
+            return Convert.ToSingle(_value);
+        }
+
+        string IConvertible.ToString(IFormatProvider provider)
+        {
+            return ToString("g", provider);
+        }
+
+        object IConvertible.ToType(Type conversionType, IFormatProvider provider)
+        {
+            if(conversionType == typeof(Length))
+                return this;
+            else if(conversionType == typeof(LengthUnit))
+                return Unit;
+            else if(conversionType == typeof(QuantityType))
+                return Length.QuantityType;
+            else if(conversionType == typeof(BaseDimensions))
+                return Length.BaseDimensions;
+            else
+                throw new InvalidCastException($"Converting {typeof(Length)} to {conversionType} is not supported.");
+        }
+
+        ushort IConvertible.ToUInt16(IFormatProvider provider)
+        {
+            return Convert.ToUInt16(_value);
+        }
+
+        uint IConvertible.ToUInt32(IFormatProvider provider)
+        {
+            return Convert.ToUInt32(_value);
+        }
+
+        ulong IConvertible.ToUInt64(IFormatProvider provider)
+        {
+            return Convert.ToUInt64(_value);
+        }
+
+        #endregion
     }
 }
